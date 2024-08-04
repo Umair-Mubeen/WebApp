@@ -1,0 +1,76 @@
+<style>
+    html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.wrapper {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1;
+}
+
+.main-footer {
+    margin-top: auto;
+}
+
+</style>
+<canvas id="designationChart" width="200" height="200"></canvas>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const data = {
+            labels: [
+                {% for item in results %}
+                "{{ item.trimmed_designation }}"{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Total #',
+                data: [
+                    {% for item in results %}
+                    {{ item.total }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                backgroundColor: generateRandomColors({{ results|length }}),
+                borderColor: 'rgba(0, 0, 0, 0.2)',
+                borderWidth: 2
+            }]
+        };
+
+        // Function to generate random colors
+        function generateRandomColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const randomColor = 'rgba(' +
+                    Math.floor(Math.random() * 256) + ',' +
+                    Math.floor(Math.random() * 256) + ',' +
+                    Math.floor(Math.random() * 256) + ',' +
+                    '0.5)';
+                colors.push(randomColor);
+            }
+            return colors;
+        }
+
+        // Create the chart
+        const ctx = document.getElementById('designationChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
