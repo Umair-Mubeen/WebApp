@@ -6,7 +6,8 @@ from django.shortcuts import render, HttpResponse, redirect, HttpResponseRedirec
 from django.contrib.auth import authenticate, login, logout
 from .models import DispositionList
 import matplotlib.pyplot as plt
-from .Utitlities import getDispositionList, getRetirementList, getZoneRetirementList
+from .Utitlities import getDispositionList, getRetirementList, getZoneRetirementList, fetchAllDispositionList
+
 
 # Create your views here.
 
@@ -60,9 +61,20 @@ def Dashboard(request):
             zones = list(zone_counts.keys())
             counts = list(zone_counts.values())
 
-            return render(request, 'Dashboard.html', {'results': results, 'retired': employee_to_be_retired,'zones' : zones, 'counts' : counts})
+            return render(request, 'Dashboard.html',
+                          {'results': results, 'retired': employee_to_be_retired, 'zones': zones, 'counts': counts})
     except Exception as e:
         print(str(e))
+
+
+def DispositionList(request):
+    try:
+        disposition_result, error = fetchAllDispositionList(request)
+        if error:
+            return HttpResponse(f"An error occurred: {error}", status=500)
+        return render(request, 'DispositionList.html', {'DispositionResult': disposition_result})
+    except Exception as e:
+        return str(e)
 
 
 def Logout(request):
