@@ -18,8 +18,21 @@
     margin-top: auto;
 }
 
+
 </style>
-<canvas id="designationChart" width="200" height="200"></canvas>
+
+
+<div class="card">
+    <div class="card-header">
+                    <h3 class="card-title">Disposition Chart List Designation Wise, Regional Tax Office - II</h3>
+
+    </div>
+    <div class="card-body">
+     <canvas id="designationChart" width="200" height="80"></canvas>
+
+    </div>
+
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -30,7 +43,7 @@
                 {% endfor %}
             ],
             datasets: [{
-                label: 'Total #',
+                label: 'Total Strength #',
                 data: [
                     {% for item in results %}
                     {{ item.total }}{% if not forloop.last %},{% endif %}
@@ -73,4 +86,5 @@
             }
         });
     });
+
 </script>

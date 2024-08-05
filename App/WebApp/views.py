@@ -1,12 +1,12 @@
-from django.db.models import Count
-from django.db.models.functions import Trim
+from collections import defaultdict
+
 from django.shortcuts import render
 from io import StringIO
 from django.shortcuts import render, HttpResponse, redirect, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from .models import DispositionList
-from django.db.models import Count, Func, Value
-
+import matplotlib.pyplot as plt
+from .Utitlities import getDispositionList, getRetirementList, getZoneRetirementList
 
 # Create your views here.
 
@@ -54,11 +54,16 @@ def Dashboard(request):
         if isLoggedIn(request) is False:
             return redirect('/')
         else:
-            results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')).values('trimmed_designation').annotate(total=Count('trimmed_designation'))
-            print(results)
-            return render(request, 'Dashboard.html', {'results':results})
+            results = getDispositionList()
+            employee_to_be_retired = getRetirementList()
+            zone_counts = getZoneRetirementList()
+            zones = list(zone_counts.keys())
+            counts = list(zone_counts.values())
+
+            return render(request, 'Dashboard.html', {'results': results, 'retired': employee_to_be_retired,'zones' : zones, 'counts' : counts})
     except Exception as e:
         print(str(e))
+
 
 def Logout(request):
     logout(request)
