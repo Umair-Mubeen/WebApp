@@ -1,0 +1,224 @@
+<style>
+    html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.wrapper {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1;
+}
+
+.main-footer {
+    margin-top: auto;
+}
+
+
+
+
+
+
+
+</style>
+
+{% load static %}
+{% include 'reusable.html' %}
+<title>Search Records </title>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+    <!-- SideBar Start Here  -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here  -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">Zone</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <input type="hidden" name="hd_zone" id="hd_zone" class="form-control" value="{{zone}}">
+                <form action="Zone" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <select name="Zone" class="form-control" id="zone">
+                                <option value="">Select Zone</option>
+                                <option value="Zone-I">Zone - I</option>
+                                <option value="Zone-II">Zone - II</option>
+                                <option value="Zone-III">Zone - III</option>
+                                <option value="Zone-IV">Zone - IV</option>
+                                <option value="Zone-V">Zone - V</option>
+
+                            </select>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <input type="submit" name="submit" class="form-control btn btn-primary" value="Search"/>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+
+
+        </section>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <canvas id="myChart" width="400" height="200"></canvas>
+
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid col-lg-12">
+
+            {% if results|length > 0 %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{% if zone %} {{ zone }} - {% endif %} Designation Chart Zone Wise, Regional
+                        Tax Office - II</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="ZoneWiseList" width="200" height="70"></canvas>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+        <!-- Content Wrapper. Contains page content  Ends Here -->
+
+
+    </div>
+    <!-- /.content-wrapper -->
+
+
+    {% include 'footer.html' %}
+
+</div>
+
+</body>
+<script>
+    var hd_zone = document.getElementById('hd_zone').value;
+    $('#zone').val(hd_zone).attr("selected", "selected");
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('ZoneWiseList').getContext('2d');
+
+            // Data passed from Django view
+            const data = {{ results|safe }};
+
+            // Extract designations and totals
+            const designations = data.map(item => item.designation);
+            const totals = data.map(item => item.total);
+
+            const myChart = new Chart(ctx, {
+                type: 'bar', // You can change this to 'line', 'pie', etc.
+                data: {
+                    labels: designations,
+                    datasets: [{
+                        label: 'Total Strength',
+                        data: totals,
+                         backgroundColor: generateRandomColors({{ results|length }}),
+                borderColor: 'rgba(0, 0, 0, 0.2)',
+                borderWidth: 2
+
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+             // Function to generate random colors
+        function generateRandomColors(count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                const randomColor = 'rgba(' +
+                    Math.floor(Math.random() * 256) + ',' +
+                    Math.floor(Math.random() * 256) + ',' +
+                    Math.floor(Math.random() * 256) + ',' +
+                    '0.5)';
+                colors.push(randomColor);
+            }
+            return colors;
+        }
+
+        });
+
+
+
+
+
+</script>
+
+
+<script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Extract data from Django context
+        const zones = {{ zones|safe }};
+        const designations = {{ designations|safe }};
+        const counts = {{ counts|safe }};
+
+        // Prepare data for Chart.js
+        const datasets = designations.map(designation => {
+            return {
+                label: designation,
+                data: zones.map(zone => counts[zone][designation]),
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            };
+        });
+
+        // Create the chart
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: zones,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+</script>

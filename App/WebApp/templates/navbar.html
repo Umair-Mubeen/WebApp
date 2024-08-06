@@ -1,4 +1,13 @@
+
 {% load static %}
+<style>
+    .img-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+}
+
+</style>
 <nav class="main-header navbar navbar-expand navbar-white navbar-light">
     <!-- Left navbar links -->
     <div class="collapse navbar-collapse order-3" id="navbarCollapse">
@@ -9,8 +18,16 @@
             <li class="nav-item">
                 <a href="/Dashboard" class="nav-link"> Home</a>
             </li>
-              <li class="nav-item">
+            <li class="nav-item">
                 <a href="/DispositionList" class="nav-link"> Disposition List</a>
+            </li>
+
+               <li class="nav-item">
+                <a href="/Zone" class="nav-link"> Zone </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/Search" class="nav-link"> Search</a>
             </li>
 
 
@@ -35,20 +52,18 @@
                 </div>
 
             </li>
-            <li class="nav-item dropdown user-menu show">
+            <li class="nav-item dropdown user-menu">
                 <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
-                    <img src="{% static "dist/img/avatar5.png" %} " class="user-image img-circle elevation-2"
-                         alt="Umair">
-                    <span class="d-none d-md-inline" style="color:white">Umair</span>
+                    <span class="d-none d-md-inline" style="color:black">Welcome {{request.session.UserName}}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <!-- User image -->
                     <li class="user-header" style="background-color:#3c8dbc">
-                        <img src="{% static "dist/img/avatar5.png" %} " class="img-circle elevation-2"
-                             alt="Umair">
+                        <img src="{% static 'dist\img\user2-160x160.jpg' %} " class="img-circle elevation-2"
+                             alt="{{ request.session.UserName }}"/>
 
                         <p style="color:white">
-                            {{ request.session.UserName }} - Solution Engineer
+                            {{ request.session.UserName }} - Software Engineer
                         </p>
                     </li>
                     <li class="user-footer">

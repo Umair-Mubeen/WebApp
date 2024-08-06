@@ -1,12 +1,10 @@
-from collections import defaultdict
+import json
 
-from django.shortcuts import render
-from io import StringIO
-from django.shortcuts import render, HttpResponse, redirect, HttpResponseRedirect
+from django.db.models import Count
+from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
+from .Utitlities import DesignationWiseList, getRetirementList, getZoneRetirementList, fetchAllDispositionList, getZoneWiseOfficialsList
 from .models import DispositionList
-import matplotlib.pyplot as plt
-from .Utitlities import getDispositionList, getRetirementList, getZoneRetirementList, fetchAllDispositionList
 
 
 # Create your views here.
@@ -55,7 +53,7 @@ def Dashboard(request):
         if isLoggedIn(request) is False:
             return redirect('/')
         else:
-            results = getDispositionList()
+            results = DesignationWiseList()
             employee_to_be_retired = getRetirementList()
             zone_counts = getZoneRetirementList()
             zones = list(zone_counts.keys())
@@ -67,8 +65,85 @@ def Dashboard(request):
         print(str(e))
 
 
-def DispositionList(request):
+def getDispositionList(request):
     try:
+        if isLoggedIn(request) is False:
+            return redirect('/')
+
+        disposition_result, error = fetchAllDispositionList(request)
+        if error:
+            return HttpResponse(f"An error occurred: {error}", status=500)
+        return render(request, 'DispositionList.html', {'DispositionResult': disposition_result})
+    except Exception as e:
+        return str(e)
+
+
+def Search(request):
+    try:
+        if isLoggedIn(request) is False:
+            return redirect('/')
+
+        if request.method == 'POST':
+            type = request.POST.get('type')
+            searchValue = request.POST.get('parameter')
+            if type == 'CNIC':
+                result = DispositionList.objects.filter(CNIC_No=searchValue)
+                return render(request, 'search.html', {'result': result})
+            else:
+                result = DispositionList.objects.filter(Personal_No=searchValue)
+                return render(request, 'search.html', {'result': result})
+
+        return render(request, 'search.html')
+    except Exception as e:
+        return HttpResponse(str(e))
+
+
+def Zone(request):
+    try:
+        if isLoggedIn(request) is False:
+            return redirect('/')
+
+        if request.method == 'POST':
+            searchZone = request.POST.get('Zone')
+            results = getZoneWiseOfficialsList(searchZone)
+            print(results)
+            results_list = list(results)
+            results_json = json.dumps(results_list, indent=4)
+            return render(request, 'Zone.html', {'results' : results_json, 'zone' : searchZone})
+
+        data = (DispositionList.objects
+                .filter(ZONE__in=['Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V'])
+                .values('ZONE', 'Designation')
+                .annotate(total=Count('id'))
+                .order_by('ZONE'))
+
+        # Prepare data for the template
+        zones = sorted(set(d['ZONE'] for d in data))
+        designations = sorted(set(d['Designation'] for d in data))
+
+        counts = {zone: {designation: 0 for designation in designations} for zone in zones}
+
+        for entry in data:
+            counts[entry['ZONE']][entry['Designation']] = entry['total']
+
+        context = {
+            'zones': zones,
+            'designations': designations,
+            'counts': counts,
+            'results' : '',
+            'zone' : ''
+        }
+
+        return render(request, 'Zone.html', context)
+    except Exception as e:
+        return HttpResponse(str(e))
+
+
+def TransferPosting(request):
+    try:
+        if isLoggedIn(request) is False:
+            return redirect('/')
+
         disposition_result, error = fetchAllDispositionList(request)
         if error:
             return HttpResponse(f"An error occurred: {error}", status=500)
@@ -86,8 +161,7 @@ def isLoggedIn(request):
     if request.user.is_authenticated:
         print("True Logged In")
         return True
-        # if 'UserName' not in request.session:
-        #     return False
+
     else:
         print("False Logged In")
         return False

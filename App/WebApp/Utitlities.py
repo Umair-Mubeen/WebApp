@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.core.paginator import Paginator
 from .models import DispositionList
 from django.db.models.functions import Substr
-from django.db.models import Count
+from django.db.models import Count, F
 from django.db.models.functions import Trim
 
 
@@ -21,7 +21,7 @@ def fetchAllDispositionList(request):
         return None, str(e)
 
 
-def getDispositionList():
+def DesignationWiseList():
     try:
         results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')).values(
             'trimmed_designation').annotate(total=Count('trimmed_designation'))
@@ -69,3 +69,14 @@ def getZoneRetirementList():
 
     except Exception as e:
         return str(e)
+
+
+def getZoneWiseOfficialsList(Zone):
+    try:
+        results = DispositionList.objects.filter(ZONE__in=[Zone]) \
+            .annotate(zone=Trim(F('ZONE')), designation=Trim(F('Designation'))).values("zone", "designation").annotate(
+            total=Count('id'))
+        return results
+
+    except Exception as e:
+        print(str(e))

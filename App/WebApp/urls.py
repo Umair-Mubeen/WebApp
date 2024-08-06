@@ -8,6 +8,9 @@ urlpatterns = [
     path('login', views.userLogin, name='userLogin'),
     path('Dashboard', views.Dashboard, name='Dashboard'),
     path('Logout', views.Logout, name='Logout'),
-    path('DispositionList', views.DispositionList, name='DispositionList'),
+    path('DispositionList', views.getDispositionList, name='DispositionList'),
+    path('TransferPosting', views.TransferPosting, name='TransferPosting'),
+    path('Search', views.Search, name='Search'),
+    path('Zone', views.Zone, name='Zone'),
 
 ]
