@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.core.paginator import Paginator
 from .models import DispositionList
 from django.db.models.functions import Substr
-from django.db.models import Count, F
+from django.db.models import Count, F, Case, Value, When
 from django.db.models.functions import Trim
 
 
@@ -80,3 +80,33 @@ def getZoneWiseOfficialsList(Zone):
 
     except Exception as e:
         print(str(e))
+
+
+def ZoneWiseStrength():
+    try:
+        data = (DispositionList.objects
+                .filter(ZONE__in=['Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V','CCIR','Refund Zone','IP/TFD/HRM'])
+                .values('ZONE', 'Designation')
+                .annotate(total=Count('id'))
+                .order_by('ZONE'))
+
+        # Prepare data for the template
+        zones = sorted(set(d['ZONE'] for d in data))
+        designations = sorted(set(d['Designation'] for d in data))
+
+        counts = {zone: {designation: 0 for designation in designations} for zone in zones}
+
+        for entry in data:
+            counts[entry['ZONE']][entry['Designation']] = entry['total']
+
+        context = {
+            'zones': zones,
+            'designations': designations,
+            'counts': counts,
+            'results': '',
+            'zone': ''
+        }
+        return context
+
+    except Exception as e:
+        return str(e)

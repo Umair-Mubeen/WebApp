@@ -19,11 +19,6 @@
 }
 
 
-
-
-
-
-
 </style>
 
 {% load static %}
@@ -71,6 +66,9 @@
                         <div class="col-lg-3">
                             <select name="Zone" class="form-control" id="zone">
                                 <option value="">Select Zone</option>
+                                <option value="CCIR">CCIR</option>
+                                <option value="Refund Zone">Refund Zone</option>
+                                 <option value="IP/TFD/HRM">IP / TFD/ HRM</option>
                                 <option value="Zone-I">Zone - I</option>
                                 <option value="Zone-II">Zone - II</option>
                                 <option value="Zone-III">Zone - III</option>
@@ -92,14 +90,7 @@
 
         </section>
 
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <canvas id="myChart" width="400" height="200"></canvas>
 
-                </div>
-            </div>
-        </div>
         <div class="container-fluid col-lg-12">
 
             {% if results|length > 0 %}
@@ -118,7 +109,24 @@
         </div>
         <!-- Content Wrapper. Contains page content  Ends Here -->
 
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Disposition Chart List Zone Wise Strength, Regional Tax Office -
+                                II</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="ZoneWiseCharList" width="400" height="150"></canvas>
 
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
     <!-- /.content-wrapper -->
 
@@ -180,45 +188,71 @@
         });
 
 
-
-
-
 </script>
 
-
 <script>
-        const ctx = document.getElementById('myChart').getContext('2d');
+    // Get the canvas context for Chart.js
+    const ctx = document.getElementById('ZoneWiseCharList').getContext('2d');
 
-        // Extract data from Django context
-        const zones = {{ zones|safe }};
-        const designations = {{ designations|safe }};
-        const counts = {{ counts|safe }};
+    // Extract data from Django context
+    const zones = {{ zones|safe }};
+    const designations = {{ designations|safe }};
+    const counts = {{ counts|safe }};
 
-        // Prepare data for Chart.js
-        const datasets = designations.map(designation => {
-            return {
-                label: designation,
-                data: zones.map(zone => counts[zone][designation]),
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            };
-        });
+    // Function to generate random colors for datasets
+    function generateRandomColors(count) {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+            const randomColor = `rgba(${Math.floor(Math.random() * 256)},` +
+                                `${Math.floor(Math.random() * 256)},` +
+                                `${Math.floor(Math.random() * 256)},` +
+                                '0.5)';
+            colors.push(randomColor);
+        }
+        return colors;
+    }
 
-        // Create the chart
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: zones,
-                datasets: datasets
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+    // Prepare datasets for Chart.js
+    const datasets = designations.map(designation => {
+        return {
+            label: designation,
+            data: zones.map(zone => counts[zone][designation] || 0), // Ensure no undefined values
+            backgroundColor: generateRandomColors(designations.length),
+            borderColor: generateRandomColors(designations.length),
+            borderWidth: 1
+        };
+    });
+
+    // Create the chart
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: zones,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                        }
                     }
                 }
+            },
+            scales: {
+                x: {
+                    stacked: false // Change to true for a stacked bar chart
+                },
+                y: {
+                    stacked: false, // Change to true for a stacked bar chart
+                    beginAtZero: true
+                }
             }
-        });
-
+        }
+    });
 </script>
