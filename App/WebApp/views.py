@@ -59,9 +59,13 @@ def Dashboard(request):
             zone_counts = getZoneRetirementList()
             zones = list(zone_counts.keys())
             counts = list(zone_counts.values())
-
-            return render(request, 'Dashboard.html',
-                          {'results': results, 'retired': employee_to_be_retired, 'zones': zones, 'counts': counts})
+            context = {
+                'zones' : zones,
+                'counts': counts,
+                'retired': employee_to_be_retired,
+                'results' : results
+            }
+            return render(request, 'Dashboard.html',context)
     except Exception as e:
         print(str(e))
 
