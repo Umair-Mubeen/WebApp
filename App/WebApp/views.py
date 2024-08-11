@@ -4,8 +4,8 @@ from django.db.models import Q, Count
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
 from .Utitlities import DesignationWiseList, getRetirementList, getZoneRetirementList, fetchAllDispositionList, \
-    getZoneWiseOfficialsList, ZoneWiseStrength
-from .models import DispositionList
+    getZoneWiseOfficialsList, ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison
+from .models import DispositionList,TransferPosting
 
 
 # Create your views here.
@@ -54,19 +54,24 @@ def Dashboard(request):
         if isLoggedIn(request) is False:
             return redirect('/')
         else:
+            label = "Employee yet to be Retired in the Year 2024,Regional Tax Office - II"
+            Comparison = ZoneDesignationWiseComparison()
             results = DesignationWiseList()
             employee_to_be_retired = getRetirementList()
             zone_counts = getZoneRetirementList()
             zones = list(zone_counts.keys())
             counts = list(zone_counts.values())
             context = {
-                'zones' : zones,
+                'zones': zones,
                 'counts': counts,
                 'retired': employee_to_be_retired,
-                'results' : results
+                'results': results,
+                'Comparison': Comparison,
+                'label': label,
             }
-            return render(request, 'Dashboard.html',context)
+            return render(request, 'Dashboard.html', context)
     except Exception as e:
+        return str(e)
         print(str(e))
 
 
@@ -123,17 +128,38 @@ def Zone(request):
         return HttpResponse(str(e))
 
 
-def TransferPosting(request):
+def EmployeeTransferPosting(request):
     try:
         if isLoggedIn(request) is False:
             return redirect('/')
+        if request.method == 'POST':
+            emp_name = request.POST.get('emp_name')
+            old_unit = request.POST.get('old_unit')
+            new_unit = request.POST.get('new_unit')
+            order_number = request.POST.get('order_number')
+            transfer_order_date = request.POST.get('transfer_order_date')
+            transfer_reason = request.POST.get('transfer_reason')
+            order_approved_by = request.POST.get('order_approved_by')
+            image = request.FILES['image']
+            TransferPosting(emp_name=emp_name)
+
 
         disposition_result, error = fetchAllDispositionList(request)
         if error:
             return HttpResponse(f"An error occurred: {error}", status=500)
-        return render(request, 'DispositionList.html', {'DispositionResult': disposition_result})
+        return render(request, 'TransferPosting.html', {'DispositionResult': disposition_result})
     except Exception as e:
         return str(e)
+
+
+def Strength(request):
+    try:
+        final_data = StrengthComparison()
+        Comparison = ZoneDesignationWiseComparison()
+
+        return render(request, 'strength.html', {'data': final_data, 'Comparison' : ZoneDesignationWiseComparison()})
+    except Exception as e:
+        return render(request, 'strength.html', {'error_message': str(e)})
 
 
 def Logout(request):

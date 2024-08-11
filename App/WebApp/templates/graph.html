@@ -17,26 +17,10 @@
 .main-footer {
     margin-top: auto;
 }
-
-
-
-
-
 </style>
-
-
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Employee Retirement Chart Zone Wise, Regional Tax Office - II</h3>
-    </div>
-    <div class="card-body">
-        <canvas id="retirementChart" width="200" height="80"></canvas>
-
-    </div>
-</div>
-
-
-<div class="card">
+<div class="row">
+        <div class="col-lg-6">
+                <div class="card">
     <div class="card-header">
         <h3 class="card-title">Disposition Chart List Designation Wise, Regional Tax Office - II</h3>
 
@@ -47,6 +31,27 @@
     </div>
 
 </div>
+
+
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Employee Retirement Chart Zone Wise, Regional Tax Office - II</h3>
+    </div>
+    <div class="card-body">
+        <canvas id="retirementChart" width="200" height="80"></canvas>
+
+    </div>
+</div>
+
+        </div>
+
+</div>
+
+
+
+
 
 
 
@@ -88,8 +93,8 @@
         }
 
         // Create the chart
-        const ctx = document.getElementById('designationChart').getContext('2d');
-        new Chart(ctx, {
+        const designationChart = document.getElementById('designationChart').getContext('2d');
+        new Chart(designationChart, {
             type: 'bar',
             data: data,
             options: {
@@ -133,9 +138,9 @@
     const backgroundColors = counts.map(() => getRandomColor());
 
     // Set up the chart data and configuration
-    const ctx = document.getElementById('retirementChart').getContext('2d');
+    const retirementChart = document.getElementById('retirementChart').getContext('2d');
 
-    const retirementChart = new Chart(ctx, {
+    const retirement = new Chart(retirementChart, {
         type: 'bar',
         data: {
             labels: zones,

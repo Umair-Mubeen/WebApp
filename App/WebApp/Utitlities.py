@@ -1,10 +1,12 @@
+import json
 from collections import defaultdict
-from django.http import HttpResponse
 from django.core.paginator import Paginator
 from .models import DispositionList
 from django.db.models.functions import Substr
-from django.db.models import Count, F, Case, Value, When
 from django.db.models.functions import Trim
+from django.db.models import Count, Sum, Case, When
+from django.db.models import Count, Sum, Case, When, F, Value
+from django.db.models.functions import Coalesce
 
 
 def fetchAllDispositionList(request):
@@ -107,6 +109,149 @@ def ZoneWiseStrength():
             'zone': ''
         }
         return context
-
     except Exception as e:
+        return str(e)
+
+
+def ZoneDesignationWiseComparison():
+    try:
+        aggregated_data = (DispositionList.objects
+                           .values('ZONE', 'Designation')
+                           .annotate(total=Count('id'))
+                           .values('Designation', 'ZONE', 'total')
+                           )
+
+        # Pivot the data to get totals by zone
+        pivoted_data = {}
+        for entry in aggregated_data:
+            designation = entry['Designation']
+            zone = entry['ZONE']
+            total = entry['total']
+
+            if designation not in pivoted_data:
+                pivoted_data[designation] = {'Zone-I': 0, 'Zone-II': 0, 'Zone-III': 0, 'Zone-IV': 0, 'Zone-V': 0,
+                                             'Refund Zone': 0}
+
+            pivoted_data[designation][zone] = total
+
+        # Calculate total across all zones
+        for designation, zones in pivoted_data.items():
+            total = sum(zones.values())
+            zones['Total Across All Zones'] = total
+        data_for_graph = {
+            'labels': list(pivoted_data.keys()),
+            'datasets': [
+                {
+                    'label': 'CCIR',
+                    'data': [zones.get('CCIR', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(255, 99, 132, 0.2)',
+                    'borderColor': 'rgba(255, 99, 132, 1)',
+                    'borderWidth': 1
+                },
+                {
+                    'label': 'IP/TFD/HRM',
+                    'data': [zones.get('IP/TFD/HRM', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(255, 99, 132, 0.2)',
+                    'borderColor': 'rgba(255, 99, 132, 1)',
+                    'borderWidth': 1
+                },
+
+                {
+                    'label': 'Zone-I',
+                    'data': [zones.get('Zone-I', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(255, 99, 132, 0.2)',
+                    'borderColor': 'rgba(255, 99, 132, 1)',
+                    'borderWidth': 1
+                },
+                {
+                    'label': 'Zone-II',
+                    'data': [zones.get('Zone-II', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(54, 162, 235, 0.2)',
+                    'borderColor': 'rgba(54, 162, 235, 1)',
+                    'borderWidth': 1
+                },
+                {
+                    'label': 'Zone-III',
+                    'data': [zones.get('Zone-III', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(75, 192, 192, 0.2)',
+                    'borderColor': 'rgba(75, 192, 192, 1)',
+                    'borderWidth': 1
+                },
+                {
+                    'label': 'Zone-IV',
+                    'data': [zones.get('Zone-IV', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(153, 102, 255, 0.2)',
+                    'borderColor': 'rgba(153, 102, 255, 1)',
+                    'borderWidth': 1
+                },
+                {
+                    'label': 'Zone-V',
+                    'data': [zones.get('Zone-V', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(255, 159, 64, 0.2)',
+                    'borderColor': 'rgba(255, 159, 64, 1)',
+                    'borderWidth': 1
+                },
+                {
+                    'label': 'Refund Zone',
+                    'data': [zones.get('Refund Zone', 0) for zones in pivoted_data.values()],
+                    'backgroundColor': 'rgba(255, 99, 71, 0.2)',
+                    'borderColor': 'rgba(255, 99, 71, 1)',
+                    'borderWidth': 1
+                },
+            ]
+        }
+        print(data_for_graph)
+
+        # Convert to JSON and pass to context
+        data_json = json.dumps(data_for_graph)
+        context = {
+            'data_json': data_json,
+        }
+        return context
+    except Exception as e:
+        return str(e)
+
+
+def StrengthComparison():
+    try:
+
+        base_queryset = DispositionList.objects.values('ZONE', 'Designation', 'BPS').annotate(total=Count('id'))
+        aggregated_data = defaultdict(lambda: defaultdict(int))
+
+        # Iterate over the base queryset to fill the aggregated data
+        for item in base_queryset:
+            designation = item['Designation']
+            bps = item['BPS']
+            zone = item['ZONE']
+            total = item['total']
+
+            # Aggregate the totals per zone
+            aggregated_data[(designation, bps)][zone] += total
+            # Also aggregate the total sum across all zones
+            aggregated_data[(designation, bps)]['total_sum'] += total
+
+        # Convert aggregated data to a list for easier handling in templates
+        final_data = []
+        for (designation, bps), zone_data in aggregated_data.items():
+            final_data.append({
+
+                'Designation': designation,
+                'BPS': bps,
+                'Zone_I': zone_data.get('Zone-I', 0),
+                'Zone_II': zone_data.get('Zone-II', 0),
+                'Zone_III': zone_data.get('Zone-III', 0),
+                'Zone_IV': zone_data.get('Zone-IV', 0),
+                'Zone_V': zone_data.get('Zone-V', 0),
+                'CCIR': zone_data.get('CCIR', 0),
+                'Refund_Zone': zone_data.get('Refund Zone', 0),
+                'IP_TFD_HRM': zone_data.get('IP/TFD/HRM', 0),
+                'CSO': zone_data.get('CSO', 0),
+                'Zone_I_Refund Zone': zone_data.get('Zone-I / (Refund Zone)', 0),
+                'Zone-V_CCIR': zone_data.get('Zone-V / CCIR', 0),
+                'total_sum': zone_data['total_sum']
+            })
+
+        return final_data
+    except Exception as e:
+        print(str(e))
         return str(e)

@@ -1,0 +1,257 @@
+{% load static %}
+{% include 'reusable.html' %}
+<title>RTO - II, Dashboard</title>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+    <!-- SideBar Start Here  -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here  -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#" style="color:black"><i class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                {% include 'icons.html' %}
+            </div>
+
+
+        </section>
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">{{type}}</h3>
+
+                            <div class="card-tools">
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input type="text" name="table_search" class="form-control float-right"
+                                           placeholder="Search">
+
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body table-responsive p-0" style="height:400px">
+                            <table class="table table-head-fixed text-nowrap table-hover table table-head-fixed text-nowrap">
+                                <thead>
+                                <tr>
+                                    <th>Designation</th>
+                                    <th>BPS</th>
+                                    <th>Zone-I</th>
+                                    <th>Zone-II</th>
+                                    <th>Zone-III</th>
+                                    <th>Zone-IV</th>
+                                    <th>Zone-V</th>
+                                    <th>CCIR</th>
+                                    <th>Refund Zone</th>
+                                    <th>IP/TFD/HRM</th>
+                                    <th>CSO</th>
+                                    <th>Zone-I / (Refund Zone)</th>
+                                    <th>Zone-V / CCIR</th>
+                                    <th>Total Sum</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in data %}
+                                <tr>
+
+                                    <td>{{ row.Designation }}</td>
+                                    <td>{{ row.BPS }}</td>
+                                    <td>{{ row.Zone_I }}</td>
+                                    <td>{{ row.Zone_II }}</td>
+                                    <td>{{ row.Zone_III }}</td>
+                                    <td>{{ row.Zone_IV }}</td>
+                                    <td>{{ row.Zone_V }}</td>
+                                    <td>{{ row.CCIR }}</td>
+                                    <td>{{ row.Refund_Zone }}</td>
+                                    <td>{{ row.IP_TFD_HRM }}</td>
+                                    <td>{{ row.CSO }}</td>
+                                    <td>{{ row.Zone_I_Refund_Zone }}</td>
+                                    <td>{{ row.Zone_V_CCIR }}</td>
+                                    <td>{{ row.total_sum }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+                <!-- Content Wrapper. Contains page content  Ends Here -->
+
+
+            </div>
+            <!-- /.content-wrapper -->
+
+             <div class="row">
+                  <div class="col-lg-12">
+            <div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Designation Wise Comparison Chart Group By Zones, Regional Tax Office - II</h3>
+    </div>
+    <div class="card-body">
+        <canvas id="ComparisonChart" width="200" height="50"></canvas>
+
+    </div>
+</div>
+
+        </div>
+             </div>
+        </div>
+
+
+    </div>
+    {% include 'footer.html' %}
+
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const rawData = '{{ Comparison.data_json|safe }}';
+            const parsedData = JSON.parse(rawData);
+
+            if (!parsedData || !parsedData.labels || !parsedData.datasets) {
+                throw new Error('Parsed data is incomplete or malformed.');
+            }
+
+            const ctx = document.getElementById('ComparisonChart').getContext('2d');
+
+            // Extract labels and datasets
+            const labels = parsedData.labels;
+            const datasets = parsedData.datasets;
+
+            // Create the chart
+            const myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 16, // Larger font size for legend
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return `Zone: ${tooltipItems[0].label}`;
+                                },
+                                label: function(tooltipItem) {
+                                    return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                                }
+                            },
+                            bodyFont: {
+                                size: 14
+                            },
+                            titleFont: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        datalabels: {
+                            display: true,
+                            color: '#000',
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: function(value) {
+                                return value;
+                            },
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Zones',
+                                font: {
+                                    size: 18, // Larger font size for x-axis title
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 90,
+                                minRotation: 45,
+                                font: {
+                                    size: 14 // Larger font size for x-axis labels
+                                }
+                            },
+                            barPercentage: 0.8
+                        },
+                        y: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Count',
+                                font: {
+                                    size: 18, // Larger font size for y-axis title
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                font: {
+                                    size: 14 // Larger font size for y-axis labels
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error creating chart:', error);
+        }
+    });
+</script>

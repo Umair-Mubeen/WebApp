@@ -9,8 +9,11 @@ urlpatterns = [
     path('Dashboard', views.Dashboard, name='Dashboard'),
     path('Logout', views.Logout, name='Logout'),
     path('DispositionList', views.getDispositionList, name='DispositionList'),
-    path('TransferPosting', views.TransferPosting, name='TransferPosting'),
+    path('TransferPosting', views.EmployeeTransferPosting, name='TransferPosting'),
     path('Search', views.Search, name='Search'),
     path('Zone', views.Zone, name='Zone'),
+    path('Strength', views.Strength, name='Strength'),
+
+
 
 ]

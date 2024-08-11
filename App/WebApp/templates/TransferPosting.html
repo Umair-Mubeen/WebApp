@@ -1,0 +1,136 @@
+{% load static %}
+{% include 'reusable.html' %}
+<title>RTO - II, Dashboard</title>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+    <!-- SideBar Start Here  -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here  -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#" style="color:black"><i class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                {% include 'icons.html' %}
+            </div>
+
+
+        </section>
+
+
+        <!-- Main content -->
+        <div class="container-fluid">
+
+            <form action="" id="transfer_posting" name="" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row p-2">
+
+                    <div class="col-lg-5">
+                        <div class="card collapsed-card">
+                            <div class="card-header header-elements-inline">
+
+                                <h5 class="card-title">Employee Transfer Posting</h5>
+
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
+                                            class="fas fa-minus"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-tool" data-card-widget="remove"><i
+                                            class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+
+
+                            <div class="card-body mt-0" style="display:block">
+                                <input type="hidden" name="hd_emp" value="" id="hd_emp">
+                                <div class="form-group">
+                                    <label>Employee Name </label>
+
+                                    <select class="js-example-basic-single form-control" name="emp_name">
+                                    </select>
+                                </div>
+                                <!-- /.form-group -->
+
+
+                                <div class="form-group">
+                                    <label> Previous Zone </label>
+                                <input type="text" name="old_unit" class="form-control" value="">
+
+                                </div>
+
+
+                                <div class="form-group">
+                                    <label>New Zone </label>
+                                    <input type="text" name="new_unit   " class="form-control" value="">
+                                </div>
+
+                                <div class="form-group">
+                                    <label> Order #</label>
+                                    <input type="number" name="order_number" class="form-control" value="">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Transfer Order Date</label>
+                                    <input type="date" name="transfer_order_date" class="form-control" value="">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Transfer Reason </label>
+                                    <input type="text" name="transfer_reason" class="form-control" value="">
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Order Approved By </label>
+                                    <input type="text" name="order_approved_by" class="form-control" value="">
+
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Order Image / PDF </label>
+                                    <input type="file" name="image" class="form-control" value="">
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% include 'footer.html' %}
+
+</div>
+
+</body>
+</html>
