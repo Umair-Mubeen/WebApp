@@ -1,11 +1,13 @@
 import json
+import mimetypes
 
 from django.db.models import Q, Count
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
 from .Utitlities import DesignationWiseList, getRetirementList, getZoneRetirementList, fetchAllDispositionList, \
-    getZoneWiseOfficialsList, ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison
-from .models import DispositionList,TransferPosting
+    getZoneWiseOfficialsList, ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison, \
+    getAllEmpTransferPosting
+from .models import DispositionList, TransferPosting
 
 
 # Create your views here.
@@ -72,7 +74,6 @@ def Dashboard(request):
             return render(request, 'Dashboard.html', context)
     except Exception as e:
         return str(e)
-        print(str(e))
 
 
 def getDispositionList(request):
@@ -130,8 +131,10 @@ def Zone(request):
 
 def EmployeeTransferPosting(request):
     try:
-        if isLoggedIn(request) is False:
+        if not isLoggedIn(request):
             return redirect('/')
+        data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
+
         if request.method == 'POST':
             emp_name = request.POST.get('emp_name')
             old_unit = request.POST.get('old_unit')
@@ -140,24 +143,62 @@ def EmployeeTransferPosting(request):
             transfer_order_date = request.POST.get('transfer_order_date')
             transfer_reason = request.POST.get('transfer_reason')
             order_approved_by = request.POST.get('order_approved_by')
-            image = request.FILES['image']
-            TransferPosting(emp_name=emp_name)
+            image = request.FILES.get('image')
 
+            # Check if an image or PDF file is uploaded
+            if image:
+                file_type = mimetypes.guess_type(image.name)[0]
+                if not file_type or (not file_type.startswith('image') and not file_type == 'application/pdf'):
+                    return HttpResponse("Uploaded file is not a valid image or PDF.", status=400)
+            else:
+                return HttpResponse("No file uploaded.", status=400)
 
-        disposition_result, error = fetchAllDispositionList(request)
-        if error:
-            return HttpResponse(f"An error occurred: {error}", status=500)
-        return render(request, 'TransferPosting.html', {'DispositionResult': disposition_result})
+            # Save data to the database
+            employee_id = DispositionList.objects.get(id=emp_name)
+
+            transfer_posting = TransferPosting(
+                employee=employee_id,
+                old_unit=old_unit,
+                new_unit=new_unit,
+                order_number=order_number,
+                transfer_date=transfer_order_date,
+                reason_for_transfer=transfer_reason,
+                order_approved_by=order_approved_by,
+                transfer_document=image
+            )
+            transfer_posting.save()
+
+            return render(request, 'TransferPosting.html',
+                          {'title': 'Transfer Posting !', 'icon': 'success', 'message': 'Data Inserted SuccessFully !',
+                           'data': data})
+
+        else:
+            return render(request, 'TransferPosting.html', {'data': data})
+
     except Exception as e:
-        return str(e)
+        return HttpResponse(f"An error occurred: {str(e)}", status=500)
+
+
+def ManageEmployeeTransferPosting(request):
+    try:
+        transfer_records = getAllEmpTransferPosting()
+        for item in transfer_records:
+            transfer_document = item.get('transfer_document', None)
+            if transfer_document.endswith('.pdf'):
+                item['is_pdf'] = True
+            else:
+                item['is_image'] = False
+
+        return render(request, 'ManageTransferPosting.html', {'transfer_records': transfer_records})
+
+    except Exception as e:
+        return HttpResponse(str(e))
 
 
 def Strength(request):
     try:
         final_data = StrengthComparison()
-        Comparison = ZoneDesignationWiseComparison()
-
-        return render(request, 'strength.html', {'data': final_data, 'Comparison' : ZoneDesignationWiseComparison()})
+        return render(request, 'strength.html', {'data': final_data, 'Comparison': ZoneDesignationWiseComparison()})
     except Exception as e:
         return render(request, 'strength.html', {'error_message': str(e)})
 

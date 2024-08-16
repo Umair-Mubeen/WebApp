@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 from django.core.paginator import Paginator
-from .models import DispositionList
+from .models import DispositionList, TransferPosting
 from django.db.models.functions import Substr
 from django.db.models.functions import Trim
 from django.db.models import Count, Sum, Case, When
@@ -248,10 +248,30 @@ def StrengthComparison():
                 'CSO': zone_data.get('CSO', 0),
                 'Zone_I_Refund Zone': zone_data.get('Zone-I / (Refund Zone)', 0),
                 'Zone-V_CCIR': zone_data.get('Zone-V / CCIR', 0),
-                'total_sum': zone_data['total_sum']
+                'total_sum': zone_data['total_sum'],
             })
 
         return final_data
     except Exception as e:
         print(str(e))
+        return str(e)
+
+
+def getAllEmpTransferPosting():
+    try:
+        # Query to get distinct records
+        distinct_transfers = TransferPosting.objects.select_related('employee_id').values(
+            'employee_id__id',
+            'employee_id__Name',
+            'employee_id__Designation',
+            'old_unit',
+            'new_unit',
+            'transfer_date',
+            'transfer_document',
+            'order_number'
+        )
+
+        return distinct_transfers
+        #print(distinct_transfers)
+    except Exception as e:
         return str(e)

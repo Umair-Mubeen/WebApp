@@ -1,0 +1,158 @@
+{% load static %}
+{% include 'reusable.html' %}
+<title>RTO - II, Dashboard</title>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+    <!-- SideBar Start Here  -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here  -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#" style="color:black"><i class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Employee Transfer Posting History</h3>
+
+                                        <div class="card-tools">
+                                            <div class="input-group input-group-sm" style="width: 150px;">
+                                                <input type="text" name="table_search" class="form-control float-right"
+                                                       placeholder="Search">
+
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-default">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body table-responsive p-0">
+                                        <table class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
+                                            <thead>
+                                            <tr>
+                                                <th>S#</th>
+                                                <th>Name</th>
+                                                <th>Designation</th>
+                                                <th>Previous Zone</th>
+                                                <th>New Zone</th>
+                                                <th>Transfer Date</th>
+                                                <th>Transfer Order #</th>
+
+                                                <th>Image / PDF</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for item in transfer_records %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ item.employee_id__Name }}</td>
+                                                <td>{{ item.employee_id__Designation }}</td>
+                                                <td>{{ item.old_unit }}</td>
+                                                <td>{{ item.new_unit }}</td>
+                                                <td>{{ item.transfer_date }}</td>
+                                                <td> {{ item.order_number }}</td>
+                                                <td>
+                                                    {{is_pdf}}
+                                                    {% if item.transfer_document %}
+                                                    {% if item.is_pdf %}
+                                                    <a href="media/{{item.transfer_document}}" target="_blank">
+                                                        PDF
+                                                    </a>
+                                                    {% else %}
+                                                    <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
+                                                          data-src="media/{{item.transfer_document}}">
+                                                        <a href="media/{{ item.transfer_document }}"
+                                                           data-lightgallery="item">
+                                                       Image
+                                                    </a>
+                                                    </span>
+                                                    {% endif %}
+                                                    {% else %}
+                                                    No document uploaded
+                                                    {% endif %}
+                                                </td>
+
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+                                    <!-- /.card-body -->
+
+                                </div>
+                                <!-- /.card -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+    </div>
+    <!-- Content Wrapper. Contains page content  Ends Here -->
+
+
+</div>
+<!-- /.content-wrapper -->
+
+
+{% include 'footer.html' %}
+
+
+</body>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.lightgallery').lightGallery({
+            selector: '.spnImg',
+            thumbnail: false
+
+        });
+    });
+
+
+
+</script>
+<!--<script>-->
+<!--document.addEventListener('DOMContentLoaded', function() {-->
+<!--    lightGallery(document.querySelector('table'), {-->
+<!--        selector: '[data-lightgallery="item"]',-->
+<!--        plugins: [lgThumbnail],-->
+<!--        licenseKey: 'YOUR_LICENSE_KEY' // Optional, required for some versions of LightGallery-->
+<!--    });-->
+<!--});-->
+<!--</script>-->

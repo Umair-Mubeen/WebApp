@@ -30,9 +30,11 @@ class TransferPosting(models.Model):
     employee = models.ForeignKey('DispositionList', on_delete=models.CASCADE)  # Assuming using CNIC as FK
     old_unit = models.CharField(max_length=255,blank=True)
     new_unit = models.CharField(max_length=255,blank=True)
+    order_number = models.IntegerField(default=0)
     transfer_date = models.DateField()
     reason_for_transfer = models.TextField(blank=True, null=True)
     order_approved_by = models.CharField(max_length=255)  # Person who approved the transfer
-    transfer_document = models.FileField(upload_to='transfer_documents/', blank=True, null=True)
+    transfer_document = models.FileField(upload_to='transfer_documents/', max_length=250, default=None, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
