@@ -25,6 +25,7 @@ def index(request):
 
 def userLogin(request):
     try:
+        print(isLoggedIn(request))
         if isLoggedIn(request):
             return redirect('Dashboard')
 
@@ -39,21 +40,19 @@ def userLogin(request):
                 return render(request, 'Dashboard.html',
                               {'title': 'Welcome to Dashboard !', 'icon': 'success',
                                'message': 'Login SuccessFully!'})
-
             else:
                 return render(request, 'login.html',
                               {'title': 'Invalid ', 'icon': 'error', 'message': 'Invalid Username or Password!'})
-
         else:
             render(request, 'login.html',
                    {'title': 'Invalid Method ', 'icon': 'error', 'message': 'Method shall be POST rather than GET !'})
     except Exception as e:
-        return render(request, 'login.html')
+        return HttpResponse(str(e))
 
 
 def Dashboard(request):
     try:
-        if isLoggedIn(request) is False:
+        if not isLoggedIn(request):
             return redirect('/')
         else:
             label = "Employee yet to be Retired in the Year 2024,Regional Tax Office - II"
@@ -78,7 +77,7 @@ def Dashboard(request):
 
 def getDispositionList(request):
     try:
-        if isLoggedIn(request) is False:
+        if not isLoggedIn(request):
             return redirect('/')
 
         disposition_result, error = fetchAllDispositionList(request)
@@ -91,7 +90,7 @@ def getDispositionList(request):
 
 def Search(request):
     try:
-        if isLoggedIn(request) is False:
+        if not isLoggedIn(request):
             return redirect('/')
 
         if request.method == 'POST':
@@ -111,8 +110,9 @@ def Search(request):
 
 def Zone(request):
     try:
-        if isLoggedIn(request) is False:
+        if not isLoggedIn(request):
             return redirect('/')
+
         context = ZoneWiseStrength()
         print(type(context))
         if request.method == 'POST':
@@ -181,6 +181,8 @@ def EmployeeTransferPosting(request):
 
 def ManageEmployeeTransferPosting(request):
     try:
+        if not isLoggedIn(request):
+            return redirect('/')
         transfer_records = getAllEmpTransferPosting()
         for item in transfer_records:
             transfer_document = item.get('transfer_document', None)
@@ -197,6 +199,8 @@ def ManageEmployeeTransferPosting(request):
 
 def Strength(request):
     try:
+        if not isLoggedIn(request):
+            return redirect('/')
         final_data = StrengthComparison()
         return render(request, 'strength.html', {'data': final_data, 'Comparison': ZoneDesignationWiseComparison()})
     except Exception as e:
