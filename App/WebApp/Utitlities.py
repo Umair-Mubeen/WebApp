@@ -4,9 +4,7 @@ from django.core.paginator import Paginator
 from .models import DispositionList, TransferPosting
 from django.db.models.functions import Substr
 from django.db.models.functions import Trim
-from django.db.models import Count, Sum, Case, When
-from django.db.models import Count, Sum, Case, When, F, Value
-from django.db.models.functions import Coalesce
+from django.db.models import Count, F
 
 
 def fetchAllDispositionList(request):
