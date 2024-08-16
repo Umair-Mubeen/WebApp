@@ -200,7 +200,6 @@ def ZoneDesignationWiseComparison():
                 },
             ]
         }
-        print(data_for_graph)
 
         # Convert to JSON and pass to context
         data_json = json.dumps(data_for_graph)
@@ -272,6 +271,5 @@ def getAllEmpTransferPosting():
         )
 
         return distinct_transfers
-        #print(distinct_transfers)
     except Exception as e:
         return str(e)

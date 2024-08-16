@@ -214,9 +214,9 @@ def Logout(request):
 
 def isLoggedIn(request):
     if request.user.is_authenticated:
-        print("True Logged In")
+        print(True)
         return True
 
     else:
-        print("False Logged In")
+        print(False)
         return False
