@@ -145,7 +145,6 @@
 
             // Data passed from Django view
             const data = {{ results|safe }};
-
             // Extract designations and totals
             const designations = data.map(item => item.designation);
             const totals = data.map(item => item.total);
@@ -189,7 +188,6 @@
 
 
 </script>
-
 <script>
     // Get the canvas context for Chart.js
     const ctx = document.getElementById('ZoneWiseCharList').getContext('2d');
@@ -199,29 +197,21 @@
     const designations = {{ designations|safe }};
     const counts = {{ counts|safe }};
 
-    // Function to generate random colors for datasets
-    function generateRandomColors(count) {
-        const colors = [];
-        for (let i = 0; i < count; i++) {
-            const randomColor = `rgba(${Math.floor(Math.random() * 256)},` +
-                                `${Math.floor(Math.random() * 256)},` +
-                                `${Math.floor(Math.random() * 256)},` +
-                                '0.5)';
-            colors.push(randomColor);
-        }
-        return colors;
+    // Function to generate a random color
+    function generateRandomColor() {
+        return `rgba(${Math.floor(Math.random() * 256)},` +
+               `${Math.floor(Math.random() * 256)},` +
+               `${Math.floor(Math.random() * 256)}, 0.5)`;
     }
 
     // Prepare datasets for Chart.js
-    const datasets = designations.map(designation => {
-        return {
-            label: designation,
-            data: zones.map(zone => counts[zone][designation] || 0), // Ensure no undefined values
-            backgroundColor: generateRandomColors(designations.length),
-            borderColor: generateRandomColors(designations.length),
-            borderWidth: 1
-        };
-    });
+    const datasets = designations.map(designation => ({
+        label: designation,
+        data: zones.map(zone => counts[zone][designation] || 0),
+        backgroundColor: generateRandomColor(),
+        borderColor: generateRandomColor(),
+        borderWidth: 1
+    }));
 
     // Create the chart
     new Chart(ctx, {
@@ -246,10 +236,10 @@
             },
             scales: {
                 x: {
-                    stacked: false // Change to true for a stacked bar chart
+                    stacked: false // Set to true for a stacked bar chart
                 },
                 y: {
-                    stacked: false, // Change to true for a stacked bar chart
+                    stacked: false, // Set to true for a stacked bar chart
                     beginAtZero: true
                 }
             }

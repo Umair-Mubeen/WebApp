@@ -49,8 +49,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
-
-
 <!-- LightGallery core JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery-all.min.js"></script>
 
@@ -59,3 +57,28 @@
 
 <!-- LightGallery Rotate Plugin -->
 <script src="https://cdn.jsdelivr.net/npm/lg-rotate@1.0.0/dist/lg-rotate.min.js"></script>
+
+<script>
+    // Add search functionality
+    document.getElementById('tableSearch').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#zoneTable tbody tr');
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const matches = Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(searchTerm));
+            row.style.display = matches ? '' : 'none';
+        });
+    });
+
+    // Highlight row on hover
+    document.querySelectorAll('#zoneTable tbody tr').forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f2f2f2';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+
+</script>

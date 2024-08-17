@@ -1,30 +1,29 @@
 import json
 from collections import defaultdict
 from django.core.paginator import Paginator
-from .models import DispositionList, TransferPosting
-from django.db.models.functions import Substr
-from django.db.models.functions import Trim
 from django.db.models import Count, F
+from django.db.models.functions import Substr, Trim
+from .models import DispositionList, TransferPosting
 
 
 def fetchAllDispositionList(request):
     try:
+        # Paginate results
         result = DispositionList.objects.all()
         paginator = Paginator(result, 20)
         page = request.GET.get('page')
-        print("Page", page)
-        DispositionResult = paginator.get_page(page)
-        print("Disposition List ", DispositionResult)
-        return DispositionResult, None
-
+        disposition_result = paginator.get_page(page)
+        return disposition_result, None
     except Exception as e:
         return None, str(e)
 
 
 def DesignationWiseList():
     try:
-        results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')).values(
-            'trimmed_designation').annotate(total=Count('trimmed_designation'))
+        # Annotate designations after trimming whitespace and count occurrences
+        results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')) \
+            .values('trimmed_designation') \
+            .annotate(total=Count('trimmed_designation'))
         return results
     except Exception as e:
         return str(e)
@@ -32,6 +31,7 @@ def DesignationWiseList():
 
 def getRetirementList():
     try:
+        # Extract year and month, filter for 2024 retirees, and order by month
         retirement = DispositionList.objects.annotate(
             year=Substr('Date_of_Retirement', 7, 4),
             month=Substr('Date_of_Retirement', 4, 2)
@@ -39,11 +39,12 @@ def getRetirementList():
             year='2024',
             month__in=['08', '09', '10', '11', '12']
         ).order_by('month')
-        data = retirement.values('ZONE', 'Date_of_Retirement')
-        # getZoneRetirementList(data)
 
-        employee_to_be_retired = retirement.values('Name', 'CNIC_No', 'Designation', 'BPS', 'ZONE', 'Date_of_Birth',
-                                                   'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement', 'month')
+        # Return relevant fields for employees to be retired
+        employee_to_be_retired = retirement.values(
+            'Name', 'CNIC_No', 'Designation', 'BPS', 'ZONE', 'Date_of_Birth',
+            'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement', 'month'
+        )
         return employee_to_be_retired
     except Exception as e:
         return str(e)
@@ -51,6 +52,7 @@ def getRetirementList():
 
 def getZoneRetirementList():
     try:
+        # Group retirements by zone and count them
         retirement = DispositionList.objects.annotate(
             year=Substr('Date_of_Retirement', 7, 4),
             month=Substr('Date_of_Retirement', 4, 2)
@@ -58,44 +60,44 @@ def getZoneRetirementList():
             year='2024',
             month__in=['08', '09', '10', '11', '12']
         ).order_by('ZONE')
-        data = retirement.values('ZONE', 'Date_of_Retirement')
 
-        # Prepare data for Chart.js
         zone_counts = defaultdict(int)
-        for item in data:
+        for item in retirement.values('ZONE'):
             zone_counts[item['ZONE']] += 1
 
         return zone_counts
-
     except Exception as e:
         return str(e)
 
 
-def getZoneWiseOfficialsList(Zone):
+def getZoneWiseOfficialsList(zone):
     try:
-        results = DispositionList.objects.filter(ZONE__in=[Zone]) \
-            .annotate(zone=Trim(F('ZONE')), designation=Trim(F('Designation'))).values("zone", "designation").annotate(
-            total=Count('id'))
-        return results
+        # Trim fields and count officials by zone and designation
+        results = DispositionList.objects.filter(ZONE__in=[zone]) \
+            .annotate(zone=Trim(F('ZONE')), designation=Trim(F('Designation'))) \
+            .values("zone", "designation").annotate(total=Count('id'))
+        results_list = list(results)
+        results_json = json.dumps(results_list, indent=4)
 
+        return results_json
     except Exception as e:
-        print(str(e))
+        return str(e)
 
 
 def ZoneWiseStrength():
     try:
-        data = (DispositionList.objects
-                .filter(ZONE__in=['Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V','CCIR','Refund Zone','IP/TFD/HRM'])
-                .values('ZONE', 'Designation')
-                .annotate(total=Count('id'))
-                .order_by('ZONE'))
+        # Filter by zones and aggregate by zone and designation
+        data = DispositionList.objects.filter(
+            ZONE__in=['Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'CCIR', 'Refund Zone', 'IP/TFD/HRM']
+        ).values('ZONE', 'Designation').annotate(total=Count('id')).order_by('ZONE')
 
-        # Prepare data for the template
         zones = sorted(set(d['ZONE'] for d in data))
         designations = sorted(set(d['Designation'] for d in data))
 
+        # Initialize counts dictionary with zeros
         counts = {zone: {designation: 0 for designation in designations} for zone in zones}
 
+        # Populate the counts dictionary
         for entry in data:
             counts[entry['ZONE']][entry['Designation']] = entry['total']
 
@@ -103,8 +105,6 @@ def ZoneWiseStrength():
             'zones': zones,
             'designations': designations,
             'counts': counts,
-            'results': '',
-            'zone': ''
         }
         return context
     except Exception as e:
@@ -113,125 +113,54 @@ def ZoneWiseStrength():
 
 def ZoneDesignationWiseComparison():
     try:
-        aggregated_data = (DispositionList.objects
-                           .values('ZONE', 'Designation')
-                           .annotate(total=Count('id'))
-                           .values('Designation', 'ZONE', 'total')
-                           )
+        # Aggregate counts by zone and designation
+        aggregated_data = DispositionList.objects.values('ZONE', 'Designation') \
+            .annotate(total=Count('id')).values('Designation', 'ZONE', 'total')
 
-        # Pivot the data to get totals by zone
-        pivoted_data = {}
+        # Pivot the data to organize it by zones
+        pivoted_data = defaultdict(lambda: defaultdict(int))
         for entry in aggregated_data:
             designation = entry['Designation']
             zone = entry['ZONE']
-            total = entry['total']
+            pivoted_data[designation][zone] = entry['total']
 
-            if designation not in pivoted_data:
-                pivoted_data[designation] = {'Zone-I': 0, 'Zone-II': 0, 'Zone-III': 0, 'Zone-IV': 0, 'Zone-V': 0,
-                                             'Refund Zone': 0}
+        # Prepare data for Chart.js
+        labels = list(pivoted_data.keys())
+        datasets = []
+        colors = ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(75, 192, 192, 0.2)',
+                  'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 99, 71, 0.2)']
+        zones = ['CCIR', 'IP/TFD/HRM', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'Refund Zone']
 
-            pivoted_data[designation][zone] = total
+        for i, zone in enumerate(zones):
+            datasets.append({
+                'label': zone,
+                'data': [pivoted_data[designation].get(zone, 0) for designation in labels],
+                'backgroundColor': colors[i % len(colors)],
+                'borderColor': colors[i % len(colors)].replace('0.2', '1'),
+                'borderWidth': 1
+            })
 
-        # Calculate total across all zones
-        for designation, zones in pivoted_data.items():
-            total = sum(zones.values())
-            zones['Total Across All Zones'] = total
-        data_for_graph = {
-            'labels': list(pivoted_data.keys()),
-            'datasets': [
-                {
-                    'label': 'CCIR',
-                    'data': [zones.get('CCIR', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(255, 99, 132, 0.2)',
-                    'borderColor': 'rgba(255, 99, 132, 1)',
-                    'borderWidth': 1
-                },
-                {
-                    'label': 'IP/TFD/HRM',
-                    'data': [zones.get('IP/TFD/HRM', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(255, 99, 132, 0.2)',
-                    'borderColor': 'rgba(255, 99, 132, 1)',
-                    'borderWidth': 1
-                },
-
-                {
-                    'label': 'Zone-I',
-                    'data': [zones.get('Zone-I', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(255, 99, 132, 0.2)',
-                    'borderColor': 'rgba(255, 99, 132, 1)',
-                    'borderWidth': 1
-                },
-                {
-                    'label': 'Zone-II',
-                    'data': [zones.get('Zone-II', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(54, 162, 235, 0.2)',
-                    'borderColor': 'rgba(54, 162, 235, 1)',
-                    'borderWidth': 1
-                },
-                {
-                    'label': 'Zone-III',
-                    'data': [zones.get('Zone-III', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(75, 192, 192, 0.2)',
-                    'borderColor': 'rgba(75, 192, 192, 1)',
-                    'borderWidth': 1
-                },
-                {
-                    'label': 'Zone-IV',
-                    'data': [zones.get('Zone-IV', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(153, 102, 255, 0.2)',
-                    'borderColor': 'rgba(153, 102, 255, 1)',
-                    'borderWidth': 1
-                },
-                {
-                    'label': 'Zone-V',
-                    'data': [zones.get('Zone-V', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(255, 159, 64, 0.2)',
-                    'borderColor': 'rgba(255, 159, 64, 1)',
-                    'borderWidth': 1
-                },
-                {
-                    'label': 'Refund Zone',
-                    'data': [zones.get('Refund Zone', 0) for zones in pivoted_data.values()],
-                    'backgroundColor': 'rgba(255, 99, 71, 0.2)',
-                    'borderColor': 'rgba(255, 99, 71, 1)',
-                    'borderWidth': 1
-                },
-            ]
-        }
-
-        # Convert to JSON and pass to context
-        data_json = json.dumps(data_for_graph)
-        context = {
-            'data_json': data_json,
-        }
-        return context
+        data_json = json.dumps({'labels': labels, 'datasets': datasets})
+        return {'data_json': data_json}
     except Exception as e:
         return str(e)
 
 
 def StrengthComparison():
     try:
-
+        # Aggregate counts by zone, designation, and BPS
         base_queryset = DispositionList.objects.values('ZONE', 'Designation', 'BPS').annotate(total=Count('id'))
-        aggregated_data = defaultdict(lambda: defaultdict(int))
 
-        # Iterate over the base queryset to fill the aggregated data
+        aggregated_data = defaultdict(lambda: defaultdict(int))
         for item in base_queryset:
             designation = item['Designation']
             bps = item['BPS']
             zone = item['ZONE']
-            total = item['total']
+            aggregated_data[(designation, bps)][zone] = item['total']
 
-            # Aggregate the totals per zone
-            aggregated_data[(designation, bps)][zone] += total
-            # Also aggregate the total sum across all zones
-            aggregated_data[(designation, bps)]['total_sum'] += total
-
-        # Convert aggregated data to a list for easier handling in templates
-        final_data = []
-        for (designation, bps), zone_data in aggregated_data.items():
-            final_data.append({
-
+        # Convert aggregated data to a list
+        final_data = [
+            {
                 'Designation': designation,
                 'BPS': bps,
                 'Zone_I': zone_data.get('Zone-I', 0),
@@ -242,32 +171,30 @@ def StrengthComparison():
                 'CCIR': zone_data.get('CCIR', 0),
                 'Refund_Zone': zone_data.get('Refund Zone', 0),
                 'IP_TFD_HRM': zone_data.get('IP/TFD/HRM', 0),
-                'CSO': zone_data.get('CSO', 0),
-                'Zone_I_Refund Zone': zone_data.get('Zone-I / (Refund Zone)', 0),
-                'Zone-V_CCIR': zone_data.get('Zone-V / CCIR', 0),
-                'total_sum': zone_data['total_sum'],
-            })
+                'total_sum': sum(zone_data.values()),
+            }
+            for (designation, bps), zone_data in aggregated_data.items()
+        ]
 
         return final_data
     except Exception as e:
-        print(str(e))
         return str(e)
 
 
 def getAllEmpTransferPosting():
     try:
-        # Query to get distinct records
-        distinct_transfers = TransferPosting.objects.select_related('employee_id').values(
-            'employee_id__id',
-            'employee_id__Name',
-            'employee_id__Designation',
+        # Use select_related to optimize foreign key access and avoid additional queries
+        distinct_transfers = TransferPosting.objects.select_related('employee').values(
+            'employee__id',
+            'employee__Name',
+            'employee__Designation',
+            'employee__BPS',
             'old_unit',
             'new_unit',
             'transfer_date',
             'transfer_document',
             'order_number'
         )
-
         return distinct_transfers
     except Exception as e:
         return str(e)

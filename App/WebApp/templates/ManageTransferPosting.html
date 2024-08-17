@@ -45,7 +45,7 @@
 
                                         <div class="card-tools">
                                             <div class="input-group input-group-sm" style="width: 150px;">
-                                                <input type="text" name="table_search" class="form-control float-right"
+                                                <input id="tableSearch" type="text" name="table_search" class="form-control float-right"
                                                        placeholder="Search">
 
                                                 <div class="input-group-append">
@@ -58,11 +58,12 @@
                                     </div>
                                     <!-- /.card-header -->
                                     <div class="card-body table-responsive p-0">
-                                        <table class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
+                                        <table id="zoneTable" class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
                                             <thead>
                                             <tr>
                                                 <th>S#</th>
                                                 <th>Name</th>
+                                                <th>BPS</th>
                                                 <th>Designation</th>
                                                 <th>Previous Zone</th>
                                                 <th>New Zone</th>
@@ -76,8 +77,9 @@
                                             {% for item in transfer_records %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <td>{{ item.employee_id__Name }}</td>
-                                                <td>{{ item.employee_id__Designation }}</td>
+                                                <td>{{ item.employee__Name }}</td>
+                                                <td>{{ item.employee__Designation }}</td>
+                                                <td> {{ item.employee__BPS }}</td>
                                                 <td>{{ item.old_unit }}</td>
                                                 <td>{{ item.new_unit }}</td>
                                                 <td>{{ item.transfer_date }}</td>
