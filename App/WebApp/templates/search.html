@@ -39,18 +39,22 @@
                 <form action="Search" method="POST">
                     {% csrf_token %}
                     <div class="row">
-                        <div class="col-lg-3">
-                            <select name="type" class="form-control">
-                                <option value="CNIC">CNIC</option>
-                                <option value="Personnel">Personnel</option>
+                        <div class="col-lg-4">
+                            <input type="hidden" name="hd_id" value="{{id}}" id="hd_id">
+                            <select name="emp_name" class="form-control" id="emp_name">
+                                <!--                                <option value="CNIC">CNIC</option>-->
+                                <!--                                <option value="Personnel">Personnel</option>-->
+                                {% for item in data %}
+                                <option value="{{item.id}}">{{item.Name}} ({{item.Designation}})</option>
+                                {% endfor %}
 
                             </select>
                         </div>
 
-                        <div class="col-lg-3">
-                            <input type="text" name="parameter" class="form-control"
-                                   placeholder="Enter CNIC or Personnel # "/>
-                        </div>
+                        <!--                        <div class="col-lg-3">-->
+                        <!--                            <input type="text" name="parameter" class="form-control"-->
+                        <!--                                   placeholder="Enter CNIC or Personnel # "/>-->
+                        <!--                        </div>-->
                         <div class="col-lg-3">
                             <input type="submit" name="submit" class="form-control btn btn-primary" value="Search"/>
                         </div>
@@ -82,3 +86,11 @@
 </div>
 
 </body>
+<script>
+$(document).ready(function () {
+   var hd_id = document.getElementById('hd_id').value; // Get the hidden input value
+   $('#emp_name').val(hd_id).trigger('change'); // Set the selected value and trigger select2 to update
+   $("select").select2(); // Initialize select2
+});
+
+</script>

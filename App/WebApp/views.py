@@ -101,13 +101,22 @@ def getDispositionList(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def Search(request):
     try:
+        data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'CNIC_No', 'Date_of_Birth',
+                                              'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement')
+
         if request.method == 'POST':
-            search_type = request.POST.get('type')
-            search_value = request.POST.get('parameter')
-            filter_args = {'CNIC_No': search_value} if search_type == 'CNIC' else {'Personal_No': search_value}
-            result = DispositionList.objects.filter(**filter_args)
-            return render(request, 'search.html', {'result': result})
-        return render(request, 'search.html')
+            # search_type = request.POST.get('type')
+            search_value = request.POST.get('emp_name')
+            # filter_args = {'CNIC_No': search_value} if search_type == 'CNIC' else {'Personal_No': search_value}
+            # result = DispositionList.objects.filter(id=search_value)
+            result = DispositionList.objects.get(id=search_value)
+            context = {
+                'result': result,
+                'data': data,
+                'id': search_value
+            }
+            return render(request, 'search.html', context)
+        return render(request, 'search.html', {'data': data})
     except Exception as e:
         logger.error(f"Error in Search view: {e}")
         return HttpResponse("An error occurred.", status=500)
@@ -264,9 +273,9 @@ def submitLeaveApplication(request):
             )
             context = {
                 'data': data,
-                'message' : 'Your leave application has been submitted successfully.',
-                'title' : 'Leave Application',
-                'icon' : 'success'
+                'message': 'Your leave application has been submitted successfully.',
+                'title': 'Leave Application',
+                'icon': 'success'
             }
             return render(request, 'LeaveApplication.html', context)
         else:

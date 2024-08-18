@@ -215,7 +215,6 @@ def getAllEmpLeaveApplication():
             'reason',
             'leave_document'
         )
-        print(leave_application)
         return leave_application
     except Exception as e:
         return str(e)

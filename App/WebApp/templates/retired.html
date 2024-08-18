@@ -34,19 +34,34 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for result in retired %}
-                    <tr data-toggle="tooltip" title="Name: {{ result.Name }}, Zone: {{ result.ZONE }}">
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ result.Name }}</td>
-                        <td>{{ result.CNIC_No }}</td>
-                        <td>{{ result.Designation }}</td>
-                        <td>{{ result.BPS }}</td>
-                        <td>{{ result.ZONE }}</td>
-                        <td>{{ result.Date_of_Birth }}</td>
-                        <td>{{ result.Date_of_Entry_into_Govt_Service }}</td>
-                        <td>{{ result.Date_of_Retirement }}</td>
-                    </tr>
-                    {% endfor %}
+                    {% if type == 'Employee Details' %}
+                        <tr data-toggle="tooltip" title="Name: {{ retired.Name }}, Zone: {{ retired.ZONE }}">
+                            <td>{{ retired.id }}</td>
+                            <td>{{ retired.Name }}</td>
+                            <td>{{ retired.CNIC_No }}</td>
+                            <td>{{ retired.Designation }}</td>
+                            <td>{{ retired.BPS }}</td>
+                            <td>{{ retired.ZONE }}</td>
+                            <td>{{ retired.Date_of_Birth }}</td>
+                            <td>{{ retired.Date_of_Entry_into_Govt_Service }}</td>
+                            <td>{{ retired.Date_of_Retirement }}</td>
+                        </tr>
+
+                    {% else %}
+                        {% for result in retired %}
+                            <tr data-toggle="tooltip" title="Name: {{ result.Name }}, Zone: {{ result.ZONE }}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ result.Name }}</td>
+                                <td>{{ result.CNIC_No }}</td>
+                                <td>{{ result.Designation }}</td>
+                                <td>{{ result.BPS }}</td>
+                                <td>{{ result.ZONE }}</td>
+                                <td>{{ result.Date_of_Birth }}</td>
+                                <td>{{ result.Date_of_Entry_into_Govt_Service }}</td>
+                                <td>{{ result.Date_of_Retirement }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
                     </tbody>
                 </table>
             </div>
