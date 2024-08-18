@@ -11,11 +11,14 @@ urlpatterns = [
     path('Dashboard', views.Dashboard, name='Dashboard'),
     path('Logout', views.Logout, name='Logout'),
     path('DispositionList', views.getDispositionList, name='DispositionList'),
-    path('TransferPosting', views.EmployeeTransferPosting, name='TransferPosting'),
     path('Search', views.Search, name='Search'),
     path('Zone', views.Zone, name='Zone'),
     path('Strength', views.Strength, name='Strength'),
-    path('ManageTransferPosting', views.ManageEmployeeTransferPosting, name='ManageTransferPosting')
+    path('TransferPosting', views.EmployeeTransferPosting, name='TransferPosting'),
+    path('ManageTransferPosting', views.ManageEmployeeTransferPosting, name='ManageTransferPosting'),
+    path('LeaveApplication',views.submitLeaveApplication, name='submitLeaveApplication'),
+    path('ManageLeaveApplication',views.ManageEmployeeLeaveApplication, name='ManageLeaveApplication')
+
 
 ]
 if settings.DEBUG:

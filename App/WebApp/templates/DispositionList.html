@@ -29,7 +29,8 @@
                     </div><!-- /.col -->
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i class="fa fa-home"></i></a>
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a>
                             </li>
                             <li class="breadcrumb-item active">Disposition List</li>
                         </ol>
@@ -104,27 +105,33 @@
 
                             </div>
                             <!-- /.card -->
-                         <ul class="pagination float-right">
-        {% if DispositionResult.has_previous %}
-        <li class="paginate_button page-item previous">
-            <a href="?page={{ DispositionResult.previous_page_number }}" aria-controls="example2" data-dt-idx="0" tabindex="0" class="page-link">Previous</a>
-        </li>
-        {% else %}
-        <li class="paginate_button page-item previous disabled" id="example2_previous">
-            <a href="#" aria-controls="example2" data-dt-idx="0" tabindex="0" class="page-link">Previous</a>
-        </li>
-        {% endif %}
+                            <ul class="pagination float-right">
+                                {% if DispositionResult.has_previous %}
+                                <li class="paginate_button page-item previous">
+                                    <a href="?page={{ DispositionResult.previous_page_number }}"
+                                       aria-controls="example2" data-dt-idx="0" tabindex="0"
+                                       class="page-link">Previous</a>
+                                </li>
+                                {% else %}
+                                <li class="paginate_button page-item previous disabled" id="example2_previous">
+                                    <a href="#" aria-controls="example2" data-dt-idx="0" tabindex="0" class="page-link">Previous</a>
+                                </li>
+                                {% endif %}
 
-        {% if DispositionResult.has_next %}
-        <li class="paginate_button page-item next">
-            <a href="?page={{ DispositionResult.next_page_number }}" aria-controls="example2" data-dt-idx="{{ DispositionResult.next_page_number }}" tabindex="0" class="page-link">Next</a>
-        </li>
-        {% else %}
-        <li class="paginate_button page-item next disabled" id="example2_next">
-            <a href="#" aria-controls="example2" data-dt-idx="{{ DispositionResult.next_page_number }}" tabindex="0" class="page-link">Next</a>
-        </li>
-        {% endif %}
-    </ul>
+                                {% if DispositionResult.has_next %}
+                                <li class="paginate_button page-item next">
+                                    <a href="?page={{ DispositionResult.next_page_number }}" aria-controls="example2"
+                                       data-dt-idx="{{ DispositionResult.next_page_number }}" tabindex="0"
+                                       class="page-link">Next</a>
+                                </li>
+                                {% else %}
+                                <li class="paginate_button page-item next disabled" id="example2_next">
+                                    <a href="#" aria-controls="example2"
+                                       data-dt-idx="{{ DispositionResult.next_page_number }}" tabindex="0"
+                                       class="page-link">Next</a>
+                                </li>
+                                {% endif %}
+                            </ul>
 
                         </div>
                     </div>

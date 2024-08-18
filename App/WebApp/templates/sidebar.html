@@ -5,7 +5,7 @@
         <img src="{% static 'dist/img/user2-160x160.jpg' %}" alt="{{ request.session.UserName }}"
              class="brand-image img-circle elevation-3"
              style="opacity: .8">
-        <span class="brand-text font-weight-light">RTO - II,  App </span>
+        <span class="brand-text font-weight-light">Regional Tax Office - II </span>
     </a>
 
     <!-- Sidebar -->
@@ -13,19 +13,59 @@
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2" alt="{{ request.session.UserName }}">
+                <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2"
+                     alt="{{ request.session.UserName }}">
             </div>
             <div class="info">
                 <a href="#" class="d-block">{{ request.session.UserName }}</a>
             </div>
         </div>
 
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
-        <!-- Sidebar Menu -->
-        <nav class="mt-2">
+            <!-- Sidebar Menu -->
+            <nav class="mt-2">
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <p>
+                            Leave
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="display: none;">
+                        <li class="nav-item">
+                            <a href="/LeaveApplication" class="nav-link"> Create Leave</a>
+                        </li>
 
-        </nav>
-        <!-- /.sidebar-menu -->
+                        <li class="nav-item">
+                            <a href="/ManageLeaveApplication" class="nav-link"> Manage Leave</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <p>
+                            Transfer
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview" style="display: none;">
+                        <li class="nav-item">
+                            <a href="/TransferPosting" class="nav-link"> Create Transfer</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/ManageTransferPosting" class="nav-link"> Manage Transfer</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+            </nav>
+            <!-- /.sidebar-menu -->
+        </ul>
     </div>
+
     <!-- /.sidebar -->
 </aside>

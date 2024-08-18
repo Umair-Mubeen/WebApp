@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.core.paginator import Paginator
 from django.db.models import Count, F
 from django.db.models.functions import Substr, Trim
-from .models import DispositionList, TransferPosting
+from .models import DispositionList, TransferPosting,LeaveApplication
 
 
 def fetchAllDispositionList(request):
@@ -196,5 +196,26 @@ def getAllEmpTransferPosting():
             'order_number'
         )
         return distinct_transfers
+    except Exception as e:
+        return str(e)
+
+
+def getAllEmpLeaveApplication():
+    try:
+        # Use select_related to optimize foreign key access and avoid additional queries
+        leave_application = LeaveApplication.objects.select_related('employee').values(
+            'employee__id',
+            'employee__Name',
+            'employee__Designation',
+            'employee__BPS',
+            'leave_type',
+            'leave_start_date',
+            'leave_end_date',
+            'days_granted',
+            'reason',
+            'leave_document'
+        )
+        print(leave_application)
+        return leave_application
     except Exception as e:
         return str(e)

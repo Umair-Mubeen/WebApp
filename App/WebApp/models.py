@@ -38,3 +38,17 @@ class TransferPosting(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
+class LeaveApplication(models.Model):
+    LEAVE_TYPES = [
+        ('Casual Leave', 'Casual Leave'),
+        ('Earned Leave', 'Earned Leave'),
+        ('Ex-Pakistan Leave', 'Ex-Pakistan Leave')
+    ]
+    employee = models.ForeignKey('DispositionList', on_delete=models.CASCADE)  # Assuming using CNIC as FK
+    leave_type = models.CharField(max_length=50, choices=LEAVE_TYPES)
+    leave_start_date = models.DateField()
+    leave_end_date = models.DateField()
+    leave_document = models.FileField(upload_to='leave_documents/', null=True,blank=True)  # Field for leave application
+    reason = models.TextField()
+    days_granted = models.PositiveIntegerField(default=0)  # Field for number of days granted

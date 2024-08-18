@@ -41,11 +41,12 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h3 class="card-title">Employee Transfer Posting History</h3>
+                                        <h3 class="card-title">Employee Leave Application History</h3>
 
                                         <div class="card-tools">
                                             <div class="input-group input-group-sm" style="width: 150px;">
-                                                <input id="tableSearch" type="text" name="table_search" class="form-control float-right"
+                                                <input id="tableSearch" type="text" name="table_search"
+                                                       class="form-control float-right"
                                                        placeholder="Search">
 
                                                 <div class="input-group-append">
@@ -58,43 +59,46 @@
                                     </div>
                                     <!-- /.card-header -->
                                     <div class="card-body table-responsive p-0">
-                                        <table id="zoneTable" class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
+                                        <table id="zoneTable"
+                                               class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
                                             <thead>
                                             <tr>
                                                 <th>S#</th>
                                                 <th>Name</th>
                                                 <th>BPS</th>
                                                 <th>Designation</th>
-                                                <th>Previous Zone</th>
-                                                <th>New Zone</th>
-                                                <th>Transfer Date</th>
-                                                <th>Transfer Order #</th>
-
+                                                <th>Leave Type</th>
+                                                <th>Leave Start Date</th>
+                                                <th>Leave End Date</th>
+                                                <th>Days Granted</th>
+                                                <th>Leave Reason</th>
                                                 <th>Image / PDF</th>
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for item in transfer_records %}
+                                            {% for item in leave_application %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>{{ item.employee__Name }}</td>
                                                 <td>{{ item.employee__Designation }}</td>
                                                 <td> {{ item.employee__BPS }}</td>
-                                                <td>{{ item.old_unit }}</td>
-                                                <td>{{ item.new_unit }}</td>
-                                                <td>{{ item.transfer_date}}</td>
-                                                <td> {{ item.order_number }}</td>
+                                                <td>{{ item.leave_type }}</td>
+                                                <td>{{ item.leave_start_date }}</td>
+                                                <td>{{ item.leave_end_date}}</td>
+                                                <td> {{ item.days_granted }}</td>
+                                                <td> {{ item.reason }}</td>
+
                                                 <td>
                                                     {{is_pdf}}
-                                                    {% if item.transfer_document %}
+                                                    {% if item.leave_document %}
                                                     {% if item.is_pdf %}
-                                                    <a href="media/{{item.transfer_document}}" target="_blank">
+                                                    <a href="media/{{item.leave_document}}" target="_blank">
                                                         PDF
                                                     </a>
                                                     {% else %}
-                                                    <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
-                                                          data-src="media/{{item.transfer_document}}">
-                                                        <a href="media/{{ item.transfer_document }}"
+                                                    <span class="spnImg" data-sub-html="{{ item.employee__Name }}"
+                                                          data-src="media/{{item.leave_document}}">
+                                                        <a href="media/{{ item.leave_document }}"
                                                            data-lightgallery="item">
                                                        Image
                                                     </a>
@@ -145,7 +149,5 @@
 
         });
     });
-
-
-
 </script>
+
