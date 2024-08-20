@@ -45,7 +45,7 @@
                                 <!--                                <option value="CNIC">CNIC</option>-->
                                 <!--                                <option value="Personnel">Personnel</option>-->
                                 {% for item in data %}
-                                <option value="{{item.id}}">{{item.Name}} ({{item.Designation}})</option>
+                                <option value="{{item.id}}">{{item.Name}} ({{item.Designation}}) - {{item.ZONE}}</option>
                                 {% endfor %}
 
                             </select>
@@ -71,6 +71,12 @@
         <div class="container-fluid col-lg-12">
             {% if result %}
             {% include 'retired.html' with retired=result type='Employee Details' %}
+            {% endif %}
+        </div>
+
+        <div class="container-fluid col-lg-12">
+            {% if leave_application %}
+            {% include 'viewHistory.html' with leave_application=leave_application transfer_records=transfer_records %}
             {% endif %}
         </div>
     </div>

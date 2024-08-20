@@ -66,9 +66,9 @@
 
                 <form action="LeaveApplication" id="LeaveApplication" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div class="row p-2">
+                    <div class="row">
 
-                        <div class="col-lg-5">
+                        <div class="col-lg-8">
                             <div class="card collapsed-card">
                                 <div class="card-header header-elements-inline">
 
@@ -84,7 +84,7 @@
                                 </div>
 
 
-                                <div class="card-body mt-0" style="display:block">
+                                <div class="card-body" style="display:block">
                                     <input type="hidden" name="hd_emp" value="" id="hd_emp">
                                     <div class="form-group">
                                         <label>Employee Name </label>
@@ -167,18 +167,18 @@
 
 
 <script>
-{% if message %}
-Swal.fire({
-    title: "{{ title }}",
-    text: "{{ message }}",
-    icon: "{{ icon }}",
-    didOpen: () => {
-        setTimeout(() => {
-            // Initialize Select2 here
-            $('.js-example-basic-single').select2();
-        }, 100);
-    }
-});
-{% endif %}
+    {% if message %}
+    Swal.fire({
+        title: "{{ title }}",
+        text: "{{ message }}",
+        icon: "{{ icon }}",
+        didOpen: () => {
+            setTimeout(() => {
+                // Initialize Select2 here
+                $('.js-example-basic-single').select2();
+            }, 100);
+        }
+    });
+    {% endif %}
 
 </script>

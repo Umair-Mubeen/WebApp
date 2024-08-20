@@ -107,13 +107,19 @@ def Search(request):
         if request.method == 'POST':
             # search_type = request.POST.get('type')
             search_value = request.POST.get('emp_name')
+
+            leave_application = LeaveApplication.objects.filter(employee_id=search_value).select_related('employee')
+            transfer_records = TransferPosting.objects.filter(employee_id=search_value).select_related('employee')
             # filter_args = {'CNIC_No': search_value} if search_type == 'CNIC' else {'Personal_No': search_value}
             # result = DispositionList.objects.filter(id=search_value)
             result = DispositionList.objects.get(id=search_value)
+
             context = {
                 'result': result,
                 'data': data,
-                'id': search_value
+                'id': search_value,
+                'leave_application' : leave_application,
+                'transfer_records' : transfer_records
             }
             return render(request, 'search.html', context)
         return render(request, 'search.html', {'data': data})

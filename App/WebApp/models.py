@@ -24,6 +24,8 @@ class DispositionList(models.Model):
     Total = models.CharField(max_length=255, null=True, blank=True)
     Email_Address = models.CharField(max_length=255, null=True, blank=True)
     Remarks = models.CharField(max_length=255, null=True, blank=True)
+    additional_charge = models.CharField(max_length=255, null=True, blank=True)
+    additional_charge_lro = models.CharField(max_length=255, null=True, blank=True)
 
 
 class TransferPosting(models.Model):

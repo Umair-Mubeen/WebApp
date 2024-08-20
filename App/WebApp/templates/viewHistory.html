@@ -1,0 +1,182 @@
+<div class="row">
+    <div class="col-12">
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Employee Leave Application Details</h3>
+
+                <div class="card-tools">
+                    <div class="input-group input-group-sm" style="width: 150px;">
+                        <input type="text" id="LeaveSearch" class="form-control float-right"
+                               placeholder="Search">
+
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-default">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body table-responsive p-0">
+                <table id="LeaveTable"
+                       class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
+                    <thead>
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Leave Start Date</th>
+                        <th>Leave End Date</th>
+                        <th>Days Granted</th>
+                        <th>Leave Reason</th>
+                        <th>Image / PDF</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in leave_application %}
+                    <tr>
+                        <td>{{ item.leave_type }}</td>
+                        <td>{{ item.leave_start_date }}</td>
+                        <td>{{ item.leave_end_date}}</td>
+                        <td> {{ item.days_granted }}</td>
+                        <td> {{ item.reason }}</td>
+
+                        <td>
+                            {{is_pdf}}
+                            {% if item.leave_document %}
+                            {% if item.is_pdf %}
+                            <a href="media/{{item.leave_document}}" target="_blank">
+                                PDF
+                            </a>
+                            {% else %}
+                            <span class="spnImg" data-sub-html="{{ item.employee__Name }}"
+                                  data-src="media/{{item.leave_document}}">
+                                                        <a href="media/{{ item.leave_document }}"
+                                                           data-lightgallery="item">
+                                                       Image
+                                                    </a>
+                                                    </span>
+                            {% endif %}
+                            {% else %}
+                            No document uploaded
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+        <div class="card-header">
+            <div class="card-tools">
+                <div class="input-group input-group-sm" style="width: 150px;">
+                    <input id='transferSearch' type="text" class="form-control float-right"
+                           placeholder="Search">
+
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-default">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="card-title">Employee Transfer / Posting Application Details</h3>
+
+        </div>
+
+        <div class="card-body table-responsive p-0">
+            <table id="transferTable"
+                   class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery zoneTable">
+                <thead>
+                <tr>
+                    <th>Previous Zone</th>
+                    <th>New Zone</th>
+                    <th>Transfer Date</th>
+                    <th>Transfer Order #</th>
+
+                    <th>Image / PDF</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in transfer_records %}
+                <tr>
+                    <td>{{ item.old_unit }}</td>
+                    <td>{{ item.new_unit }}</td>
+                    <td>{{ item.transfer_date}}</td>
+                    <td> {{ item.order_number }}</td>
+                    <td>
+                        {{is_pdf}}
+                        {% if item.transfer_document %}
+                        {% if item.is_pdf %}
+                        <a href="media/{{item.transfer_document}}" target="_blank">
+                            PDF
+                        </a>
+                        {% else %}
+                        <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
+                              data-src="media/{{item.transfer_document}}">
+                                                        <a href="media/{{ item.transfer_document }}"
+                                                           data-lightgallery="item">
+                                                       Image
+                                                    </a>
+                                                    </span>
+                        {% endif %}
+                        {% else %}
+                        No document uploaded
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+    </div>
+
+
+<script>
+    function setupTableSearchAndHighlight(inputId, tableId) {
+        // Search functionality
+        document.getElementById(inputId).addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll(`${tableId} tbody tr`);
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const matches = Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(searchTerm));
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+
+        // Highlight row on hover
+        document.querySelectorAll(`${tableId} tbody tr`).forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = '#f2f2f2';
+            });
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+    }
+
+    // Setup for Leave Table
+    setupTableSearchAndHighlight('LeaveSearch', '#LeaveTable');
+
+    // Setup for Transfer Table
+    setupTableSearchAndHighlight('transferSearch', '#transferTable');
+</script>
