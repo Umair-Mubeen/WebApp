@@ -3,14 +3,18 @@ from collections import defaultdict
 from django.core.paginator import Paginator
 from django.db.models import Count, F
 from django.db.models.functions import Substr, Trim
-from .models import DispositionList, TransferPosting,LeaveApplication
+from .models import DispositionList, TransferPosting, LeaveApplication
 
 
 def fetchAllDispositionList(request):
     try:
         # Paginate results
-        result = DispositionList.objects.all()
-        paginator = Paginator(result, 20)
+        if request.user.is_superuser == 2:
+            result = DispositionList.objects.filter(ZONE=request.user.userType)
+        else:
+            result = DispositionList.objects.all()
+
+        paginator = Paginator(result, 10)
         page = request.GET.get('page')
         disposition_result = paginator.get_page(page)
         return disposition_result, None
@@ -18,27 +22,43 @@ def fetchAllDispositionList(request):
         return None, str(e)
 
 
-def DesignationWiseList():
+def DesignationWiseList(zone, request):
     try:
         # Annotate designations after trimming whitespace and count occurrences
-        results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')) \
-            .values('trimmed_designation') \
-            .annotate(total=Count('trimmed_designation'))
+        if request.user.userType == 'admin':
+            results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')) \
+                .values('trimmed_designation') \
+                .annotate(total=Count('trimmed_designation'))
+        else:
+            results = DispositionList.objects.filter(ZONE=zone). \
+                annotate(trimmed_designation=Trim('Designation')).values('trimmed_designation') \
+                .annotate(total=Count('trimmed_designation'))
         return results
     except Exception as e:
         return str(e)
 
 
-def getRetirementList():
+def getRetirementList(zone, request):
     try:
         # Extract year and month, filter for 2024 retirees, and order by month
-        retirement = DispositionList.objects.annotate(
-            year=Substr('Date_of_Retirement', 7, 4),
-            month=Substr('Date_of_Retirement', 4, 2)
-        ).filter(
-            year='2024',
-            month__in=['08', '09', '10', '11', '12']
-        ).order_by('month')
+        if request.user.userType == 'admin':
+
+            retirement = DispositionList.objects.annotate(
+                year=Substr('Date_of_Retirement', 7, 4),
+                month=Substr('Date_of_Retirement', 4, 2)
+            ).filter(
+                year='2024',
+                month__in=['08', '09', '10', '11', '12'],
+            ).order_by('month')
+        else:
+            retirement = DispositionList.objects.annotate(
+                year=Substr('Date_of_Retirement', 7, 4),
+                month=Substr('Date_of_Retirement', 4, 2)
+            ).filter(
+                year='2024',
+                month__in=['08', '09', '10', '11', '12'],
+                ZONE=zone
+            ).order_by('month')
 
         # Return relevant fields for employees to be retired
         employee_to_be_retired = retirement.values(
@@ -50,16 +70,27 @@ def getRetirementList():
         return str(e)
 
 
-def getZoneRetirementList():
+def getZoneRetirementList(zone, request):
     try:
         # Group retirements by zone and count them
-        retirement = DispositionList.objects.annotate(
-            year=Substr('Date_of_Retirement', 7, 4),
-            month=Substr('Date_of_Retirement', 4, 2)
-        ).filter(
-            year='2024',
-            month__in=['08', '09', '10', '11', '12']
-        ).order_by('ZONE')
+        if request.user.userType == 'admin':
+            retirement = DispositionList.objects.annotate(
+                year=Substr('Date_of_Retirement', 7, 4),
+                month=Substr('Date_of_Retirement', 4, 2)
+            ).filter(
+                year='2024',
+                month__in=['08', '09', '10', '11', '12'],
+            ).order_by('ZONE')
+
+        else:
+            retirement = DispositionList.objects.annotate(
+                year=Substr('Date_of_Retirement', 7, 4),
+                month=Substr('Date_of_Retirement', 4, 2)
+            ).filter(
+                year='2024',
+                month__in=['08', '09', '10', '11', '12'],
+                ZONE=zone
+            ).order_by('ZONE')
 
         zone_counts = defaultdict(int)
         for item in retirement.values('ZONE'):
@@ -146,11 +177,54 @@ def ZoneDesignationWiseComparison():
         return str(e)
 
 
-def StrengthComparison():
+#
+# def StrengthComparison():
+#     try:
+#         # Aggregate counts by zone, designation, and BPS
+#         base_queryset = DispositionList.objects.values('ZONE', 'Designation', 'BPS').annotate(total=Count('id'))
+#
+#         aggregated_data = defaultdict(lambda: defaultdict(int))
+#         for item in base_queryset:
+#             designation = item['Designation']
+#             bps = item['BPS']
+#             zone = item['ZONE']
+#             aggregated_data[(designation, bps)][zone] = item['total']
+#
+#         # Convert aggregated data to a list
+#         final_data = [
+#             {
+#                 'Designation': designation,
+#                 'BPS': bps,
+#                 'Zone_I': zone_data.get('Zone-I', 0),
+#                 'Zone_II': zone_data.get('Zone-II', 0),
+#                 'Zone_III': zone_data.get('Zone-III', 0),
+#                 'Zone_IV': zone_data.get('Zone-IV', 0),
+#                 'Zone_V': zone_data.get('Zone-V', 0),
+#                 'CCIR': zone_data.get('CCIR', 0),
+#                 'Refund_Zone': zone_data.get('Refund Zone', 0),
+#                 'IP_TFD_HRM': zone_data.get('IP/TFD/HRM', 0),
+#                 'total_sum': sum(zone_data.values()),
+#             }
+#             for (designation, bps), zone_data in aggregated_data.items()
+#         ]
+#
+#         return final_data
+#     except Exception as e:
+#         return str(e)
+
+def StrengthComparison(userType, user_zone=None):
     try:
-        # Aggregate counts by zone, designation, and BPS
+        # Base queryset with aggregation
         base_queryset = DispositionList.objects.values('ZONE', 'Designation', 'BPS').annotate(total=Count('id'))
 
+        # Filter based on userType
+        if userType == 2:  # Employee
+            if user_zone:  # Ensure user_zone is provided
+                base_queryset = base_queryset.filter(ZONE=user_zone)
+            else:
+                return "Error: Zone information is missing for the employee."
+
+        # Aggregate data
         aggregated_data = defaultdict(lambda: defaultdict(int))
         for item in base_queryset:
             designation = item['Designation']
@@ -176,25 +250,40 @@ def StrengthComparison():
             for (designation, bps), zone_data in aggregated_data.items()
         ]
 
+        print(final_data)
         return final_data
+
     except Exception as e:
         return str(e)
 
 
-def getAllEmpTransferPosting():
+def getAllEmpTransferPosting(userType, zoneType):
     try:
-        # Use select_related to optimize foreign key access and avoid additional queries
-        distinct_transfers = TransferPosting.objects.select_related('employee').values(
+        # Apply filter based on userType
+        filters = {}
+        if userType == 2:  # Employee
+            filters['zone_type'] = zoneType
+        # Execute the query
+        distinct_transfers = TransferPosting.objects.select_related('employee').filter(
+            **filters
+        ).values(
             'employee__id',
             'employee__Name',
             'employee__Designation',
             'employee__BPS',
+            'id',
+            'old_zone',
+            'new_zone',
             'old_unit',
             'new_unit',
-            'transfer_date',
-            'transfer_document',
-            'order_number'
+            'chief_order_number',
+            'chief_transfer_date',
+            'chief_transfer_document',
+            'zone_range',
+            'zone_transfer_document',
+            'zone_order_number'
         )
+
         return distinct_transfers
     except Exception as e:
         return str(e)
@@ -202,6 +291,7 @@ def getAllEmpTransferPosting():
 
 def getAllEmpLeaveApplication():
     try:
+
         # Use select_related to optimize foreign key access and avoid additional queries
         leave_application = LeaveApplication.objects.select_related('employee').values(
             'employee__id',

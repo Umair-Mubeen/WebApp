@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 import os
@@ -81,7 +80,7 @@ WSGI_APPLICATION = 'App.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'admin',
+        'NAME': 'irisdb',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',
@@ -126,6 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+AUTH_USER_MODEL = 'WebApp.CustomUser'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

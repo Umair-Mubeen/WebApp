@@ -21,21 +21,25 @@
             <li class="nav-item">
                 <a href="/Dashboard" class="nav-link"> Home</a>
             </li>
-            <!--            <li class="nav-item">-->
-            <!--                <a href="/DispositionList" class="nav-link"> Disposition List</a>-->
-            <!--            </li>-->
+                        <li class="nav-item">
+                            <a href="/DispositionList" class="nav-link"> Disposition List</a>
+                        </li>
 
-            <li class="nav-item">
-                <a href="/Zone" class="nav-link"> Zone </a>
-            </li>
+            {% if request.user.is_superuser == 1 %}
+                    <li class="nav-item">
+                        <a href="/Zone" class="nav-link"> Zone </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="/Strength" class="nav-link"> Strength</a>
+                    </li>
+
+            {% endif %}
 
             <li class="nav-item">
                 <a href="/Search" class="nav-link"> Search</a>
             </li>
 
-            <li class="nav-item">
-                <a href="/Strength" class="nav-link"> Strength</a>
-            </li>
 
 
 

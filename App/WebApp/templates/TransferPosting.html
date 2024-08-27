@@ -26,6 +26,10 @@
 
 
 
+
+
+
+
 </style>
 
 {% load static %}
@@ -88,11 +92,15 @@
 
 
                                 <div class="card-body mt-0" style="display:block">
-                                    <input type="hidden" name="hd_emp" value="" id="hd_emp">
-                                    <div class="form-group">
-                                        <label>Employee Name </label>
+                                    <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
+                                    <input type="hidden" name="hd_rowId" value="{{rowId}}" id="rowId">
+                                    <input type="hidden" name="hd_type" value="{{type}}" id="hd_type">
 
-                                        <select class="js-example-basic-single form-control" name="emp_name">
+                                    <div class="form-group">
+                                        <label>Employee Name {{emp_id }} </label>
+
+                                        <select class="js-example-basic-single form-control" name="emp_name"
+                                                id="emp_name">
                                             {% for item in data %}
                                             <option value="{{item.id}}">{{item.Name}} - ({{item.Designation}}) -
                                                 {{item.ZONE}}
@@ -102,38 +110,89 @@
                                     </div>
                                     <!-- /.form-group -->
 
-
+                                    {% if request.user.is_superuser == 1 %}
                                     <div class="form-group">
-                                        <label> Previous Zone </label>
-                                        <input type="text" name="old_unit" class="form-control">
+                                        <label> Current Zone </label>
+                                        <select name="old_zone" class="form-control">
+                                            <option value="CCIR">CCIR</option>
+                                            <option value="Zone-I">Zone-I</option>
+                                            <option value="Zone-II">Zone-II</option>
+                                            <option value="Zone-III">Zone-III</option>
+                                            <option value="Zone-IV">Zone-Iv</option>
+                                            <option value="Zone-V">Zone-V</option>
+
+                                        </select>
 
                                     </div>
 
 
                                     <div class="form-group">
                                         <label>New Zone </label>
-                                        <input type="text" name="new_unit" class="form-control">
+                                        <select name="new_zone" class="form-control">
+                                            <option value="CCIR">CCIR</option>
+
+                                            <option value="Zone-I">Zone-I</option>
+                                            <option value="Zone-II">Zone-II</option>
+                                            <option value="Zone-III">Zone-III</option>
+                                            <option value="Zone-IV">Zone-Iv</option>
+                                            <option value="Zone-V">Zone-V</option>
+
+                                        </select>
+
+                                    </div>
+
+                                    {% endif %}
+
+                                    {% if request.user.is_superuser == 2 %}
+                                    <div class="form-group">
+                                        <label> Current Unit </label>
+                                        <input type="text" name="zone_prev_unit" class="form-control"
+                                               value="{{row.zone_current_unit}}">
+
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label>New Unit </label>
+                                        <input type="text" name="zone_new_unit" class="form-control"
+                                               value="{{row.zone_new_unit}}">
                                     </div>
 
                                     <div class="form-group">
+                                        <label>Select Range </label>
+                                        <select name="range" class="form-control">
+                                            <option value="A"> Range - A</option>
+                                            <option value="B"> Range - B</option>
+
+                                        </select>
+                                    </div>
+
+                                    {% endif %}
+
+
+                                    <div class="form-group">
                                         <label> Order #</label>
-                                        <input type="number" name="order_number" class="form-control">
+                                        <input type="number" name="order_number" class="form-control"
+                                               value="{{row.zone_order_number}}">
                                     </div>
 
                                     <div class="form-group">
                                         <label>Transfer Order Date</label>
-                                        <input type="date" name="transfer_order_date" class="form-control">
+                                        <input type="date" name="transfer_order_date" class="form-control"
+                                               value="{{ row.zone_transfer_date|date:'Y-m-d' }}">
                                     </div>
 
                                     <div class="form-group">
                                         <label>Transfer Reason </label>
-                                        <input type="text" name="transfer_reason" class="form-control">
+                                        <input type="text" name="transfer_reason" class="form-control"
+                                               value="{{row.zone_transfer_reason}}">
 
                                     </div>
 
                                     <div class="form-group">
                                         <label>Order Approved By </label>
-                                        <input type="text" name="order_approved_by" class="form-control">
+                                        <input type="text" name="order_approved_by" class="form-control"
+                                               value="{{row.zone_order_approved_by}}">
 
                                     </div>
 
@@ -171,6 +230,26 @@
 
 </body>
 <script>
+    $(document).ready(function () {
+    var hd_emp = document.getElementById('hd_emp').value; // Get the hidden input value
+
+    // Set the selected value and trigger select2 to update
+    $('#emp_name').val(hd_emp).trigger('change');
+
+    // Disable the select element
+    if(hd_emp !=''){
+    }
+
+    // Initialize select2
+    $('.js-example-basic-single').select2();
+});
+
+
+
+
+</script>
+
+<script>
 {% if message %}
 Swal.fire({
     title: "{{ title }}",
@@ -184,4 +263,10 @@ Swal.fire({
     }
 });
 {% endif %}
+
+
+
+
 </script>
+
+

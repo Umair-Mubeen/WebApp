@@ -45,7 +45,8 @@
 
                                         <div class="card-tools">
                                             <div class="input-group input-group-sm" style="width: 150px;">
-                                                <input id="tableSearch" type="text" name="table_search" class="form-control float-right"
+                                                <input id="tableSearch" type="text" name="table_search"
+                                                       class="form-control float-right"
                                                        placeholder="Search">
 
                                                 <div class="input-group-append">
@@ -58,19 +59,31 @@
                                     </div>
                                     <!-- /.card-header -->
                                     <div class="card-body table-responsive p-0">
-                                        <table id="zoneTable" class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
+                                        <table id="zoneTable"
+                                               class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
                                             <thead>
                                             <tr>
                                                 <th>S#</th>
                                                 <th>Name</th>
                                                 <th>BPS</th>
                                                 <th>Designation</th>
-                                                <th>Previous Zone</th>
+                                                {% if request.user.is_superuser == 1 %}
+                                                <th>Prev Zone</th>
                                                 <th>New Zone</th>
-                                                <th>Transfer Date</th>
-                                                <th>Transfer Order #</th>
+                                                <th>CCIR Order #</th>
+                                                <th>CCIR Order</th>
+                                                <th>Doc</th>
+                                                {% endif %}
 
-                                                <th>Image / PDF</th>
+                                                <th>Prev Unit</th>
+                                                <th>New Unit</th>
+                                                <th>Range</th>
+                                                <th>Transfer Date</th>
+                                                <th>Zone Order #</th>
+
+                                                <th>Zone Order</th>
+                                                <th>Actions</th>
+
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -80,30 +93,60 @@
                                                 <td>{{ item.employee__Name }}</td>
                                                 <td>{{ item.employee__Designation }}</td>
                                                 <td> {{ item.employee__BPS }}</td>
+                                               {% if request.user.is_superuser == 1 %}
+                                                    <td>{{ item.old_zone }}</td>
+                                                    <td>{{ item.new_zone }}</td>
+                                                    <td> {{ item.chief_order_number }}</td>
+                                                    <td>{{ item.chief_transfer_date}}</td>
+                                                    <td>
+                                                        {{is_pdf}}
+                                                        {% if item.chief_transfer_document %}
+                                                        {% if item.is_pdf %}
+                                                        <a href="media/{{item.chief_transfer_document}}" target="_blank">
+                                                            PDF
+                                                        </a>
+                                                        {% else %}
+                                                        <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
+                                                              data-src="media/{{item.chief_transfer_document}}">
+                                                            <a href="media/{{ item.chief_transfer_document }}"
+                                                               data-lightgallery="item">
+                                                           Image
+                                                        </a>
+                                                        </span>
+                                                        {% endif %}
+                                                        {% else %}
+                                                        {% endif %}
+                                                    </td>
+                                               {% endif %}
+
                                                 <td>{{ item.old_unit }}</td>
                                                 <td>{{ item.new_unit }}</td>
-                                                <td>{{ item.transfer_date}}</td>
-                                                <td> {{ item.order_number }}</td>
+                                                <td>{{ item.zone_range}}</td>
+                                                <td>{{ item.zone_transfer_date}}</td>
+                                                <td>{{item.zone_order_number}}</td>
                                                 <td>
                                                     {{is_pdf}}
-                                                    {% if item.transfer_document %}
+                                                    {% if item.zone_transfer_document %}
                                                     {% if item.is_pdf %}
-                                                    <a href="media/{{item.transfer_document}}" target="_blank">
+                                                    <a href="media/{{item.zone_transfer_document}}" target="_blank">
                                                         PDF
                                                     </a>
                                                     {% else %}
                                                     <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
-                                                          data-src="media/{{item.transfer_document}}">
-                                                        <a href="media/{{ item.transfer_document }}"
+                                                          data-src="media/{{item.zone_transfer_document}}">
+                                                        <a href="media/{{ item.zone_transfer_document }}"
                                                            data-lightgallery="item">
                                                        Image
                                                     </a>
                                                     </span>
                                                     {% endif %}
                                                     {% else %}
-                                                    No document uploaded
                                                     {% endif %}
                                                 </td>
+
+                                                <td>
+                                                    <a href="TransferPosting?rowId={{item.id}}&empId={{item.employee__id}}&userType={{request.user.is_superuser}}&type=edit"
+                                                       style="color:black"><i class="fa fa-edit"></i> </a></td>
 
                                             </tr>
                                             {% endfor %}
