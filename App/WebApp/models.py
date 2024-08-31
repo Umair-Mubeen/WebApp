@@ -3,6 +3,9 @@ from django.db import models
 
 
 # Create your models here.
+from django.utils import timezone
+
+
 class DispositionList(models.Model):
     Name = models.CharField(max_length=255, null=True, blank=True)
     Designation = models.CharField(max_length=255, null=True, blank=True)
@@ -51,7 +54,6 @@ class TransferPosting(models.Model):
     zone_transfer_document = models.FileField(upload_to='transfer_documents/', max_length=250, default=None,
                                               null=True)  #
     zone_type = models.CharField(max_length=255, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -70,6 +72,9 @@ class LeaveApplication(models.Model):
                                       blank=True)  # Field for leave application
     reason = models.TextField()
     days_granted = models.PositiveIntegerField(default=0)  # Field for number of days granted
+    zone_type = models.CharField(max_length=255, null=True)
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class CustomUser(AbstractUser):

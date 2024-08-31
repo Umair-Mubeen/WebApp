@@ -1,4 +1,4 @@
-<style>
+<style xmlns="http://www.w3.org/1999/html">
     html, body {
     height: 100%;
     margin: 0;
@@ -22,6 +22,8 @@
 .swal2-container .select2-container {
     display: none !important;
 }
+
+
 
 
 
@@ -59,7 +61,16 @@
                             <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
                                     class="fa fa-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item active">Transfer</li>
+                            <li class="breadcrumb-item active">
+                                <a href="/ManageTransferPosting" style="color:black">
+                                    Manage Posting </a>
+                            </li>
+                            {% if empId %}
+                            <li class="breadcrumb-item">Edit</li>
+                            {% else %}
+                            <li class="breadcrumb-item">Create</li>
+                            {% endif %}
+
                         </ol>
                     </div><!-- /.col -->
                 </div><!-- /.row -->
@@ -238,11 +249,15 @@
 
     // Disable the select element
     if(hd_emp !=''){
+        $('#emp_name').val(hd_emp).prop('disabled', true);
+
     }
 
     // Initialize select2
     $('.js-example-basic-single').select2();
 });
+
+
 
 
 
@@ -263,6 +278,8 @@ Swal.fire({
     }
 });
 {% endif %}
+
+
 
 
 

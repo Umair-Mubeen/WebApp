@@ -1,9 +1,13 @@
 import json
+import logging
 from collections import defaultdict
 from django.core.paginator import Paginator
-from django.db.models import Count, F
+from django.db.models import Count, F, When, BooleanField
 from django.db.models.functions import Substr, Trim
+from django.db.models import Case, When, BooleanField, F
+
 from .models import DispositionList, TransferPosting, LeaveApplication
+logger = logging.getLogger(__name__)
 
 
 def fetchAllDispositionList(request):
@@ -259,11 +263,10 @@ def StrengthComparison(userType, user_zone=None):
 
 def getAllEmpTransferPosting(userType, zoneType):
     try:
-        # Apply filter based on userType
         filters = {}
         if userType == 2:  # Employee
             filters['zone_type'] = zoneType
-        # Execute the query
+
         distinct_transfers = TransferPosting.objects.select_related('employee').filter(
             **filters
         ).values(
@@ -281,12 +284,22 @@ def getAllEmpTransferPosting(userType, zoneType):
             'chief_transfer_document',
             'zone_range',
             'zone_transfer_document',
-            'zone_order_number'
+            'zone_order_number',
+            'zone_transfer_date',
+            'zone_type'
+        ).annotate(
+            zone_changed=Case(
+                When(old_zone=F('new_zone'), then=False),
+                default=True,
+                output_field=BooleanField()
+            )
         )
 
         return distinct_transfers
+
     except Exception as e:
-        return str(e)
+        logger.error(f"Error in getAllEmpTransferPosting: {e}")
+        return []  # Return an empty list on error
 
 
 def getAllEmpLeaveApplication():

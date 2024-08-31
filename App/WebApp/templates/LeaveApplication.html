@@ -22,6 +22,9 @@
     display: none !important;
 }
 
+
+
+
 </style>
 
 {% load static %}
@@ -52,7 +55,10 @@
                             <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
                                     class="fa fa-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item active">Transfer</li>
+                            <li class="breadcrumb-item active"><a href="/ManageLeaveApplication" style="color:black">Manage
+                                Leave </a></li>
+
+                            <li class="breadcrumb-item active">Leave Application</li>
                         </ol>
                     </div><!-- /.col -->
                 </div><!-- /.row -->
@@ -89,7 +95,10 @@
                                     <div class="form-group">
                                         <label>Employee Name </label>
 
-                                        <select class="js-example-basic-single form-control" name="emp_name">
+                                        <select class="js-example-basic-single form-control" name="emp_name"
+                                                id="emp_name">
+                                            <option value="" selected disabled>Select an employee</option>
+
                                             {% for item in data %}
                                             <option value="{{item.id}}">{{item.Name}} - ({{item.Designation}}) -
                                                 {{item.ZONE}}
@@ -146,6 +155,45 @@
 
                             </div>
                         </div>
+
+                        <!-- Leave Information Table -->
+                        <div class="col-lg-7">
+                            <div class="card" style="display: none;" id="leaveInfo">
+                                <div class="card-header header-elements-inline">
+
+                                    <h5 class="card-title">Employee Leave Application History</h5>
+
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
+                                                class="fas fa-minus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-tool" data-card-widget="remove"><i
+                                                class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="empId" id="empId" value="{{empId}}">
+
+                                <div class="card-body">
+                                    <table class="table table-bordered card-body">
+                                        <thead>
+                                        <tr>
+                                            <th>Casual Leave</th>
+                                            <th>Earned Leave</th>
+                                            <th>Ex-Pakistan Leave</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td id="casualLeave">0</td>
+                                            <td id="earnedLeave">0</td>
+                                            <td id="exPakistanLeave">0</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </form>
 
@@ -164,21 +212,77 @@
 </div>
 
 </body>
-
-
 <script>
-    {% if message %}
-    Swal.fire({
-        title: "{{ title }}",
-        text: "{{ message }}",
-        icon: "{{ icon }}",
-        didOpen: () => {
-            setTimeout(() => {
-                // Initialize Select2 here
-                $('.js-example-basic-single').select2();
-            }, 100);
-        }
+    $(document).ready(function() {
+        // Initialize Select2 on page load
+        initializeSelect2();
+
+        // Attach the change event handler for employee selection
+        $('#emp_name').change(function() {
+            fetchEmployeeLeaveData($(this).val());
+        });
+
+        // If a message is passed, display it using Swal
+        {% if message %}
+        displayAlert("{{ title }}", "{{ message }}", "{{ icon }}");
+        {% endif %}
     });
-    {% endif %}
+
+    // Function to initialize Select2
+    function initializeSelect2() {
+        $('.js-example-basic-single').select2();
+    }
+
+    // Function to fetch employee leave data based on selected employee
+    function fetchEmployeeLeaveData(empId) {
+        if (empId) {
+            $.ajax({
+                url: '/get_employee_leave_data/' + empId + '/',
+                method: 'GET',
+                success: function(data) {
+                    updateLeaveInfo(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("An error occurred while fetching leave data:", status, error);
+                }
+            });
+        } else {
+            $('#leaveInfo').hide(); // Hide the table if no employee is selected
+        }
+    }
+
+    // Function to update leave information in the DOM
+    function updateLeaveInfo(data) {
+        // Check if data exists and update the table
+        if (data) {
+            $('#casualLeave').text(data.casual_leave || "N/A");
+            $('#earnedLeave').text(data.earned_leave || "N/A");
+            $('#exPakistanLeave').text(data.ex_pakistan_leave || "N/A");
+            $('#leaveInfo').show(); // Show the table with updated data
+        } else {
+            console.warn("No data received.");
+            $('#leaveInfo').hide(); // Hide the table if no data is received
+        }
+    }
+
+    // Function to display an alert using SweetAlert
+    function displayAlert(title, message, icon) {
+        Swal.fire({
+            title: title,
+            text: message,
+            icon: icon,
+            didOpen: () => {
+                setTimeout(() => {
+                    // Re-initialize Select2 after the alert is shown
+                    initializeSelect2();
+                }, 1000);
+            }
+        });
+
+    var hd_emp = document.getElementById('empId').value; // Get the hidden input value
+    // Set the selected value and trigger select2 to update
+    $('#emp_name').val(hd_emp).trigger('change');
+
+    }
 
 </script>

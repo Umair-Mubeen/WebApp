@@ -17,8 +17,8 @@ urlpatterns = [
     path('TransferPosting', views.EmployeeTransferPosting, name='TransferPosting'),
     path('ManageTransferPosting', views.ManageEmployeeTransferPosting, name='ManageTransferPosting'),
     path('LeaveApplication',views.submitLeaveApplication, name='submitLeaveApplication'),
-    path('ManageLeaveApplication',views.ManageEmployeeLeaveApplication, name='ManageLeaveApplication')
-
+    path('ManageLeaveApplication',views.ManageEmployeeLeaveApplication, name='ManageLeaveApplication'),
+    path('get_employee_leave_data/<int:emp_id>/', views.get_employee_leave_data, name='get_employee_leave_data'),
 
 ]
 if settings.DEBUG:

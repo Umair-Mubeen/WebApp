@@ -2,6 +2,7 @@ from datetime import datetime
 import mimetypes
 import logging
 from django.db.models import Sum
+from django.http import JsonResponse
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -152,8 +153,8 @@ def EmployeeTransferPosting(request):
     try:
         empId = request.GET.get('empId', '')
         rowId = request.GET.get('rowId', '')
-        opType = request.GET.get('type','')
-
+        opType = request.GET.get('type', '')
+        userType = request.GET.get('userType', '')
         # Determine if the user is an admin or zone admin and filter data accordingly
         if request.user.is_superuser == 1:
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
@@ -163,16 +164,22 @@ def EmployeeTransferPosting(request):
 
         # fetch row from database zone admin in case of edit record
         if empId and rowId:
+            employee = DispositionList.objects.get(id=empId)
             postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId, zone_type=request.user.userType)
+            if postingRow.zone_type == employee.ZONE:
+                zones_match = True
+            else:
+                zones_match = False
+            if postingRow:
+                row = {
+                    'zone_current_unit': postingRow.old_unit or '',
+                    'zone_new_unit': postingRow.new_unit or '',
+                    'zone_order_number': postingRow.zone_order_number or '',
+                    'zone_transfer_date': postingRow.zone_transfer_date or '',
+                    'zone_transfer_reason': postingRow.zone_reason_for_transfer or '',
+                    'zone_order_approved_by': postingRow.zone_order_approved_by or ''
 
-            row = {
-                'zone_current_unit': postingRow.old_unit or '',
-                'zone_new_unit': postingRow.new_unit or '',
-                'zone_order_number': postingRow.zone_order_number or '',
-                'zone_transfer_date': postingRow.zone_transfer_date or '',
-                'zone_transfer_reason': postingRow.zone_reason_for_transfer or '',
-                'zone_order_approved_by': postingRow.zone_order_approved_by or ''
-            }   # # f
+                }  # # f
         else:
             # Handle the case where both empId and rowId are None
             row = {
@@ -182,6 +189,7 @@ def EmployeeTransferPosting(request):
                 'zone_transfer_date': '',
                 'zone_transfer_reason': '',
                 'zone_order_approved_by': ''
+
             }
             # You can add additional logic here, like logging an error or returning a response
 
@@ -202,7 +210,7 @@ def EmployeeTransferPosting(request):
             # Retrieve the employee object
             employee = DispositionList.objects.get(id=emp_name)
 
-            if request.user.is_superuser == 1:
+            if request.user.is_superuser == 1:  # ccir will create record
                 print('admin create record')
                 # Handling for superuser (admin)
                 new_zone = request.POST.get('new_zone')
@@ -220,10 +228,11 @@ def EmployeeTransferPosting(request):
                     chief_transfer_document=image,
                     zone_type=new_zone
                 )
-            elif request.user.is_superuser == 2 and hd_type and hd_rowId:
+            elif request.user.is_superuser == 2 and hd_type and hd_rowId:  # after CCIR ZOne will assigned Unit
                 print("editing zone record employees")
                 # Handling for zone admin
-                transfer_posting = TransferPosting.objects.get(employee=employee)
+                transfer_posting = TransferPosting.objects.get(employee=employee, zone_type=request.user.userType,
+                                                               id=hd_rowId)
                 transfer_posting.old_unit = request.POST.get('zone_prev_unit')
                 transfer_posting.new_unit = request.POST.get('zone_new_unit')
                 transfer_posting.zone_range = request.POST.get('range')
@@ -239,8 +248,12 @@ def EmployeeTransferPosting(request):
                 transfer_posting.zone_order_approved_by = request.POST.get('order_approved_by')
                 transfer_posting.zone_transfer_document = image
 
-            else:  # in case no emp Id and row Id
+            else:  # in case no emp Id and row Id creating transfer posting by zone,Internally Posting Employee by ZONE
                 print('create transfer posting')
+                # Fetch the latest TransferPosting record for this employee if it's an internal transfer
+                emp_zone = DispositionList.objects.filter(id=emp_name).first()
+                print(emp_zone.ZONE)
+                previous_transfer = TransferPosting.objects.filter(employee=employee).order_by('-created_at').first()
                 transfer_posting = TransferPosting(
                     employee=employee,
                     old_unit=request.POST.get('zone_prev_unit'),
@@ -251,7 +264,15 @@ def EmployeeTransferPosting(request):
                     zone_reason_for_transfer=request.POST.get('transfer_reason'),
                     zone_order_approved_by=request.POST.get('order_approved_by'),
                     zone_transfer_document=image,
-                    zone_type=request.user.userType
+                    zone_type=request.user.userType,
+                    old_zone=emp_zone.ZONE if previous_transfer else '-',
+                    new_zone=emp_zone.ZONE if previous_transfer else '-',
+                    chief_order_number=previous_transfer.chief_order_number if previous_transfer else 0,
+                    chief_transfer_date=previous_transfer.chief_transfer_date if previous_transfer else None,
+                    chief_reason_for_transfer=previous_transfer.chief_reason_for_transfer if previous_transfer else '',
+                    chief_order_approved_by=previous_transfer.chief_order_approved_by if previous_transfer else '',
+                    chief_transfer_document=previous_transfer.chief_transfer_document if previous_transfer else '',
+
                 )
 
             transfer_posting.save()
@@ -264,17 +285,17 @@ def EmployeeTransferPosting(request):
             })
 
         return render(request, 'TransferPosting.html',
-                      {'data': data, 'empId': empId, 'row' : row, 'rowId' : rowId, 'type' : opType})
+                      {'data': data, 'empId': empId, 'row': row, 'rowId': rowId, 'type': opType})
     except Exception as e:
         logger.error(f"Error in EmployeeTransferPosting view: {e}")
         return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
 
-@login_required(login_url='userLogin')  # redirect when user is not logged in
+@login_required(login_url='userLogin')
 def ManageEmployeeTransferPosting(request):
     try:
-        print(request.user.userType)
         transfer_records = getAllEmpTransferPosting(request.user.is_superuser, request.user.userType)
+
         for item in transfer_records:
             transfer_document = item.get('transfer_document')
             mime_type = mimetypes.guess_type(transfer_document)[0] if transfer_document else None
@@ -283,7 +304,9 @@ def ManageEmployeeTransferPosting(request):
             elif mime_type and mime_type.startswith('image'):
                 item['is_image'] = True
 
-        return render(request, 'ManageTransferPosting.html', {'transfer_records': transfer_records})
+        return render(request, 'ManageTransferPosting.html', {
+            'transfer_records': transfer_records,
+        })
     except Exception as e:
         logger.error(f"Error in ManageEmployeeTransferPosting view: {e}")
         return HttpResponse("An error occurred.", status=500)
@@ -323,7 +346,9 @@ def submitLeaveApplication(request):
                     'data': data,
                     'message': 'Casual Leave already take and cannot exceed 20 days per year.',
                     'title': 'Leave Application',
-                    'icon': 'error'
+                    'icon': 'error',
+                    'empId' : employee_name
+
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -332,7 +357,9 @@ def submitLeaveApplication(request):
                     'data': data,
                     'message': 'Earned Leave already taken and cannot exceed 48 days per year.',
                     'title': 'Leave Application',
-                    'icon': 'error'
+                    'icon': 'error',
+                    'empId' : employee_name
+
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -343,7 +370,9 @@ def submitLeaveApplication(request):
                     'data': data,
                     'message': 'Casual Leave cannot exceed 20 days per year.',
                     'title': 'Leave Application',
-                    'icon': 'error'
+                    'icon': 'error',
+                    'empId' : employee_name
+
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -352,7 +381,9 @@ def submitLeaveApplication(request):
                     'data': data,
                     'message': 'Earned Leave cannot exceed 48 days per year.',
                     'title': 'Leave Application',
-                    'icon': 'error'
+                    'icon': 'error',
+                    'empId' : employee_name
+
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -368,13 +399,15 @@ def submitLeaveApplication(request):
                 leave_end_date=leave_end_date,
                 leave_document=leave_document,
                 reason=reason,
-                days_granted=days_granted
+                days_granted=days_granted,
+                zone_type=request.user.userType
             )
             context = {
                 'data': data,
                 'message': 'Your leave application has been submitted successfully.',
                 'title': 'Leave Application',
-                'icon': 'success'
+                'icon': 'success',
+                'empId' : employee_name
             }
             return render(request, 'LeaveApplication.html', context)
         else:
@@ -422,3 +455,18 @@ def Strength(request):
 def Logout(request):
     logout(request)
     return redirect('/')
+
+
+def get_employee_leave_data(request, emp_id):
+    # Filter leave data based on the selected employee
+    leave_data = LeaveApplication.objects.filter(employee__id=emp_id)
+    print(leave_data)
+
+    # Serialize the data to send it back as JSON
+    leave_summary = {
+        'casual_leave': leave_data.filter(leave_type='Casual Leave').count(),
+        'earned_leave': leave_data.filter(leave_type='Earned Leave').count(),
+        'ex_pakistan_leave': leave_data.filter(leave_type='Ex-Pakistan Leave').count(),
+    }
+
+    return JsonResponse(leave_summary)
