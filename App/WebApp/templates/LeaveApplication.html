@@ -1,3 +1,4 @@
+
 <style>
     html, body {
     height: 100%;
@@ -21,10 +22,6 @@
 .swal2-container .select2-container {
     display: none !important;
 }
-
-
-
-
 </style>
 
 {% load static %}
@@ -158,42 +155,52 @@
 
                         <!-- Leave Information Table -->
                         <div class="col-lg-7">
-                            <div class="card" style="display: none;" id="leaveInfo">
-                                <div class="card-header header-elements-inline">
-
-                                    <h5 class="card-title">Employee Leave Application History</h5>
-
+                            <div class="card shadow-sm" style="display: none;" id="leaveInfo">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Employee Leave Application History</h5>
                                     <div class="card-tools">
-                                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                                class="fas fa-minus"></i>
+                                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                            <i class="fas fa-minus"></i>
                                         </button>
-                                        <button type="button" class="btn btn-tool" data-card-widget="remove"><i
-                                                class="fas fa-times"></i></button>
+                                        <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <input type="hidden" name="empId" id="empId" value="{{empId}}">
-
-                                <div class="card-body">
-                                    <table class="table table-bordered card-body">
-                                        <thead>
-                                        <tr>
-                                            <th>Casual Leave</th>
-                                            <th>Earned Leave</th>
-                                            <th>Ex-Pakistan Leave</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td id="casualLeave">0</td>
-                                            <td id="earnedLeave">0</td>
-                                            <td id="exPakistanLeave">0</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
+                                <input type="hidden" name="empId" id="empId" value="{{ empId }}">
+                                <div class="card-body p-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover text-center">
+                                            <thead class="thead-light">
+                                            <tr>
+                                                <th>Leave Type</th>
+                                                <th>Availed Days</th>
+                                                <th>Total Leave</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td>Casual Leave</td>
+                                                <td id="casualLeave_days">0</td>
+                                                <td id="casualLeave">20</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Earned Leave</td>
+                                                <td id="earnedLeave_days">0</td>
+                                                <td id="earnedLeave">48</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Ex-Pakistan Leave</td>
+                                                <td id="exPakistanLeave_days">0</td>
+                                                <td id="exPakistanLeave">As per policy</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-
                             </div>
                         </div>
+
                     </div>
                 </form>
 
@@ -212,6 +219,15 @@
 </div>
 
 </body>
+
+<script>
+    $(document).ready(function () {
+       $("select").select2();
+    });
+
+</script>
+
+
 <script>
     $(document).ready(function() {
         // Initialize Select2 on page load
@@ -226,6 +242,12 @@
         {% if message %}
         displayAlert("{{ title }}", "{{ message }}", "{{ icon }}");
         {% endif %}
+
+        // Set the selected employee if the hidden input has a value
+        var hd_emp = $('#empId').val(); // Get the hidden input value
+        if (hd_emp) {
+            $('#emp_name').val(hd_emp).trigger('change'); // Set the selected value and trigger change event
+        }
     });
 
     // Function to initialize Select2
@@ -241,6 +263,7 @@
                 method: 'GET',
                 success: function(data) {
                     updateLeaveInfo(data);
+                    console.log(data);
                 },
                 error: function(xhr, status, error) {
                     console.error("An error occurred while fetching leave data:", status, error);
@@ -255,9 +278,15 @@
     function updateLeaveInfo(data) {
         // Check if data exists and update the table
         if (data) {
-            $('#casualLeave').text(data.casual_leave || "N/A");
-            $('#earnedLeave').text(data.earned_leave || "N/A");
-            $('#exPakistanLeave').text(data.ex_pakistan_leave || "N/A");
+            $('#casualLeave').text(data.casual_leave.count  || "");
+            $('#casualLeave_days').text(data.casual_leave.days  || "");
+
+            $('#earnedLeave').text(data.earned_leave.count || "");
+            $('#earnedLeave_days').text(data.earned_leave.days || "");
+
+            $('#exPakistanLeave').text(data.ex_pakistan_leave.count || "");
+            $('#exPakistanLeave_days').text(data.ex_pakistan_leave.days || "");
+
             $('#leaveInfo').show(); // Show the table with updated data
         } else {
             console.warn("No data received.");
@@ -278,11 +307,8 @@
                 }, 1000);
             }
         });
-
-    var hd_emp = document.getElementById('empId').value; // Get the hidden input value
-    // Set the selected value and trigger select2 to update
-    $('#emp_name').val(hd_emp).trigger('change');
-
     }
+
+
 
 </script>

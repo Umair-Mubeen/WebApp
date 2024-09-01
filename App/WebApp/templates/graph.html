@@ -1,29 +1,63 @@
-<style>
-    html, body {
-    height: 100%;
-    margin: 0;
-}
-
-.wrapper {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.content-wrapper {
-    flex: 1;
-}
-
-.main-footer {
-    margin-top: auto;
-}
-
-</style>
 <div class="row">
+
     <div class="col-lg-6">
-        <div class="card">
+        <div class="card card card-primary">
             <div class="card-header">
-                <h3 class="card-title">Disposition Chart List Designation Wise, Regional Tax Office - II</h3>
+                <h3 class="card-title">Leave Summary Report, {{request.user.userType}} , Regional Tax Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+            </div>
+            <div class="card-body">
+                <canvas id="leaveSummary" width="200" height="80"></canvas>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">Employee Retirement Chart Zone Wise, {{request.user.userType}} , Regional Tax
+                    Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+            </div>
+            <div class="card-body">
+                <canvas id="retirementChart" width="200" height="80"></canvas>
+
+            </div>
+        </div>
+
+    </div>
+    <div class="col-lg-12">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">Disposition Chart List Designation Wise, {{request.user.userType}}, Regional Tax
+                    Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
 
             </div>
             <div class="card-body">
@@ -35,150 +69,8 @@
 
 
     </div>
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Employee Retirement Chart Zone Wise, Regional Tax Office - II</h3>
-            </div>
-            <div class="card-body">
-                <canvas id="retirementChart" width="200" height="80"></canvas>
 
-            </div>
-        </div>
-
-    </div>
 
 </div>
 
-
-<!--Graph Script for showing the Designation WISE Data using Group By Starts Here-->
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const data = {
-            labels: [
-                {% for item in results %}
-                "{{ item.trimmed_designation }}"{% if not forloop.last %},{% endif %}
-                {% endfor %}
-            ],
-            datasets: [{
-                label: 'Total Strength #',
-                data: [
-                    {% for item in results %}
-                    {{ item.total }}{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                backgroundColor: generateRandomColors({{ results|length }}),
-                borderColor: 'rgba(0, 0, 0, 0.2)',
-                borderWidth: 2
-            }]
-        };
-
-        // Function to generate random colors
-        function generateRandomColors(count) {
-            const colors = [];
-            for (let i = 0; i < count; i++) {
-                const randomColor = 'rgba(' +
-                    Math.floor(Math.random() * 256) + ',' +
-                    Math.floor(Math.random() * 256) + ',' +
-                    Math.floor(Math.random() * 256) + ',' +
-                    '0.5)';
-                colors.push(randomColor);
-            }
-            return colors;
-        }
-
-        // Create the chart
-        const designationChart = document.getElementById('designationChart').getContext('2d');
-        new Chart(designationChart, {
-            type: 'bar',
-            data: data,
-            options: {
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    });
-
-
-
-
-
-</script>
-
-<!--Graph Script for showing the Designation WISE Data using Group By Ends Here-->
-
-
-<!--Graph Script for showing the ZONE WISE Data using Group By Starts Here-->
-<script>
-    // Convert Django context variables to JavaScript variables
-    const zones = {{ zones|safe }};
-    const counts = {{ counts|safe }};
-
-    // Function to generate a random color
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-
-    // Generate a color for each data point
-    const backgroundColors = counts.map(() => getRandomColor());
-
-    // Set up the chart data and configuration
-    const retirementChart = document.getElementById('retirementChart').getContext('2d');
-
-    const retirement = new Chart(retirementChart, {
-        type: 'bar',
-        data: {
-            labels: zones,
-            datasets: [{
-                label: '# of Retirements',
-                data: counts.map(count => parseFloat(count)),  // Ensure data is treated as numbers
-                backgroundColor: backgroundColors,
-                borderColor: backgroundColors.map(color => color.replace('0.2', '1')),
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.y !== null) {  // Use context.parsed.y for bar chart
-                                label += context.parsed.y.toLocaleString();
-                            }
-                            return label;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-
-</script>
-<!--Graph Script for showing the ZONE WISE Data using Group By Ends Here-->
 

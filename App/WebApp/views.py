@@ -1,7 +1,10 @@
 from datetime import datetime
 import mimetypes
 import logging
-from django.db.models import Sum
+
+from django.contrib import messages
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Sum, Count
 from django.http import JsonResponse
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -38,14 +41,14 @@ def userLogin(request):
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         if user:
-            print(user.userType)
             login(request, user)
             request.session['UserName'] = username
-            return render(request, 'Dashboard.html', {
-                'title': 'Welcome to Dashboard!',
-                'icon': 'success',
-                'message': 'Login Successful!'
-            })
+            return redirect('Dashboard')
+            # return render(request, 'Dashboard.html', {
+            #     'title': 'Welcome to Dashboard!',
+            #     'icon': 'success',
+            #     'message': 'Login Successful!'
+            # })
         return render(request, 'login.html', {
             'title': 'Invalid',
             'icon': 'error',
@@ -65,6 +68,8 @@ def Dashboard(request):
         if not request.user.is_authenticated:
             return redirect('/')
 
+        leave_summary = get_employee_leave_data(request) # admin and zone
+
         label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
         results = DesignationWiseList(request.user.userType, request)
@@ -80,6 +85,9 @@ def Dashboard(request):
             'results': results,
             'Comparison': Comparison,
             'label': label,
+            'leave_summary': leave_summary,
+            'count_leave_individuals': CountLeaveIndividuals(request)
+
         }
         return render(request, 'Dashboard.html', context)
     except Exception as e:
@@ -347,8 +355,7 @@ def submitLeaveApplication(request):
                     'message': 'Casual Leave already take and cannot exceed 20 days per year.',
                     'title': 'Leave Application',
                     'icon': 'error',
-                    'empId' : employee_name
-
+                    'empId': employee_name
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -358,8 +365,7 @@ def submitLeaveApplication(request):
                     'message': 'Earned Leave already taken and cannot exceed 48 days per year.',
                     'title': 'Leave Application',
                     'icon': 'error',
-                    'empId' : employee_name
-
+                    'empId': employee_name
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -371,8 +377,7 @@ def submitLeaveApplication(request):
                     'message': 'Casual Leave cannot exceed 20 days per year.',
                     'title': 'Leave Application',
                     'icon': 'error',
-                    'empId' : employee_name
-
+                    'empId': employee_name
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -382,8 +387,7 @@ def submitLeaveApplication(request):
                     'message': 'Earned Leave cannot exceed 48 days per year.',
                     'title': 'Leave Application',
                     'icon': 'error',
-                    'empId' : employee_name
-
+                    'empId': employee_name
 
                 }
                 return render(request, 'LeaveApplication.html', context)
@@ -407,7 +411,7 @@ def submitLeaveApplication(request):
                 'message': 'Your leave application has been submitted successfully.',
                 'title': 'Leave Application',
                 'icon': 'success',
-                'empId' : employee_name
+                'empId': employee_name
             }
             return render(request, 'LeaveApplication.html', context)
         else:
@@ -423,11 +427,10 @@ def submitLeaveApplication(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def ManageEmployeeLeaveApplication(request):
     try:
-        leave_application = getAllEmpLeaveApplication()
+        leave_application = getAllEmpLeaveApplication(request.user.is_superuser, request.user.userType)
         for item in leave_application:
             leave_document = item.get('leave_document')
             mime_type = mimetypes.guess_type(leave_document)[0] if leave_document else None
-            print(mime_type)
             if mime_type == 'application/pdf':
                 item['is_pdf'] = True
             elif mime_type and mime_type.startswith('image'):
@@ -457,16 +460,95 @@ def Logout(request):
     return redirect('/')
 
 
-def get_employee_leave_data(request, emp_id):
-    # Filter leave data based on the selected employee
-    leave_data = LeaveApplication.objects.filter(employee__id=emp_id)
-    print(leave_data)
+def get_employee_leave_data(request, emp_id=None):
+    try:
+        leave_summary = {}
 
-    # Serialize the data to send it back as JSON
-    leave_summary = {
-        'casual_leave': leave_data.filter(leave_type='Casual Leave').count(),
-        'earned_leave': leave_data.filter(leave_type='Earned Leave').count(),
-        'ex_pakistan_leave': leave_data.filter(leave_type='Ex-Pakistan Leave').count(),
-    }
+        # Determine if the user is an admin
+        if request.user.is_superuser:
+            # Group by zone_type and aggregate leave data for each zone
+            zones = LeaveApplication.objects.values('zone_type').distinct()
 
-    return JsonResponse(leave_summary)
+            for zone in zones:
+                zone_type = zone['zone_type']
+
+                casual_leave = LeaveApplication.objects.filter(leave_type='Casual Leave', zone_type=zone_type)
+                earned_leave = LeaveApplication.objects.filter(leave_type='Earned Leave', zone_type=zone_type)
+                ex_pakistan_leave = LeaveApplication.objects.filter(leave_type='Ex-Pakistan Leave', zone_type=zone_type)
+
+                leave_summary[zone_type] = {
+                    'casual_leave': {
+                        'count': casual_leave.count(),
+                        'days': casual_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
+                    'earned_leave': {
+                        'count': earned_leave.count(),
+                        'days': earned_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
+                    'ex_pakistan_leave': {
+                        'count': ex_pakistan_leave.count(),
+                        'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
+                }
+        if request.user.is_superuser == 2:
+            # Filter by the user's zone_type if not admin
+            leave_data = LeaveApplication.objects.filter(zone_type=request.user.userType)
+
+            if emp_id:
+                leave_data = leave_data.filter(employee__id=emp_id)
+
+            casual_leave = leave_data.filter(leave_type='Casual Leave')
+            earned_leave = leave_data.filter(leave_type='Earned Leave')
+            ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave')
+
+            leave_summary = {
+                'casual_leave': {
+                    'count': casual_leave.count(),
+                    'days': casual_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
+                'earned_leave': {
+                    'count': earned_leave.count(),
+                    'days': earned_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
+                'ex_pakistan_leave': {
+                    'count': ex_pakistan_leave.count(),
+                    'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
+            }
+            print(leave_summary)
+
+        return leave_summary
+    except Exception as e:
+        logger.error(f"Error in get_employee_leave_data function: {e}")
+        return {'error': str(e)}
+
+
+# count Leaves ZOne wise table
+def CountLeaveIndividuals(request):
+    if request.user.is_superuser:
+        queryset = LeaveApplication.objects.select_related('employee') \
+            .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
+            .annotate(
+            leave_count=Count('leave_type'),
+            total_days_granted=Sum('days_granted')
+        )
+    if request.user.is_superuser == 2:
+        queryset = LeaveApplication.objects.select_related('employee').filter(zone_type=request.user.userType) \
+            .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
+            .annotate(
+            leave_count=Count('leave_type'),
+            total_days_granted=Sum('days_granted')
+        )
+    paginator = Paginator(queryset, 10)  # Show 10 records per page
+    page = request.GET.get('page')
+
+    try:
+        data = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        data = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        data = paginator.page(paginator.num_pages)
+
+    return data

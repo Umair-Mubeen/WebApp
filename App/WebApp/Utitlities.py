@@ -302,11 +302,15 @@ def getAllEmpTransferPosting(userType, zoneType):
         return []  # Return an empty list on error
 
 
-def getAllEmpLeaveApplication():
+def getAllEmpLeaveApplication(userType,zoneType):
     try:
+        filters = {}
+        if userType == 2:  # Employee
+            filters['zone_type'] = zoneType
 
-        # Use select_related to optimize foreign key access and avoid additional queries
-        leave_application = LeaveApplication.objects.select_related('employee').values(
+        leave_application = LeaveApplication.objects.select_related('employee').filter(
+            **filters
+        ).values(
             'employee__id',
             'employee__Name',
             'employee__Designation',
