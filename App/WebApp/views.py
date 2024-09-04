@@ -375,6 +375,8 @@ def submitLeaveApplication(request):
         else:
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
                 ZONE=request.user.userType)
+
+
         if request.method == 'POST':
             employee_name = request.POST.get('emp_name')
             leave_type = request.POST.get('leave_type')
@@ -510,9 +512,8 @@ def Logout(request):
 def get_employee_leave_data(request, emp_id=None):
     try:
         leave_summary = {}
-
         # Determine if the user is an admin
-        if request.user.is_superuser:
+        if is_admin(request.user):
             # Group by zone_type and aggregate leave data for each zone
             zones = LeaveApplication.objects.values('zone_type').distinct()
 
@@ -537,7 +538,8 @@ def get_employee_leave_data(request, emp_id=None):
                         'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
                     },
                 }
-        if request.user.is_superuser == 2:
+
+        if is_zone_admin(request.user):
             # Filter by the user's zone_type if not admin
             leave_data = LeaveApplication.objects.filter(zone_type=request.user.userType)
 
@@ -573,14 +575,14 @@ def get_employee_leave_data(request, emp_id=None):
 
 # count Leaves ZOne wise table
 def CountLeaveIndividuals(request):
-    if request.user.is_superuser:
+    if is_admin(request.user):
         queryset = LeaveApplication.objects.select_related('employee') \
             .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
             .annotate(
             leave_count=Count('leave_type'),
             total_days_granted=Sum('days_granted')
         )
-    if request.user.is_superuser == 2:
+    if is_zone_admin(request.user):
         queryset = LeaveApplication.objects.select_related('employee').filter(zone_type=request.user.userType) \
             .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
             .annotate(
@@ -602,27 +604,59 @@ def CountLeaveIndividuals(request):
     return data
 
 
+# def get_employee_unit_data(request, emp_id):
+#     try:
+#         if is_zone_admin(request.user) and emp_id:
+#             # Get the latest transfer record based on created_date
+#             latest_transfer_record = TransferPosting.objects.filter(employee_id=emp_id).order_by('-created_at').first()
+#
+#             if latest_transfer_record:
+#                 # Fetch the previous records that are older than the latest record
+#                 previous_records = TransferPosting.objects.filter(
+#                     employee_id=emp_id,
+#                     created_at__lt=latest_transfer_record.created_at
+#                 ).order_by('-created_at')
+#                 previous_unit = None
+#
+#                 posting_summary = {
+#                     'units': {
+#                         'current_unit': latest_transfer_record.new_unit,
+#                         'previous_unit': latest_transfer_record.old_unit,
+#                     }
+#                 }
+#                 print(posting_summary)
+#                 return JsonResponse(posting_summary)
+#             else:
+#                 return JsonResponse({'error': 'No transfer records found'}, status=404)
+#
+#         else:
+#             return JsonResponse({'error': 'Unauthorized or invalid employee ID'}, status=403)
+#
+#     except Exception as e:
+#         logger.error(f"Error in get_employee_unit_data function: {e}")
+#         return JsonResponse({'error': str(e)}, status=500)
+
 def get_employee_unit_data(request, emp_id):
     try:
-        if request.user.is_superuser == 2 and emp_id:
-            # Get the latest transfer record based on created_date
+        if emp_id:
+            # Get the latest transfer record based on created_at
             latest_transfer_record = TransferPosting.objects.filter(employee_id=emp_id).order_by('-created_at').first()
-            print(latest_transfer_record)
 
             if latest_transfer_record:
-                # Fetch the previous records that are older than the latest record
-                previous_records = TransferPosting.objects.filter(
-                    employee_id=emp_id,
-                    created_at__lt=latest_transfer_record.created_at
-                ).order_by('-created_at')
-                previous_unit = None
-
                 posting_summary = {
                     'units': {
                         'current_unit': latest_transfer_record.new_unit,
                         'previous_unit': latest_transfer_record.old_unit,
                     }
                 }
+
+                # Include zone information if the user is an admin
+                if request.user.is_superuser == 1 or 2:
+                    posting_summary['zones'] = {
+                        'old_zone': latest_transfer_record.old_zone,
+                        'new_zone': latest_transfer_record.new_zone,
+                    }
+
                 print(posting_summary)
                 return JsonResponse(posting_summary)
             else:
@@ -634,3 +668,11 @@ def get_employee_unit_data(request, emp_id):
     except Exception as e:
         logger.error(f"Error in get_employee_unit_data function: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def is_admin(user):
+    return user.is_superuser == 1
+
+
+def is_zone_admin(user):
+    return user.is_superuser == 2

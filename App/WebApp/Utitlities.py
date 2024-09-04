@@ -309,8 +309,7 @@ def getAllEmpLeaveApplication(userType,zoneType):
             filters['zone_type'] = zoneType
 
         leave_application = LeaveApplication.objects.select_related('employee').filter(
-            **filters
-        ).values(
+            **filters).values(
             'employee__id',
             'employee__Name',
             'employee__Designation',
