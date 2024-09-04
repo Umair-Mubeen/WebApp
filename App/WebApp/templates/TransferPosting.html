@@ -22,6 +22,10 @@
 .swal2-container .select2-container {
     display: none !important;
 }
+
+
+
+
 </style>
 
 {% load static %}
@@ -99,6 +103,8 @@
                                     <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
                                     <input type="hidden" name="hd_rowId" value="{{rowId}}" id="rowId">
                                     <input type="hidden" name="hd_type" value="{{type}}" id="hd_type">
+                                    <input type="hidden" name="old_zone" value="{{row.old_zone}}" id="old_zone">
+                                    <input type="hidden" name="new_zone" value="{{row.new_zone}}" id="new_zone">
 
                                     <div class="form-group">
                                         <label>Employee Name {{emp_id }} </label>
@@ -116,8 +122,8 @@
 
                                     {% if request.user.is_superuser == 1 %}
                                     <div class="form-group">
-                                        <label> Current Zone </label>
-                                        <select name="old_zone" class="form-control">
+                                        <label> Old Zone </label>
+                                        <select name="old_zone" class="form-control" id="old_zone_name">
                                             <option value="CCIR">CCIR</option>
                                             <option value="Zone-I">Zone-I</option>
                                             <option value="Zone-II">Zone-II</option>
@@ -132,7 +138,7 @@
 
                                     <div class="form-group">
                                         <label>New Zone </label>
-                                        <select name="new_zone" class="form-control">
+                                        <select name="new_zone" class="form-control" id="new_zone_name">
                                             <option value="CCIR">CCIR</option>
 
                                             <option value="Zone-I">Zone-I</option>
@@ -149,7 +155,7 @@
 
                                     {% if request.user.is_superuser == 2 %}
                                     <div class="form-group">
-                                        <label> Current Unit </label>
+                                        <label> Prev Unit </label>
                                         <input type="text" name="zone_prev_unit" class="form-control"
                                                value="{{row.zone_current_unit}}">
 
@@ -157,7 +163,7 @@
 
 
                                     <div class="form-group">
-                                        <label>New Unit </label>
+                                        <label>Current Unit </label>
                                         <input type="text" name="zone_new_unit" class="form-control"
                                                value="{{row.zone_new_unit}}">
                                     </div>
@@ -177,26 +183,26 @@
                                     <div class="form-group">
                                         <label> Order #</label>
                                         <input type="number" name="order_number" class="form-control"
-                                               value="{{row.zone_order_number}}">
+                                               value="{% if row.zone_order_number %}{{ row.zone_order_number }}{% else %}{{ row.chief_order_number }}{% endif %}">
                                     </div>
 
                                     <div class="form-group">
                                         <label>Transfer Order Date</label>
                                         <input type="date" name="transfer_order_date" class="form-control"
-                                               value="{{ row.zone_transfer_date|date:'Y-m-d' }}">
+                                               value="{% if row.zone_transfer_date %}{{ row.zone_transfer_date|date:'Y-m-d' }}{% else %}{{ row.chief_transfer_date|date:'Y-m-d' }}{% endif %}">
                                     </div>
 
                                     <div class="form-group">
                                         <label>Transfer Reason </label>
                                         <input type="text" name="transfer_reason" class="form-control"
-                                               value="{{row.zone_transfer_reason}}">
+                                               value="{% if row.zone_transfer_reason %}{{row.zone_transfer_reason}}{% else %}{{ row.chief_reason_for_transfer}}{% endif %}">
 
                                     </div>
 
                                     <div class="form-group">
                                         <label>Order Approved By </label>
                                         <input type="text" name="order_approved_by" class="form-control"
-                                               value="{{row.zone_order_approved_by}}">
+                                               value="{% if row.zone_order_approved_by %}{{row.zone_order_approved_by}}{% else %}{{ row.chief_order_approved_by}}{% endif %}">
 
                                     </div>
 
@@ -215,6 +221,44 @@
 
                             </div>
                         </div>
+
+                        <!-- Transfer Posting Information Table -->
+                        <div class="col-lg-7">
+                            <div class="card shadow-sm" id="leaveInfo">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Employee Transfer Posting History</h5>
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="empId" id="empId" value="{{ empId }}">
+                                <div class="card-body p-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover text-center">
+                                            <thead class="thead-light">
+                                            <tr>
+                                                <th>Previous Unit</th>
+                                                <th>Current Unit</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td id="prev_unit">0</td>
+                                                <td id="new_unit">0</td>
+
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </form>
 
@@ -236,6 +280,10 @@
 <script>
     $(document).ready(function () {
     var hd_emp = document.getElementById('hd_emp').value; // Get the hidden input value
+    var old_zone = document.getElementById('old_zone').value; // Get the hidden input value
+    var new_zone = document.getElementById('new_zone').value; // Get the hidden input value
+    $('#old_zone_name').val(old_zone).trigger('change');
+    $('#new_zone_name').val(new_zone).trigger('change');
 
     // Set the selected value and trigger select2 to update
     $('#emp_name').val(hd_emp).trigger('change');
@@ -249,6 +297,10 @@
     // Initialize select2
     $('.js-example-basic-single').select2();
 });
+
+
+
+
 
 
 
@@ -277,6 +329,59 @@ Swal.fire({
 
 
 
+
+
+
+
 </script>
 
+<script>
+$(document).ready(function() {
+    // Initialize Select2 on page load
+    initializeSelect2();
 
+    // Attach the change event handler for employee selection
+    $('#emp_name').change(function() {
+        var empId = $(this).val();
+        if (empId) {
+            fetchEmployeeUnitData(empId);
+        }
+    });
+
+
+    // Function to initialize Select2
+    function initializeSelect2() {
+        $('.js-example-basic-single').select2();
+    }
+    // Function to fetch employee unit data
+    function fetchEmployeeUnitData(empId) {
+        $.ajax({
+            url: '/get_employee_unit_data/' + empId + '/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.units) {
+                    $('#prev_unit').text(response.units.previous_unit || 'N/A');
+                    $('#new_unit').text(response.units.current_unit || 'N/A');
+                } else {
+                    $('#prev_unit').text('N/A');
+                    $('#new_unit').text('N/A');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching employee unit data:', error);
+                $('#prev_unit').text('Error');
+                $('#new_unit').text('Error');
+            }
+        });
+    }
+
+    // Automatically fetch data on page load if the hidden input has a value
+    var hd_emp = $('#empId').val();
+    if (hd_emp) {
+        fetchEmployeeUnitData(hd_emp);
+    }
+
+
+});
+</script>

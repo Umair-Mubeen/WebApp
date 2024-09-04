@@ -104,100 +104,62 @@
 </script>
 <!--Select 2 Option Ends Here -->
 
-
-<!--Graph Script for showing the Designation WISE Data using Group By Starts Here-->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const data = {
-            labels: [
+    document.addEventListener('DOMContentLoaded', function() {
+    // Designation WISE Data using Group By
+    const designationData = {
+        labels: [
+            {% for item in results %}
+            "{{ item.trimmed_designation }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Total Strength #',
+            data: [
                 {% for item in results %}
-                "{{ item.trimmed_designation }}"{% if not forloop.last %},{% endif %}
+                {{ item.total }}{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ],
-            datasets: [{
-                label: 'Total Strength #',
-                data: [
-                    {% for item in results %}
-                    {{ item.total }}{% if not forloop.last %},{% endif %}
-                    {% endfor %}
-                ],
-                backgroundColor: generateRandomColors({{ results|length }}),
-                borderColor: 'rgba(0, 0, 0, 0.2)',
-                borderWidth: 2
-            }]
-        };
+            backgroundColor: generateRandomColors({{ results|length }}),
+            borderColor: 'rgba(0, 0, 0, 0.2)',
+            borderWidth: 2
+        }]
+    };
 
-        // Function to generate random colors
-        function generateRandomColors(count) {
-            const colors = [];
-            for (let i = 0; i < count; i++) {
-                const randomColor = 'rgba(' +
-                    Math.floor(Math.random() * 256) + ',' +
-                    Math.floor(Math.random() * 256) + ',' +
-                    Math.floor(Math.random() * 256) + ',' +
-                    '0.5)';
-                colors.push(randomColor);
-            }
-            return colors;
-        }
-
-        // Create the chart
-        const designationChart = document.getElementById('designationChart').getContext('2d');
-        new Chart(designationChart, {
-            type: 'bar',
-            data: data,
-            options: {
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
+    const designationChart = document.getElementById('designationChart').getContext('2d');
+    new Chart(designationChart, {
+        type: 'bar',
+        data: designationData,
+        options: {
+            scales: {
+                x: {
+                    beginAtZero: true
+                },
+                y: {
+                    beginAtZero: true
                 }
+            },
+            animation: {
+                duration: 1000, // Animation duration in ms
+                easing: 'easeInOutBounce' // Easing effect
             }
-        });
+        }
     });
 
-
-
-
-
-
-</script>
-<!--Graph Script for showing the Designation WISE Data using Group By Ends Here-->
-
-<!--Graph Script for showing the  Retirement ZONE WISE Data using Group By Starts Here-->
-<script>
-    // Convert Django context variables to JavaScript variables
+    // Retirement ZONE WISE Data using Group By
     const zones = {{ zones|safe }};
     const counts = {{ counts|safe }};
 
-    // Function to generate a random color
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-
-    // Generate a color for each data point
-    const backgroundColors = counts.map(() => getRandomColor());
-
-    // Set up the chart data and configuration
     const retirementChart = document.getElementById('retirementChart').getContext('2d');
-
-    const retirement = new Chart(retirementChart, {
+    new Chart(retirementChart, {
         type: {% if request.user.is_superuser == 1 %} 'bar' {% else %} 'doughnut' {% endif %},
         data: {
             labels: zones,
             datasets: [{
                 label: '# of Retirements',
-                data: counts.map(count => parseFloat(count)),  // Ensure data is treated as numbers
-                backgroundColor: backgroundColors,
-                borderColor: backgroundColors.map(color => color.replace('0.2', '1')),
+                data: counts.map(count => parseFloat(count)),
+                backgroundColor: generateRandomColors(counts.length),
+                borderColor: 'rgba(0, 0, 0, 0.2)',
                 borderWidth: 2
             }]
         },
@@ -208,8 +170,12 @@
                     position: 'top',
                 },
                 tooltip: {
-
+                    enabled: true
                 }
+            },
+            animation: {
+                duration: 1500, // Animation duration in ms
+                easing: 'easeInOutQuart' // Easing effect
             },
             scales: {
                 y: {
@@ -219,173 +185,107 @@
         }
     });
 
+    // Leave Summary Data
+    const userType = '{{ request.user.is_superuser }}';
+    const leaveSummary = {{ leave_summary|safe }};
+    const ctx = document.getElementById('leaveSummary').getContext('2d');
 
+    if (userType == 'True') {
+        // Admin-specific logic for grouped bar chart
+        const labels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'];
+        const datasets = Object.keys(leaveSummary).map(zone => ({
+            label: zone,
+            data: [
+                leaveSummary[zone].casual_leave.count,
+                leaveSummary[zone].earned_leave.count,
+                leaveSummary[zone].ex_pakistan_leave.count,
+            ],
+            backgroundColor: generateRandomColors(3)
+        }));
 
-
-</script>
-<!--Graph Script for showing the ZONE WISE Data using Group By Ends Here-->
-
-<!--&lt;!&ndash;Graph Script for showing the Leave Application ZONE WISE Data using Group By Starts Here&ndash;&gt;-->
-<!--<script>-->
-<!--    document.addEventListener('DOMContentLoaded', function() {-->
-<!--        // Data embedded from Django view-->
-<!--        const leaveSummary = {{ leave_summary|safe }};-->
-
-<!--        // Function to generate a random color-->
-<!--        function getRandomColor() {-->
-<!--            const letters = '0123456789ABCDEF';-->
-<!--            let color = '#';-->
-<!--            for (let i = 0; i < 6; i++) {-->
-<!--                color += letters[Math.floor(Math.random() * 16)];-->
-<!--            }-->
-<!--            return color;-->
-<!--        }-->
-
-<!--        // Generate random colors for each dataset-->
-<!--        const colors = [-->
-<!--            getRandomColor(),-->
-<!--            getRandomColor(),-->
-<!--            getRandomColor()-->
-<!--        ];-->
-
-<!--        const ctx = document.getElementById('leaveSummary').getContext('2d');-->
-
-<!--        // Data for the chart-->
-<!--        const chartData = {-->
-<!--            labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'],-->
-<!--            datasets: [{-->
-<!--                label: 'Leave Count',-->
-
-<!--                data: [-->
-<!--                    leaveSummary.casual_leave.count,-->
-<!--                    leaveSummary.earned_leave.count,-->
-<!--                    leaveSummary.ex_pakistan_leave.count,-->
-<!--                ],-->
-<!--                backgroundColor: colors  // Use random colors-->
-<!--            }]-->
-<!--        };-->
-
-<!--        // Create the chart-->
-<!--        new Chart(ctx, {-->
-<!--            type: 'doughnut',-->
-<!--            data: chartData,-->
-<!--            options: {-->
-<!--                responsive: true,-->
-<!--                plugins: {-->
-<!--                    legend: {-->
-<!--                        position: 'top',-->
-<!--                    },-->
-<!--                },-->
-<!--                scales: {-->
-<!--                    x: {-->
-<!--                        beginAtZero: true-->
-<!--                    },-->
-<!--                    y: {-->
-<!--                        beginAtZero: true-->
-<!--                    }-->
-<!--                }-->
-<!--            }-->
-<!--        });-->
-<!--    });-->
-
-
-<!--</script>-->
-<!--&lt;!&ndash;Graph Script for showing the Leave Application ZONE WISE Data using Group By Ends Here&ndash;&gt;-->
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Pass the user type from Django to JavaScript
-        const userType = '{{ request.user.is_superuser }}' ;
-        const leaveSummary = {{ leave_summary|safe }};
-        const ctx = document.getElementById('leaveSummary').getContext('2d');
-
-        // Function to generate a random color
-        function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
-
-        // Admin-specific logic
-        if (userType == 'True') {
-            // Prepare the data for the grouped bar chart (for admin view)
-            const labels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'];
-            const datasets = Object.keys(leaveSummary).map(zone => ({
-                label: zone,
-                data: [
-                    leaveSummary[zone].casual_leave.count,
-                    leaveSummary[zone].earned_leave.count,
-                    leaveSummary[zone].ex_pakistan_leave.count,
-                ],
-                backgroundColor: getRandomColor()
-            }));
-
-            // Create the grouped bar chart
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Leave Summary by Zone (Admin View)'
-                        }
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
                     },
-                    scales: {
-                        x: {
-                            beginAtZero: true
-                        },
-                        y: {
-                            beginAtZero: true
-                        }
+                    title: {
+                        display: true,
+                        text: 'Leave Summary by Zone (Admin View)'
+                    }
+                },
+                animation: {
+                    duration: 1200, // Animation duration in ms
+                    easing: 'easeOutBounce' // Easing effect
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
-        } else {
-            // Employee-specific logic
-            // Prepare data for the doughnut chart (for employee view)
-            const colors = [getRandomColor(), getRandomColor(), getRandomColor()];
-            const chartData = {
-                labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'],
-                datasets: [{
-                    label: 'Leave Count',
-                    data: [
-                        leaveSummary.casual_leave.count,
-                        leaveSummary.earned_leave.count,
-                        leaveSummary.ex_pakistan_leave.count,
-                    ],
-                    backgroundColor: colors
-                }]
-            };
+            }
+        });
+    } else {
+        // Employee-specific logic for doughnut chart
+        const chartData = {
+            labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'],
+            datasets: [{
+                label: 'Leave Count',
+                data: [
+                    leaveSummary.casual_leave.count,
+                    leaveSummary.earned_leave.count,
+                    leaveSummary.ex_pakistan_leave.count,
+                ],
+                backgroundColor: generateRandomColors(3)
+            }]
+        };
 
-            // Create the doughnut chart
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Your Leave Summary (Employee View)'
-                        }
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Your Leave Summary (Employee View)'
                     }
+                },
+                animation: {
+                    duration: 1300, // Animation duration in ms
+                    easing: 'easeInOutCubic' // Easing effect
                 }
-            });
+            }
+        });
+    }
+
+    // Function to generate random colors
+    function generateRandomColors(count) {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+            const randomColor = 'rgba(' +
+                Math.floor(Math.random() * 256) + ',' +
+                Math.floor(Math.random() * 256) + ',' +
+                Math.floor(Math.random() * 256) + ',' +
+                '0.5)';
+            colors.push(randomColor);
         }
-    });
+        return colors;
+    }
+});
+
 </script>
+
+

@@ -3,6 +3,7 @@ import mimetypes
 import logging
 
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Sum, Count
 from django.http import JsonResponse
@@ -68,7 +69,7 @@ def Dashboard(request):
         if not request.user.is_authenticated:
             return redirect('/')
 
-        leave_summary = get_employee_leave_data(request) # admin and zone
+        leave_summary = get_employee_leave_data(request)  # admin and zone
 
         label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
@@ -159,6 +160,7 @@ def Zone(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def EmployeeTransferPosting(request):
     try:
+        row = {}
         empId = request.GET.get('empId', '')
         rowId = request.GET.get('rowId', '')
         opType = request.GET.get('type', '')
@@ -169,15 +171,36 @@ def EmployeeTransferPosting(request):
         else:
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
                 ZONE=request.user.userType)
+        # super admin will edit the record
+        if empId and rowId and request.user.is_superuser == 1:
+            print('admin / CCIR')
+            postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId)
+            if postingRow:
+                row = {
+                    'old_zone': postingRow.old_zone or '',
+                    'new_zone': postingRow.new_zone or '',
+                    'chief_order_number': postingRow.chief_order_number or '',
+                    'chief_transfer_date': postingRow.chief_transfer_date or '',
+                    'chief_reason_for_transfer': postingRow.chief_reason_for_transfer or '',
+                    'chief_order_approved_by': postingRow.chief_order_approved_by or ''
 
+                }  # # f
+            else:
+                # Handle the case where both empId and rowId are None
+                row = {
+                    'old_zone': '',
+                    'new_zone': '',
+                    'chief_order_number': '',
+                    'chief_transfer_date': '',
+                    'chief_reason_for_transfer': '',
+                    'chief_order_approved_by': ''
+
+                }
         # fetch row from database zone admin in case of edit record
-        if empId and rowId:
+        elif empId and rowId and request.user.is_superuser == 2:
+            print('zone admin edit record')
             employee = DispositionList.objects.get(id=empId)
             postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId, zone_type=request.user.userType)
-            if postingRow.zone_type == employee.ZONE:
-                zones_match = True
-            else:
-                zones_match = False
             if postingRow:
                 row = {
                     'zone_current_unit': postingRow.old_unit or '',
@@ -188,17 +211,17 @@ def EmployeeTransferPosting(request):
                     'zone_order_approved_by': postingRow.zone_order_approved_by or ''
 
                 }  # # f
-        else:
-            # Handle the case where both empId and rowId are None
-            row = {
-                'zone_current_unit': '',
-                'zone_new_unit': '',
-                'zone_order_number': '',
-                'zone_transfer_date': '',
-                'zone_transfer_reason': '',
-                'zone_order_approved_by': ''
+            else:
+                # Handle the case where both empId and rowId are None
+                row = {
+                    'zone_current_unit': '',
+                    'zone_new_unit': '',
+                    'zone_order_number': '',
+                    'zone_transfer_date': '',
+                    'zone_transfer_reason': '',
+                    'zone_order_approved_by': ''
 
-            }
+                }
             # You can add additional logic here, like logging an error or returning a response
 
         if request.method == 'POST':
@@ -218,7 +241,30 @@ def EmployeeTransferPosting(request):
             # Retrieve the employee object
             employee = DispositionList.objects.get(id=emp_name)
 
-            if request.user.is_superuser == 1:  # ccir will create record
+            if request.user.is_superuser == 1 and hd_type:
+                new_zone = request.POST.get('new_zone')
+                employee.ZONE = new_zone
+                employee.save()
+                print('admin edit record / ccir')
+                transfer_posting = TransferPosting.objects.get(employee=employee, id=hd_rowId)
+                transfer_posting.old_zone = request.POST.get('old_zone')
+                transfer_posting.new_zone = request.POST.get('new_zone')
+                transfer_posting.chief_transfer_date = int(request.POST.get('order_number'))
+                transfer_order_date_str = request.POST.get('transfer_order_date')
+                try:
+                    transfer_order_date = datetime.fromisoformat(transfer_order_date_str)
+                except ValueError:
+                    transfer_order_date = None
+
+                transfer_posting.chief_transfer_date = transfer_order_date
+                transfer_posting.chief_reason_for_transfer = request.POST.get('transfer_reason')
+                transfer_posting.chief_order_approved_by = request.POST.get('order_approved_by')
+                transfer_posting.chief_transfer_document = image
+                transfer_posting.zone_type = new_zone
+
+                transfer_posting.save()
+
+            elif request.user.is_superuser == 1:  # ccir will create record
                 print('admin create record')
                 # Handling for superuser (admin)
                 new_zone = request.POST.get('new_zone')
@@ -236,8 +282,9 @@ def EmployeeTransferPosting(request):
                     chief_transfer_document=image,
                     zone_type=new_zone
                 )
+
             elif request.user.is_superuser == 2 and hd_type and hd_rowId:  # after CCIR ZOne will assigned Unit
-                print("editing zone record employees")
+                print("editing zone record employees.......")
                 # Handling for zone admin
                 transfer_posting = TransferPosting.objects.get(employee=employee, zone_type=request.user.userType,
                                                                id=hd_rowId)
@@ -515,7 +562,8 @@ def get_employee_leave_data(request, emp_id=None):
                     'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
                 },
             }
-            print(leave_summary)
+            if emp_id:
+                return JsonResponse(leave_summary)
 
         return leave_summary
     except Exception as e:
@@ -552,3 +600,37 @@ def CountLeaveIndividuals(request):
         data = paginator.page(paginator.num_pages)
 
     return data
+
+
+def get_employee_unit_data(request, emp_id):
+    try:
+        if request.user.is_superuser == 2 and emp_id:
+            # Get the latest transfer record based on created_date
+            latest_transfer_record = TransferPosting.objects.filter(employee_id=emp_id).order_by('-created_at').first()
+            print(latest_transfer_record)
+
+            if latest_transfer_record:
+                # Fetch the previous records that are older than the latest record
+                previous_records = TransferPosting.objects.filter(
+                    employee_id=emp_id,
+                    created_at__lt=latest_transfer_record.created_at
+                ).order_by('-created_at')
+                previous_unit = None
+
+                posting_summary = {
+                    'units': {
+                        'current_unit': latest_transfer_record.new_unit,
+                        'previous_unit': latest_transfer_record.old_unit,
+                    }
+                }
+                print(posting_summary)
+                return JsonResponse(posting_summary)
+            else:
+                return JsonResponse({'error': 'No transfer records found'}, status=404)
+
+        else:
+            return JsonResponse({'error': 'Unauthorized or invalid employee ID'}, status=403)
+
+    except Exception as e:
+        logger.error(f"Error in get_employee_unit_data function: {e}")
+        return JsonResponse({'error': str(e)}, status=500)

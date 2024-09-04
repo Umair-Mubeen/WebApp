@@ -1,14 +1,20 @@
 <style>
-    #tableContainer {
-    display: block; /* Default state */
-}
+    #tableContainer,
+    #graphContainer {
+        display: none; /* Hide both by default */
+        opacity: 0; /* Start with 0 opacity for smooth transition */
+        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; /* Smooth transition */
+        transform: translateY(20px); /* Start with slight downward shift */
+    }
 
-#graphContainer {
-    display: none; /* Default state */
-}
-
-
+    #tableContainer.active,
+    #graphContainer.active {
+        display: block;
+        opacity: 1; /* Fade in */
+        transform: translateY(0); /* Bring it back to normal position */
+    }
 </style>
+
 {% load static %}
 {% include 'reusable.html' %}
 <title>RTO - II, Dashboard</title>
@@ -48,8 +54,6 @@
             <div class="container-fluid">
                 {% include 'icons.html' %}
             </div>
-
-
         </section>
 
         <div class="container-fluid">
@@ -61,95 +65,75 @@
                     </select>
                 </div>
             </div>
-
         </div>
-        <div class="container-fluid" id="tableContainer" style="padding-top:20px; display:none">
+
+        <div class="container-fluid" id="tableContainer" style="padding-top:20px;">
             {% include 'retired.html' with retired=retired type=label count_leave_individuals=count_leave_individuals %}
         </div>
-        <div class="container-fluid" id="graphContainer" style="display: none;padding-top:20px;">
+
+        <div class="container-fluid" id="graphContainer" style="padding-top:20px;">
             {% include 'graph.html' with results=results counts=counts zones=zones Comparison=Comparison leave_summary=leave_summary %}
         </div>
-
-
     </div>
     <!-- Content Wrapper. Contains page content  Ends Here -->
-
 
 </div>
 <!-- /.content-wrapper -->
 
-
 {% include 'footer.html' %}
 
-</div>
-
-</body>
-
-<div class="row">
-
-    {% if message %}
-
-    <script>
-
-
-        // SweetAlert configuration
-        Swal.fire({
-            title: "{{ title }}",
-            text: "{{ message }}",
-            icon: "{{ icon }}",
-            toast: true,  // Enables toast mode for smaller alert
-            position: 'top-end',  // Position it at the top right
-            showConfirmButton: false,  // Hides the "OK" button
-            timer: 3000,  // Auto close after 3 seconds
-            timerProgressBar: true,  // Adds a progress bar to the timer
-            didOpen: () => {
-                // Delay Select2 initialization to avoid conflicts
-                setTimeout(() => {
-                }, 1000);
-            }
-        });
-
-
-
-
-
-
-    </script>
-    {% endif %}
-</div>
-
-<script>
-        $(document).ready(function() {
-            $('#viewToggle').select2();  // Initialize Select2
-        });
-    </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    const viewToggle = $('#viewToggle');  // Use jQuery to select the element
-    const tableContainer = document.getElementById('tableContainer');
-    const graphContainer = document.getElementById('graphContainer');
+        const viewToggle = $('#viewToggle');  // Initialize Select2 for the dropdown
+        const tableContainer = document.getElementById('tableContainer');
+        const graphContainer = document.getElementById('graphContainer');
 
-    // Function to update the visibility of the containers
-    function updateView() {
-        const selectedValue = viewToggle.val(); // Get the selected value from Select2
-        if (selectedValue === 'table') {
-            tableContainer.style.display = 'block';
-            graphContainer.style.display = 'none';
-        } else if (selectedValue === 'graph') {
-            tableContainer.style.display = 'none';
-            graphContainer.style.display = 'block';
-        } else {
-            tableContainer.style.display = 'none';
-            graphContainer.style.display = 'none';
+        // Function to update the visibility of the containers
+        function updateView() {
+            const selectedValue = viewToggle.val(); // Get the selected value from Select2
+
+            // Hide both containers initially
+            tableContainer.classList.remove('active');
+            graphContainer.classList.remove('active');
+
+            // Display the appropriate container
+            if (selectedValue === 'table') {
+                setTimeout(() => {
+                    tableContainer.classList.add('active');
+                }, 50); // Delay to allow for smooth transition
+            } else if (selectedValue === 'graph') {
+                setTimeout(() => {
+                    graphContainer.classList.add('active');
+                }, 50); // Delay to allow for smooth transition
+            }
         }
-    }
 
-    // Attach event listener to the Select2 dropdown
-    viewToggle.on('change', updateView);
+        // Attach event listener to the Select2 dropdown
+        viewToggle.on('change', updateView);
 
-    // Initialize the view based on the default dropdown value
-    updateView();
-});
-
-
+        // Initialize the view based on the default dropdown value
+        updateView();
+    });
 </script>
+
+{% if message %}
+<script>
+    // SweetAlert configuration
+    Swal.fire({
+        title: "{{ title }}",
+        text: "{{ message }}",
+        icon: "{{ icon }}",
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: () => {
+            setTimeout(() => {
+                // Additional actions can be placed here if needed
+            }, 1000);
+        }
+    });
+</script>
+{% endif %}
+</body>
