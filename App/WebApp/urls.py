@@ -18,8 +18,12 @@ urlpatterns = [
     path('ManageTransferPosting', views.ManageEmployeeTransferPosting, name='ManageTransferPosting'),
     path('LeaveApplication',views.submitLeaveApplication, name='submitLeaveApplication'),
     path('ManageLeaveApplication',views.ManageEmployeeLeaveApplication, name='ManageLeaveApplication'),
+    path('EmployeeExplanation', views.EmployeeExplanation, name='EmployeeExplanation'),
+    path('ManageEmployeeExplanation', views.ManageEmployeeExplanation, name='ManageEmployeeExplanation'),
+
     path('get_employee_leave_data/<int:emp_id>/', views.get_employee_leave_data, name='get_employee_leave_data'),
     path('get_employee_unit_data/<int:emp_id>/', views.get_employee_unit_data, name='get_employee_unit_data'),
+    path('get_employee_exp_data/<int:emp_id>/', views.get_employee_exp_data, name='get_employee_exp_data'),
 
 ]
 if settings.DEBUG:

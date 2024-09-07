@@ -24,8 +24,7 @@
                         <ol class="breadcrumb float-sm-right">
                             <li class="breadcrumb-item"><a href="#" style="color:black"><i class="fa fa-home"></i></a>
                             </li>
-                            <li class="breadcrumb-item active">Manage Transfer</li>
-
+                            <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
                     </div><!-- /.col -->
                 </div><!-- /.row -->
@@ -36,10 +35,10 @@
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
-                <div class="row mb-3">
+                  <div class="row mb-3">
                     <div class="col-lg-3">
-                        <a href="/TransferPosting">
-                            <button type="button" class="btn btn-primary"> Add Transfer Posting</button>
+                        <a href="/EmployeeExplanation">
+                            <button type="button" class="btn btn-primary"> Create Explanation</button>
                         </a>
                     </div>
                 </div>
@@ -50,7 +49,7 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-header">
-                                        <h3 class="card-title">Employee Transfer Posting History</h3>
+                                        <h3 class="card-title">Employee Explanation History</h3>
 
                                         <div class="card-tools">
                                             <div class="input-group input-group-sm" style="width: 150px;">
@@ -76,85 +75,48 @@
                                                 <th>Name</th>
                                                 <th>BPS</th>
                                                 <th>Designation</th>
-                                                <th>Prev Zone</th>
-                                                <th>New Zone</th>
-                                                <th>CCIR Order #</th>
-                                                <th>Order Date</th>
-                                                <th>Doc</th>
-
-                                                <th>Prev Unit</th>
-                                                <th>New Unit</th>
-                                                <th>Range</th>
-                                                <th>Transfer Date</th>
-                                                <th>Zone Order #</th>
-
-                                                <th>Zone Order</th>
+                                                <th>Explanation Type</th>
+                                                <th>Issue Date</th>
+                                                <th>Compliance Date</th>
+                                                <th>Image / PDF</th>
                                                 <th>Actions</th>
-
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for item in transfer_records %}
+                                            {% for item in exp_document %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>{{ item.employee__Name }}</td>
-                                                <td> {{ item.employee__BPS }}</td>
-
                                                 <td>{{ item.employee__Designation }}</td>
-                                                <td>{{ item.old_zone }}</td>
-                                                <td>{{ item.new_zone }}</td>
-                                                <td> {{ item.chief_order_number }}</td>
-                                                <td>{{ item.chief_transfer_date}}</td>
+                                                <td> {{ item.employee__BPS }}</td>
+                                                <td>{{ item.exp_type }}</td>
+                                                <td>{{ item.exp_issue_date }}</td>
+                                                <td>{{ item.exp_reply_date}}</td>
                                                 <td>
-                                                    {% if item.chief_transfer_document %}
-                                                    {% if item.chief_is_pdf %}
-                                                    <a href="media/{{item.chief_transfer_document}}" target="_blank">
+                                                    {% if item.exp_document %}
+                                                    {% if item.is_pdf %}
+                                                    <a href="media/{{item.exp_document}}" target="_blank">
                                                         PDF
                                                     </a>
                                                     {% else %}
-                                                    <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
-                                                          data-src="media/{{item.chief_transfer_document}}">
-                                                            <a href="media/{{ item.chief_transfer_document}}"
-                                                               data-lightgallery="item">
-                                                           Image
-                                                        </a>
-                                                        </span>
+                                                    <span class="spnImg" data-sub-html="{{ item.employee__Name }}"
+                                                          data-src="media/{{item.exp_document}}">
+                                                        <a href="media/{{ item.exp_document }}"
+                                                           data-lightgallery="item">
+                                                       Image
+                                                    </a>
+                                                    </span>
                                                     {% endif %}
                                                     {% else %}
+                                                    No document uploaded
                                                     {% endif %}
                                                 </td>
-
-                                                <td>{{ item.old_unit }}</td>
-                                                <td>{{ item.new_unit }}</td>
-                                                <td>{{ item.zone_range}}</td>
-                                                <td>{{ item.zone_transfer_date}}</td>
-                                                <td>{{item.zone_order_number}}</td>
-                                                <td>
-                                                    {% if item.zone_transfer_document %}
-                                                    {% if item.is_pdf %}
-                                                        <a href="media/{{item.zone_transfer_document}}" target="_blank">
-                                                            PDF
-                                                        </a>
-                                                    {% else %}
-                                                        <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
-                                                              data-src="media/{{item.zone_transfer_document}}">
-                                                            <a href="media/{{ item.zone_transfer_document}}"
-                                                               data-lightgallery="item">
-                                                           Image
-                                                        </a>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% else %}
-                                                    {% endif %}
-                                                </td>
-
-                                                <td>
-                                                    <a href="TransferPosting?rowId={{ item.id }}&empId={{ item.employee__id }}&userType={{ request.user.userType }}&type=edit"
+                 <td>
+                                                    <a href="EmployeeExplanation?rowId={{ item.id }}&empId={{ item.employee__id }}&userType={{ request.user.userType }}&type=edit"
                                                        style="color:black;">
                                                         <i class="fa fa-edit"></i>
                                                     </a>
                                                 </td>
-
 
                                             </tr>
                                             {% endfor %}
@@ -188,3 +150,4 @@
 
 
 </body>
+

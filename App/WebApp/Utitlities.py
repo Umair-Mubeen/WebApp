@@ -6,7 +6,8 @@ from django.db.models import Count, F, When, BooleanField
 from django.db.models.functions import Substr, Trim
 from django.db.models import Case, When, BooleanField, F
 
-from .models import DispositionList, TransferPosting, LeaveApplication
+from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
+
 logger = logging.getLogger(__name__)
 
 
@@ -302,7 +303,7 @@ def getAllEmpTransferPosting(userType, zoneType):
         return []  # Return an empty list on error
 
 
-def getAllEmpLeaveApplication(userType,zoneType):
+def getAllEmpLeaveApplication(userType, zoneType):
     try:
         filters = {}
         if userType == 2:  # Employee
@@ -322,5 +323,29 @@ def getAllEmpLeaveApplication(userType,zoneType):
             'leave_document'
         )
         return leave_application
+    except Exception as e:
+        return str(e)
+
+
+def getAllEmpLeaveExplanation(userType, zoneType):
+    try:
+        filters = {}
+        if userType == 2:  # Employee
+            filters['zone_type'] = zoneType
+
+        employee_explanation = Explanation.objects.select_related('employee').filter(
+            **filters).values(
+            'employee__id',
+            'employee__Name',
+            'employee__Designation',
+            'employee__BPS',
+            'id',
+            'exp_type',
+            'exp_issue_date',
+            'exp_reply_date',
+            'exp_document',
+            'zone_type'
+        )
+        return employee_explanation
     except Exception as e:
         return str(e)

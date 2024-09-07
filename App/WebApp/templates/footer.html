@@ -192,13 +192,18 @@
 
     if (userType == 'True') {
         // Admin-specific logic for grouped bar chart
-        const labels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'];
+        const labels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave','Maternity Leave','Study Leave','Special Leave'];
         const datasets = Object.keys(leaveSummary).map(zone => ({
             label: zone,
             data: [
                 leaveSummary[zone].casual_leave.count,
                 leaveSummary[zone].earned_leave.count,
                 leaveSummary[zone].ex_pakistan_leave.count,
+                leaveSummary[zone].medical_leave.count,
+                leaveSummary[zone].maternity_leave.count,
+                leaveSummary[zone].study_leave.count,
+                leaveSummary[zone].special_leave.count,
+
             ],
             backgroundColor: generateRandomColors(3)
         }));
@@ -236,14 +241,20 @@
         });
     } else {
         // Employee-specific logic for doughnut chart
+        console.log(leaveSummary)
         const chartData = {
-            labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave'],
+            labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave', 'Maternity Leave', 'Study Leave', 'Special Leave'],
             datasets: [{
                 label: 'Leave Count',
                 data: [
                     leaveSummary.casual_leave.count,
                     leaveSummary.earned_leave.count,
                     leaveSummary.ex_pakistan_leave.count,
+                    leaveSummary.medical_leave.count,
+                    leaveSummary.maternity_leave.count,
+                    leaveSummary.study_leave.count,
+                    leaveSummary.special_leave.count,
+
                 ],
                 backgroundColor: generateRandomColors(3)
             }]

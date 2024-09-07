@@ -20,9 +20,9 @@ from .Utitlities import (
     ZoneDesignationWiseComparison,
     StrengthComparison,
     getAllEmpTransferPosting,
-    getAllEmpLeaveApplication
+    getAllEmpLeaveApplication, getAllEmpLeaveExplanation
 )
-from .models import DispositionList, TransferPosting, LeaveApplication
+from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 
 logger = logging.getLogger(__name__)
 
@@ -352,12 +352,19 @@ def ManageEmployeeTransferPosting(request):
         transfer_records = getAllEmpTransferPosting(request.user.is_superuser, request.user.userType)
 
         for item in transfer_records:
-            transfer_document = item.get('transfer_document')
-            mime_type = mimetypes.guess_type(transfer_document)[0] if transfer_document else None
+            zone_transfer_document = item.get('zone_transfer_document')
+            chief_transfer_document = item.get('chief_transfer_document')
+            mime_type = mimetypes.guess_type(zone_transfer_document)[0] if zone_transfer_document else None
             if mime_type == 'application/pdf':
                 item['is_pdf'] = True
             elif mime_type and mime_type.startswith('image'):
                 item['is_image'] = True
+
+            mime_type = mimetypes.guess_type(chief_transfer_document)[0] if chief_transfer_document else None
+            if mime_type == 'application/pdf':
+                item['chief_is_pdf'] = True
+            elif mime_type and mime_type.startswith('image'):
+                item['chief_is_image'] = True
 
         return render(request, 'ManageTransferPosting.html', {
             'transfer_records': transfer_records,
@@ -375,7 +382,6 @@ def submitLeaveApplication(request):
         else:
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
                 ZONE=request.user.userType)
-
 
         if request.method == 'POST':
             employee_name = request.POST.get('emp_name')
@@ -523,6 +529,10 @@ def get_employee_leave_data(request, emp_id=None):
                 casual_leave = LeaveApplication.objects.filter(leave_type='Casual Leave', zone_type=zone_type)
                 earned_leave = LeaveApplication.objects.filter(leave_type='Earned Leave', zone_type=zone_type)
                 ex_pakistan_leave = LeaveApplication.objects.filter(leave_type='Ex-Pakistan Leave', zone_type=zone_type)
+                medical_leave = LeaveApplication.objects.filter(leave_type='Medical Leave', zone_type=zone_type)
+                study_leave = LeaveApplication.objects.filter(leave_type='Study Leave', zone_type=zone_type)
+                maternity_leave = LeaveApplication.objects.filter(leave_type='Maternity Leave', zone_type=zone_type)
+                special_leave = LeaveApplication.objects.filter(leave_type='Special Leave', zone_type=zone_type)
 
                 leave_summary[zone_type] = {
                     'casual_leave': {
@@ -537,18 +547,38 @@ def get_employee_leave_data(request, emp_id=None):
                         'count': ex_pakistan_leave.count(),
                         'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
                     },
+
+                    'medical_leave': {
+                        'count': medical_leave.count(),
+                        'days': medical_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
+                    'study_leave': {
+                        'count': study_leave.count(),
+                        'days': study_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
+                    'maternity_leave': {
+                        'count': maternity_leave.count(),
+                        'days': maternity_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
+                    'special_leave' : {
+                        'count': special_leave.count(),
+                        'days': special_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                    },
                 }
 
         if is_zone_admin(request.user):
             # Filter by the user's zone_type if not admin
             leave_data = LeaveApplication.objects.filter(zone_type=request.user.userType)
-
             if emp_id:
                 leave_data = leave_data.filter(employee__id=emp_id)
 
-            casual_leave = leave_data.filter(leave_type='Casual Leave')
-            earned_leave = leave_data.filter(leave_type='Earned Leave')
-            ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave')
+            casual_leave = leave_data.filter(leave_type='Casual Leave',zone_type=request.user.userType)
+            earned_leave = leave_data.filter(leave_type='Earned Leave',zone_type=request.user.userType)
+            ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave',zone_type=request.user.userType)
+            medical_leave = LeaveApplication.objects.filter(leave_type='Medical Leave',zone_type=request.user.userType)
+            study_leave = LeaveApplication.objects.filter(leave_type='Study Leave',zone_type=request.user.userType)
+            maternity_leave = LeaveApplication.objects.filter(leave_type='Maternity Leave',zone_type=request.user.userType)
+            special_leave = LeaveApplication.objects.filter(leave_type='Special Leave',zone_type=request.user.userType)
 
             leave_summary = {
                 'casual_leave': {
@@ -563,7 +593,25 @@ def get_employee_leave_data(request, emp_id=None):
                     'count': ex_pakistan_leave.count(),
                     'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
                 },
+
+                'medical_leave': {
+                    'count': medical_leave.count(),
+                    'days': medical_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
+                'study_leave': {
+                    'count': study_leave.count(),
+                    'days': study_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
+                'maternity_leave': {
+                    'count': maternity_leave.count(),
+                    'days': maternity_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
+                'special_leave': {
+                    'count': special_leave.count(),
+                    'days': special_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
+                },
             }
+            print(leave_summary)
             if emp_id:
                 return JsonResponse(leave_summary)
 
@@ -603,38 +651,6 @@ def CountLeaveIndividuals(request):
 
     return data
 
-
-# def get_employee_unit_data(request, emp_id):
-#     try:
-#         if is_zone_admin(request.user) and emp_id:
-#             # Get the latest transfer record based on created_date
-#             latest_transfer_record = TransferPosting.objects.filter(employee_id=emp_id).order_by('-created_at').first()
-#
-#             if latest_transfer_record:
-#                 # Fetch the previous records that are older than the latest record
-#                 previous_records = TransferPosting.objects.filter(
-#                     employee_id=emp_id,
-#                     created_at__lt=latest_transfer_record.created_at
-#                 ).order_by('-created_at')
-#                 previous_unit = None
-#
-#                 posting_summary = {
-#                     'units': {
-#                         'current_unit': latest_transfer_record.new_unit,
-#                         'previous_unit': latest_transfer_record.old_unit,
-#                     }
-#                 }
-#                 print(posting_summary)
-#                 return JsonResponse(posting_summary)
-#             else:
-#                 return JsonResponse({'error': 'No transfer records found'}, status=404)
-#
-#         else:
-#             return JsonResponse({'error': 'Unauthorized or invalid employee ID'}, status=403)
-#
-#     except Exception as e:
-#         logger.error(f"Error in get_employee_unit_data function: {e}")
-#         return JsonResponse({'error': str(e)}, status=500)
 
 def get_employee_unit_data(request, emp_id):
     try:
@@ -676,3 +692,123 @@ def is_admin(user):
 
 def is_zone_admin(user):
     return user.is_superuser == 2
+
+
+@login_required(login_url='userLogin')  # Redirect when user is not logged in
+def EmployeeExplanation(request):
+    try:
+        empId = request.GET.get('empId', '')
+        rowId = request.GET.get('rowId', '')
+        row = {}
+        context = {}
+
+        # Determine if the user is an admin or a zone admin and fetch the relevant row
+        if rowId and empId:
+            query_params = {'id': rowId, 'employee_id': empId}
+            if is_zone_admin(request.user):
+                query_params['zone_type'] = request.user.userType
+
+            row = Explanation.objects.filter(**query_params).first()
+
+        # Fetch data based on user role
+        user_zone = request.user.userType if is_zone_admin(request.user) else None
+        data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
+        if user_zone:
+            data = data.filter(ZONE=user_zone)
+
+        if request.method == 'POST':
+            rowId = request.POST.get('hd_rowId')
+            hd_emp = request.POST.get('emp_name') or request.POST.get('hd_emp')
+            employee = DispositionList.objects.get(id=hd_emp)
+            exp_type = request.POST.get('exp_type')
+            exp_issue_date = datetime.strptime(request.POST.get('exp_issue_date'), "%Y-%m-%d") if request.POST.get('exp_issue_date') else None
+            exp_reply_date = datetime.strptime(request.POST.get('exp_reply_date'), "%Y-%m-%d") if request.POST.get('exp_reply_date') else None
+            exp_document = request.FILES.get('exp_document')
+
+            # Validate file upload
+            if not exp_document:
+                return HttpResponse("No file uploaded.", status=400)
+
+            file_type = mimetypes.guess_type(exp_document.name)[0]
+            if not file_type or (not file_type.startswith('image') and file_type != 'application/pdf'):
+                return HttpResponse("Uploaded file is not a valid image or PDF.", status=400)
+
+            # Update or create Explanation record based on rowId
+            if rowId:
+                query_params = {'id': rowId, 'employee_id': hd_emp}
+                if is_zone_admin(request.user):
+                    query_params['zone_type'] = request.user.userType
+                elif is_admin(request.user):
+                    query_params['zone_type'] = request.POST.get('hd_zone_type')
+
+                row = Explanation.objects.filter(**query_params).first()
+                if row:
+                    row.exp_type = exp_type
+                    row.exp_issue_date = exp_issue_date
+                    row.exp_reply_date = exp_reply_date
+                    row.exp_document = exp_document
+                    row.save()
+                    context.update({'alert_message': "Record Updated Successfully.", 'alert_type': 'success'})
+                else:
+                    context.update({'alert_message': "Record not found.", 'alert_type': 'error'})
+            else:
+                zone_type = request.user.userType if is_zone_admin(request.user) else request.POST.get('zone_type')
+                Explanation.objects.create(
+                    employee=employee,
+                    exp_type=exp_type,
+                    exp_issue_date=exp_issue_date,
+                    exp_reply_date=exp_reply_date,
+                    zone_type=zone_type,
+                    exp_document=exp_document
+                )
+                context.update({'alert_message': "Record Created Successfully.", 'alert_type': 'success'})
+
+        context.update({'data': data, 'rowId': rowId, 'empId': empId, 'row': row})
+        return render(request, 'Explanation.html', context)
+    except Exception as e:
+        print(str(e))
+        return HttpResponse(str(e), status=500)
+
+
+@login_required(login_url='userLogin')  # redirect when user is not logged in
+def ManageEmployeeExplanation(request):
+    try:
+        employee_explanation = getAllEmpLeaveExplanation(request.user.is_superuser, request.user.userType)
+        for item in employee_explanation:
+            exp_document = item.get('exp_document')
+            mime_type = mimetypes.guess_type(exp_document)[0] if exp_document else None
+            if mime_type == 'application/pdf':
+                item['is_pdf'] = True
+            elif mime_type and mime_type.startswith('image'):
+                item['is_image'] = True
+
+        return render(request, 'ManageExplanation.html', {'exp_document': employee_explanation})
+    except Exception as e:
+        logger.error(f"Error in Manage Explanation view: {e}")
+        return HttpResponse("An error occurred.", status=500)
+
+
+def get_employee_exp_data(request, emp_id):
+    try:
+        if emp_id:
+            # Get all explanation records based on employee_id
+            explanation_records = Explanation.objects.filter(employee_id=emp_id).order_by('-created_at').all()
+            explanations_list = []
+
+            # Prepare the data in a JSON-friendly format
+            for record in explanation_records:
+                explanations_list.append({
+                    'exp_type': record.exp_type,
+                    'exp_issue_date': record.exp_issue_date.strftime('%Y-%m-%d'),
+                    'exp_reply_date': record.exp_reply_date.strftime('%Y-%m-%d'),
+                    'exp_document': record.exp_document.url if record.exp_document else None,
+                    'zone_type': record.zone_type,
+                    'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'updated_at': record.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                })
+            return JsonResponse({'explanations': explanations_list}, status=200)
+        else:
+            return JsonResponse({'error': 'Unauthorized or invalid employee ID'}, status=403)
+    except Exception as e:
+        logger.error(f"Error in get_employee_exp_data function: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
