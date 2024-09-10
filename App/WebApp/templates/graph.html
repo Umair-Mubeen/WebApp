@@ -44,6 +44,46 @@
         </div>
     </div>
 
+     <!-- Explanation Summary Report -->
+    <div class="col-lg-6">
+        <div class="card dark-primary">
+            <div class="card-header">
+                <h3 class="card-title">Explanation Summary Report, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="expSummary" class="chart-canvas" width="200" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+
+      <!-- Explanation Summary Report -->
+    <div class="col-lg-6">
+        <div class="card dark-primary">
+            <div class="card-header">
+                <h3 class="card-title">Transfer Posting Summary Report, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="transferChart" class="chart-canvas" width="200" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Employee Retirement Chart -->
     <div class="col-lg-6">
         <div class="card dark-primary">

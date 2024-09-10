@@ -116,6 +116,12 @@
                                                     No document uploaded
                                                     {% endif %}
                                                 </td>
+                                                <td>
+                                                    <a href="LeaveApplication?rowId={{ item.id }}&empId={{ item.employee__id }}&userType={{ request.user.userType }}&type=edit"
+                                                       style="color:black;">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
+                                                </td>
 
                                             </tr>
                                             {% endfor %}

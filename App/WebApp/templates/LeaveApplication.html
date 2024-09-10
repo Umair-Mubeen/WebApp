@@ -88,9 +88,12 @@
 
 
                                 <div class="card-body" style="display:block">
-                                    <input type="hidden" name="hd_emp" value="" id="hd_emp">
+                                <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
+                                <input type="hidden" name="hd_rowId" value="{{rowId}}" id="hd_rowId">
+                                <input type="hidden" name="hd_leave_type" value="{{row.leave_type}}" id="hd_leave_type">
+                                <input type="hidden" name="hd_zone_type" value="{{row.zone_type}}" id="hd_zone_type">
                                     <div class="form-group">
-                                        <label>Employee Name </label>
+                                        <label>Employee Name  </label>
 
                                         <select class="js-example-basic-single form-control" name="emp_name"
                                                 id="emp_name">
@@ -109,6 +112,7 @@
                                     <div class="form-group">
                                         <label for="leave_type">Type of Leave:</label><br>
                                         <select id="leave_type" name="leave_type" class="form-control">
+                                            <option value="" selected disabled>Select an Leave</option>
                                             <option value="Casual Leave">Casual Leave (Max 20 days)</option>
                                             <option value="Earned Leave">Earned Leave (Max 48 days)</option>
                                             <option value="Ex-Pakistan Leave">Ex-Pakistan Leave</option>
@@ -124,20 +128,21 @@
                                     <div class="form-group">
                                         <label for="leave_start_date">Leave Start Date:</label><br>
                                         <input type="date" id="leave_start_date" name="leave_start_date"
-                                               class="form-control">
+                                               class="form-control" value="{% if row.leave_start_date %}{{ row.leave_start_date|date:'Y-m-d' }}{% else %} {% endif %}">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="leave_end_date">Leave End Date:</label>
                                         <input type="date" id="leave_end_date" name="leave_end_date"
-                                               class="form-control">
+                                               class="form-control" value="{% if row.leave_end_date %}{{ row.leave_end_date|date:'Y-m-d' }}{% else %} {% endif %}">
+
 
                                     </div>
 
                                     <div class="form-group">
                                         <label for="reason">Reason for Leave:</label>
                                         <textarea id="reason" name="reason" rows="4" cols="50"
-                                                  class="form-control"></textarea>
+                                                  class="form-control">{% if row.reason %}{{ row.reason}}{% else %} {% endif %}</textarea>
 
                                     </div>
 
@@ -225,6 +230,33 @@
 </div>
 
 </body>
+
+<script>
+    $(document).ready(function () {
+        var hd_leave_type = document.getElementById('hd_leave_type').value; // Get the hidden input value
+        $('#leave_type').val(hd_leave_type).trigger('change');
+
+
+
+        var hd_zone_type = document.getElementById('hd_zone_type').value; // Get the hidden input value
+        $('#zone_type').val(hd_zone_type).trigger('change');
+
+
+        var hd_emp = document.getElementById('hd_emp').value; // Get the hidden input value
+        // Set the selected value and trigger select2 to update
+        $('#emp_name').val(hd_emp).trigger('change');
+
+        // Disable the select element
+        if(hd_emp !=''){$('#emp_name').val(hd_emp).prop('disabled', true);}
+
+        // Initialize select2
+        $('.js-example-basic-single').select2();
+    });
+
+
+
+
+</script>
 
 <script>
     $(document).ready(function () {

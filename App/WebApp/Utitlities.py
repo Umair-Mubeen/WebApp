@@ -78,7 +78,7 @@ def getRetirementList(zone, request):
 def getZoneRetirementList(zone, request):
     try:
         # Group retirements by zone and count them
-        if request.user.userType == 'admin':
+        if is_admin(request.user):
             retirement = DispositionList.objects.annotate(
                 year=Substr('Date_of_Retirement', 7, 4),
                 month=Substr('Date_of_Retirement', 4, 2)
@@ -87,7 +87,7 @@ def getZoneRetirementList(zone, request):
                 month__in=['08', '09', '10', '11', '12'],
             ).order_by('ZONE')
 
-        else:
+        if is_zone_admin(request.user):
             retirement = DispositionList.objects.annotate(
                 year=Substr('Date_of_Retirement', 7, 4),
                 month=Substr('Date_of_Retirement', 4, 2)
@@ -255,7 +255,6 @@ def StrengthComparison(userType, user_zone=None):
             for (designation, bps), zone_data in aggregated_data.items()
         ]
 
-        print(final_data)
         return final_data
 
     except Exception as e:
@@ -315,6 +314,7 @@ def getAllEmpLeaveApplication(userType, zoneType):
             'employee__Name',
             'employee__Designation',
             'employee__BPS',
+            'id',
             'leave_type',
             'leave_start_date',
             'leave_end_date',
@@ -349,3 +349,11 @@ def getAllEmpLeaveExplanation(userType, zoneType):
         return employee_explanation
     except Exception as e:
         return str(e)
+
+
+def is_admin(user):
+    return user.is_superuser == 1
+
+
+def is_zone_admin(user):
+    return user.is_superuser == 2
