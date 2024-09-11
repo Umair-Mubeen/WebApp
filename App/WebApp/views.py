@@ -69,7 +69,6 @@ def Dashboard(request):
             return redirect('/')
 
         transfer_posting_summary = transfer_posting_chart(request)
-        print(transfer_posting_summary)
         leave_summary = get_employee_leave_data(request)  # admin and zone
         explanation_summary = get_employee_explanation_data(request)
 
@@ -115,10 +114,10 @@ def getDispositionList(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def Search(request):
     try:
-        if request.user.is_superuser == 1:  # admin
+        if is_admin(request.user) == 1:  # admin
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'CNIC_No', 'Date_of_Birth',
                                                   'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement')
-        else:
+        if is_zone_admin(request.user):
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'CNIC_No', 'Date_of_Birth',
                                                   'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement').filter(
                 ZONE=request.user.userType)
@@ -170,13 +169,13 @@ def EmployeeTransferPosting(request):
         opType = request.GET.get('type', '')
         userType = request.GET.get('userType', '')
         # Determine if the user is an admin or zone admin and filter data accordingly
-        if request.user.is_superuser == 1:
+        if is_admin(request.user):
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
-        else:
+        if is_zone_admin(request.user):
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
                 ZONE=request.user.userType)
         # super admin will edit the record
-        if empId and rowId and request.user.is_superuser == 1:
+        if empId and rowId and is_admin(request.user):
             print('admin / CCIR')
             postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId)
             if postingRow:
@@ -201,7 +200,7 @@ def EmployeeTransferPosting(request):
 
                 }
         # fetch row from database zone admin in case of edit record
-        elif empId and rowId and request.user.is_superuser == 2:
+        elif empId and rowId and is_zone_admin(request.user):
             print('zone admin edit record')
             employee = DispositionList.objects.get(id=empId)
             postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId, zone_type=request.user.userType)
@@ -245,7 +244,7 @@ def EmployeeTransferPosting(request):
             # Retrieve the employee object
             employee = DispositionList.objects.get(id=emp_name)
 
-            if request.user.is_superuser == 1 and hd_type:
+            if is_admin(request.user) and hd_type:
                 new_zone = request.POST.get('new_zone')
                 employee.ZONE = new_zone
                 employee.save()
@@ -268,7 +267,7 @@ def EmployeeTransferPosting(request):
 
                 transfer_posting.save()
 
-            elif request.user.is_superuser == 1:  # ccir will create record
+            elif is_admin(request.user):  # ccir will create record
                 print('admin create record')
                 # Handling for superuser (admin)
                 new_zone = request.POST.get('new_zone')
@@ -287,7 +286,7 @@ def EmployeeTransferPosting(request):
                     zone_type=new_zone
                 )
 
-            elif request.user.is_superuser == 2 and hd_type and hd_rowId:  # after CCIR ZOne will assigned Unit
+            elif is_zone_admin(request.user) and hd_type and hd_rowId:  # after CCIR ZOne will assigned Unit
                 print("editing zone record employees.......")
                 # Handling for zone admin
                 transfer_posting = TransferPosting.objects.get(employee=employee, zone_type=request.user.userType,
@@ -410,6 +409,7 @@ def submitLeaveApplication(request):
             leave_end_date = request.POST.get('leave_end_date')
             reason = request.POST.get('reason')
             leave_document = request.FILES.get('leave_document')
+            zone_type = request.POST.get('zone_type') or request.POST.get('hd_zone_type')
 
             # Validate and process leave dates
             try:
@@ -427,25 +427,8 @@ def submitLeaveApplication(request):
                 leave_type=leave_type,
                 leave_start_date__year=current_year
             ).aggregate(Sum('days_granted'))['days_granted__sum'] or 0
-            # Check if updating an existing record
-            if hd_rowId:
-                if row:
-                    # Calculate the total leave including the current record
-                    existing_leave_taken = leave_taken - row.days_granted
-                else:
-                    existing_leave_taken = leave_taken
-            else:
-                existing_leave_taken = leave_taken
 
-            # # Validate against the prescribed limits
-            # if leave_type == 'Casual Leave' and (existing_leave_taken + leave_duration) > 20:
-            #     context.update({'message': 'Casual Leave already taken and cannot exceed 20 days per year.',
-            #                     'alert_type': 'error'})
-            #     return render(request, 'LeaveApplication.html', context)
-            # elif leave_type == 'Earned Leave' and (existing_leave_taken + leave_duration) > 48:
-            #     context.update({'message': 'Earned Leave already taken and cannot exceed 48 days per year.',
-            #                     'alert_type': 'error'})
-            #     return render(request, 'LeaveApplication.html', context)
+            # Check if updating an existing record
 
             if leave_type == 'Casual Leave' and leave_duration > 20:
                 context.update({'message': 'Casual Leave cannot exceed 20 days per year.', 'alert_type': 'error'})
@@ -458,12 +441,15 @@ def submitLeaveApplication(request):
             if hd_rowId:
                 # Update existing record
                 query_params = {'id': hd_rowId, 'employee_id': employee_name}
+                print(query_params)
                 if is_zone_admin(request.user):
                     query_params['zone_type'] = request.user.userType
                 elif is_admin(request.user):
                     query_params['zone_type'] = request.POST.get('hd_zone_type')
+                    print(query_params)
 
                 row = LeaveApplication.objects.filter(**query_params).first()
+                print(row)
 
                 if row:
                     row.leave_type = leave_type
@@ -473,9 +459,9 @@ def submitLeaveApplication(request):
                     row.reason = reason
                     row.days_granted = leave_duration
                     row.save()
-                    context.update({'message': 'Record Updated Successfully.', 'alert_type': 'success'})
+                    context.update({'message': 'Record Updated Successfully.', 'icon': 'success', 'empId' : employee_name})
                 else:
-                    context.update({'message': 'Record not found.', 'alert_type': 'error'})
+                    context.update({'message': 'Record not found.', 'icon': 'error'})
             else:
                 # Create new record
                 LeaveApplication.objects.create(
@@ -486,10 +472,10 @@ def submitLeaveApplication(request):
                     leave_document=leave_document,
                     reason=reason,
                     days_granted=leave_duration,
-                    zone_type=request.user.userType
+                    zone_type=zone_type
                 )
                 context.update(
-                    {'message': 'Your leave application has been submitted successfully.', 'alert_type': 'success'})
+                    {'message': 'Your leave application has been submitted successfully.', 'icon': 'success', 'empId' : employee_name})
 
         context.update({'data': data, 'rowId': rowId, 'empId': empId, 'row': row})
         return render(request, 'LeaveApplication.html', context)
@@ -546,6 +532,7 @@ def get_employee_leave_data(request, emp_id=None):
                 leave_data = LeaveApplication.objects.filter(employee_id=emp_id)
                 for zone in leave_data:
                     zoneType = zone.zone_type
+
                 casual_leave = leave_data.filter(leave_type='Casual Leave', zone_type=zoneType)
                 earned_leave = leave_data.filter(leave_type='Earned Leave', zone_type=zoneType)
                 ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave', zone_type=zoneType)
@@ -553,7 +540,6 @@ def get_employee_leave_data(request, emp_id=None):
                 study_leave = leave_data.filter(leave_type='Study Leave', zone_type=zoneType)
                 maternity_leave = leave_data.filter(leave_type='Maternity Leave', zone_type=zoneType)
                 special_leave = leave_data.filter(leave_type='Special Leave', zone_type=zoneType)
-
                 leave_summary = {
                     'casual_leave': {
                         'count': casual_leave.count(),
@@ -585,13 +571,14 @@ def get_employee_leave_data(request, emp_id=None):
                         'days': special_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
                     },
                 }
+                print(leave_summary)
                 return JsonResponse(leave_summary)
 
-            # Group by zone_type and aggregate leave data for each zone
+            # Group by zone_type Graph Leave Chart
             zones = LeaveApplication.objects.values('zone_type').distinct()
-
             for zone in zones:
                 zone_type = zone['zone_type']
+                print(zone_type)
 
                 casual_leave = LeaveApplication.objects.filter(leave_type='Casual Leave', zone_type=zone_type)
                 earned_leave = LeaveApplication.objects.filter(leave_type='Earned Leave', zone_type=zone_type)
@@ -634,17 +621,20 @@ def get_employee_leave_data(request, emp_id=None):
                 }
 
         if is_zone_admin(request.user):
-            leave_data = LeaveApplication.objects.filter(zone_type=request.user.userType)
-            zoneType = request.user.userType
+            print(zoneType)
+            if emp_id:
+                leave_data = LeaveApplication.objects.filter(employee_id=emp_id)
+            else:
+                leave_data = LeaveApplication.objects.filter(zone_type=request.user.userType)
 
+            zoneType = request.user.userType
             casual_leave = leave_data.filter(leave_type='Casual Leave', zone_type=zoneType)
             earned_leave = leave_data.filter(leave_type='Earned Leave', zone_type=zoneType)
             ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave', zone_type=zoneType)
-            medical_leave = LeaveApplication.objects.filter(leave_type='Medical Leave', zone_type=zoneType)
-            study_leave = LeaveApplication.objects.filter(leave_type='Study Leave', zone_type=zoneType)
-            maternity_leave = LeaveApplication.objects.filter(leave_type='Maternity Leave',
-                                                              zone_type=zoneType)
-            special_leave = LeaveApplication.objects.filter(leave_type='Special Leave', zone_type=zoneType)
+            medical_leave = leave_data.filter(leave_type='Medical Leave', zone_type=zoneType)
+            study_leave = leave_data.filter(leave_type='Study Leave', zone_type=zoneType)
+            maternity_leave = leave_data.filter(leave_type='Maternity Leave',zone_type=zoneType)
+            special_leave = leave_data.filter(leave_type='Special Leave', zone_type=zoneType)
 
             leave_summary = {
                 'casual_leave': {
@@ -678,6 +668,7 @@ def get_employee_leave_data(request, emp_id=None):
                 },
             }
             if emp_id:
+                print(leave_summary)
                 return JsonResponse(leave_summary)
 
         return leave_summary
@@ -962,8 +953,10 @@ def get_employee_explanation_data(request, emp_id=None):
 
 def transfer_posting_chart(request):
     try:
+        userType = None
         # Aggregating transfers by zone_type
         if is_admin(request.user):
+            userType = 1
             # For admin, get data for all zones (returns list of dicts)
             zone_transfer_data = TransferPosting.objects.values('zone_type').annotate(total_transfers=Count('id')).order_by(
                 'zone_type')
@@ -974,9 +967,11 @@ def transfer_posting_chart(request):
             context = {
                 'zones': zones,
                 'total_transfers': total_transfers,
+                'userType' : userType
             }
             return context
         elif is_zone_admin(request.user):
+            userType = 2
             # Filter records based on the user's zone_type (which corresponds to userType)
             zone_transfer_data = TransferPosting.objects.filter(zone_type=request.user.userType).values('zone_type',
                                                                                                         'new_unit').annotate(
@@ -998,6 +993,8 @@ def transfer_posting_chart(request):
             'zones': zones,
             'units': units,
             'unit_counts': unit_counts,
+            'userType': userType
+
         }
         return context
     except Exception as e:

@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 def fetchAllDispositionList(request):
     try:
         # Paginate results
-        if request.user.is_superuser == 2:
+        if is_zone_admin(request.user):
             result = DispositionList.objects.filter(ZONE=request.user.userType)
-        else:
+        if is_admin(request.user):
             result = DispositionList.objects.all()
 
         paginator = Paginator(result, 10)
@@ -30,11 +30,11 @@ def fetchAllDispositionList(request):
 def DesignationWiseList(zone, request):
     try:
         # Annotate designations after trimming whitespace and count occurrences
-        if request.user.userType == 'admin':
+        if is_admin(request.user):
             results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')) \
                 .values('trimmed_designation') \
                 .annotate(total=Count('trimmed_designation'))
-        else:
+        if is_zone_admin(request.user):
             results = DispositionList.objects.filter(ZONE=zone). \
                 annotate(trimmed_designation=Trim('Designation')).values('trimmed_designation') \
                 .annotate(total=Count('trimmed_designation'))

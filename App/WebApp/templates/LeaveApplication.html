@@ -22,6 +22,7 @@
     display: none !important;
 }
 
+
 </style>
 
 {% load static %}
@@ -88,12 +89,15 @@
 
 
                                 <div class="card-body" style="display:block">
-                                <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
-                                <input type="hidden" name="hd_rowId" value="{{rowId}}" id="hd_rowId">
-                                <input type="hidden" name="hd_leave_type" value="{{row.leave_type}}" id="hd_leave_type">
-                                <input type="hidden" name="hd_zone_type" value="{{row.zone_type}}" id="hd_zone_type">
+
+                                    <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
+                                    <input type="hidden" name="hd_rowId" value="{{rowId}}" id="hd_rowId">
+                                    <input type="hidden" name="hd_leave_type" value="{{row.leave_type}}"
+                                           id="hd_leave_type">
+                                    <input type="hidden" name="hd_zone_type" value="{{row.zone_type}}"
+                                           id="hd_zone_type">
                                     <div class="form-group">
-                                        <label>Employee Name  </label>
+                                        <label>Employee Name </label>
 
                                         <select class="js-example-basic-single form-control" name="emp_name"
                                                 id="emp_name">
@@ -128,23 +132,42 @@
                                     <div class="form-group">
                                         <label for="leave_start_date">Leave Start Date:</label><br>
                                         <input type="date" id="leave_start_date" name="leave_start_date"
-                                               class="form-control" value="{% if row.leave_start_date %}{{ row.leave_start_date|date:'Y-m-d' }}{% else %} {% endif %}">
+                                               class="form-control"
+                                               value="{% if row.leave_start_date %}{{ row.leave_start_date|date:'Y-m-d' }}{% else %} {% endif %}">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="leave_end_date">Leave End Date:</label>
                                         <input type="date" id="leave_end_date" name="leave_end_date"
-                                               class="form-control" value="{% if row.leave_end_date %}{{ row.leave_end_date|date:'Y-m-d' }}{% else %} {% endif %}">
+                                               class="form-control"
+                                               value="{% if row.leave_end_date %}{{ row.leave_end_date|date:'Y-m-d' }}{% else %} {% endif %}">
 
 
                                     </div>
 
                                     <div class="form-group">
                                         <label for="reason">Reason for Leave:</label>
-                                        <textarea id="reason" name="reason" rows="4" cols="50"
-                                                  class="form-control">{% if row.reason %}{{ row.reason}}{% else %} {% endif %}</textarea>
+                                        <textarea id="reason" name="reason" rows="2" cols="50" class="form-control">{% if row.reason %}{{ row.reason}}{% else %} {% endif %}</textarea>
 
                                     </div>
+
+                                     {% if request.user.is_superuser == 1 %}
+                                        <div class="form-group">
+                                        <label for="zone_type">Zone Type:</label>
+                                        <select name="zone_type" class="form-control" id="zone_type">
+                                            <option value="" selected disabled>Select an zone</option>
+                                            <option value="CCIR">CCIR</option>
+                                            <option value="Zone-I">Zone-I</option>
+                                            <option value="Zone-II">Zone-II</option>
+                                            <option value="Zone-III">Zone-III</option>
+                                            <option value="Zone-IV">Zone-Iv</option>
+                                            <option value="Zone-V">Zone-V</option>
+
+                                        </select>
+
+
+                                    </div>
+                                     {% endif %}
 
                                     <div class="form-group">
                                         <label for="leave_document">Leave Application Document:</label>
@@ -205,6 +228,27 @@
                                                 <td id="exPakistanLeave_days">0</td>
                                                 <td id="exPakistanLeave">As per policy</td>
                                             </tr>
+                                            <tr>
+                                                <td>Medical Leave</td>
+                                                <td id="medical_leave_days">0</td>
+                                                <td id="medical_leave">As per policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Maternity Leave</td>
+                                                <td id="maternity_leave_days">0</td>
+                                                <td id="maternity_leave">As per policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Special Leave</td>
+                                                <td id="special_leave_days">0</td>
+                                                <td id="special_leave">As per policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Study Leave</td>
+                                                <td id="study_leave_days">0</td>
+                                                <td id="study_leave">As per policy</td>
+                                            </tr>
+
                                             </tbody>
                                         </table>
                                     </div>
@@ -236,8 +280,6 @@
         var hd_leave_type = document.getElementById('hd_leave_type').value; // Get the hidden input value
         $('#leave_type').val(hd_leave_type).trigger('change');
 
-
-
         var hd_zone_type = document.getElementById('hd_zone_type').value; // Get the hidden input value
         $('#zone_type').val(hd_zone_type).trigger('change');
 
@@ -248,10 +290,12 @@
 
         // Disable the select element
         if(hd_emp !=''){$('#emp_name').val(hd_emp).prop('disabled', true);}
+        if(hd_zone_type !=''){$('#zone_type').val(hd_zone_type).prop('disabled', true);}
 
         // Initialize select2
         $('.js-example-basic-single').select2();
     });
+
 
 
 
@@ -262,6 +306,7 @@
     $(document).ready(function () {
        $("select").select2();
     });
+
 
 
 </script>
@@ -302,7 +347,6 @@
                 method: 'GET',
                 success: function(data) {
                     updateLeaveInfo(data);
-                    console.log(data);
                 },
                 error: function(xhr, status, error) {
                     console.error("An error occurred while fetching leave data:", status, error);
@@ -326,6 +370,18 @@
             $('#exPakistanLeave').text(data.ex_pakistan_leave.count || "");
             $('#exPakistanLeave_days').text(data.ex_pakistan_leave.days || "");
 
+            $('#medical_leave').text(data.medical_leave.count || "");
+            $('#medical_leave_days').text(data.medical_leave.days || "");
+
+            $('#maternity_leave').text(data.maternity_leave.count || "");
+            $('#maternity_leave_days').text(data.maternity_leave.days || "");
+
+            $('#special_leave').text(data.special_leave.count || "");
+            $('#special_leave_days').text(data.special_leave.days || "");
+
+            $('#study_leave').text(data.study_leave.count || "");
+            $('#study_leave_days').text(data.study_leave.days || "");
+
             $('#leaveInfo').show(); // Show the table with updated data
         } else {
             console.warn("No data received.");
@@ -346,7 +402,9 @@
                 }, 1000);
             }
         });
+
     }
+
 
 
 
