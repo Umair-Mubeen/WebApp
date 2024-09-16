@@ -1,10 +1,18 @@
 import json
 import logging
 from collections import defaultdict
-from django.core.paginator import Paginator
-from django.db.models import Count, F, When, BooleanField
-from django.db.models.functions import Substr, Trim
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta  # More accurate for months
+from django.db.models import Value, Case, When, CharField, F
+from django.db.models.functions import Replace, Substr, Concat, Cast
+from django.db.models.fields import DateField
+
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Count, F, When, BooleanField, Value, Func, CharField
+from django.db.models.functions import Substr, Trim, Concat
 from django.db.models import Case, When, BooleanField, F
+from datetime import datetime, timedelta
+from django.db.models.functions import Concat, Replace
 
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 
@@ -18,7 +26,6 @@ def fetchAllDispositionList(request):
             result = DispositionList.objects.filter(ZONE=request.user.userType)
         if is_admin(request.user):
             result = DispositionList.objects.all()
-
         paginator = Paginator(result, 10)
         page = request.GET.get('page')
         disposition_result = paginator.get_page(page)
@@ -45,65 +52,78 @@ def DesignationWiseList(zone, request):
 
 def getRetirementList(zone, request):
     try:
-        # Extract year and month, filter for 2024 retirees, and order by month
-        if request.user.userType == 'admin':
+        current_date = datetime.now().date()
+        next_year_date = current_date + relativedelta(months=12)
+        two_months_ago = current_date - relativedelta(months=3)
 
+        # Convert dates to 'YYYY-MM-DD' format for comparison
+        next_year_date_str = next_year_date.strftime('%Y-%m-%d')
+        two_months_ago_str = two_months_ago.strftime('%Y-%m-%d')
+
+        if is_admin(request.user):
             retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
+                # Standardize the Date_of_Retirement format by replacing '.' with '-'
+                standardized_retirement=Replace('Date_of_Retirement', Value('.'), Value('-')),
+                # Extract day, month, and year from standardized date
+                day=Substr('standardized_retirement', 1, 2),
+                month=Substr('standardized_retirement', 4, 2),
+                year=Substr('standardized_retirement', 7, 4),
+                # Reconstruct Date_of_Retirement in 'YYYY-MM-DD' format
+                retirement_date_str=Concat('year', Value('-'), 'month', Value('-'), 'day', output_field=CharField()),
+                # Cast the retirement_date_str into a DateField
+                retirement_date=Cast('retirement_date_str', output_field=DateField()),
+                # Annotate 'retired' as 'Yes' if retirement_date is before current date and within the past 2 months
+                emp_retired=Case(
+                    When(retirement_date__lte=two_months_ago_str, then=Value('Yes')),
+                    default=Value(''),
+                    output_field=CharField()
+                )
             ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-            ).order_by('month')
-        else:
+                # Include employees retired from two months ago to the next 12 months
+                retirement_date__gte=two_months_ago,
+                retirement_date__lte=next_year_date
+            ).order_by('retirement_date')
+        if is_zone_admin(request.user):
             retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
+                standardized_retirement=Replace('Date_of_Retirement', Value('.'), Value('-')),
+                day=Substr('standardized_retirement', 1, 2),
+                month=Substr('standardized_retirement', 4, 2),
+                year=Substr('standardized_retirement', 7, 4),
+                retirement_date_str=Concat('year', Value('-'), 'month', Value('-'), 'day', output_field=CharField()),
+                retirement_date=Cast('retirement_date_str', output_field=DateField()),
+                emp_retired=Case(
+                    When(retirement_date__lte=two_months_ago, then=Value('Yes')),
+                    default=Value('No'),
+                    output_field=CharField()
+                )
             ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-                ZONE=zone
-            ).order_by('month')
+                retirement_date__gte=two_months_ago,
+                retirement_date__lte=next_year_date,
+                ZONE=request.user.userType
+            ).order_by('retirement_date')
 
         # Return relevant fields for employees to be retired
         employee_to_be_retired = retirement.values(
             'Name', 'CNIC_No', 'Designation', 'BPS', 'ZONE', 'Date_of_Birth',
-            'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement', 'month'
+            'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement', 'month', 'emp_retired'
         )
-        return employee_to_be_retired
+
+        # Pagination
+        paginator = Paginator(employee_to_be_retired, 10)  # Show 10 records per page
+        page = request.GET.get('page')
+
+        try:
+            paginated_data = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page
+            paginated_data = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver last page of results
+            paginated_data = paginator.page(paginator.num_pages)
+
+        return paginated_data
     except Exception as e:
-        return str(e)
-
-
-def getZoneRetirementList(zone, request):
-    try:
-        # Group retirements by zone and count them
-        if is_admin(request.user):
-            retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
-            ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-            ).order_by('ZONE')
-
-        if is_zone_admin(request.user):
-            retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
-            ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-                ZONE=zone
-            ).order_by('ZONE')
-
-        zone_counts = defaultdict(int)
-        for item in retirement.values('ZONE'):
-            zone_counts[item['ZONE']] += 1
-
-        return zone_counts
-    except Exception as e:
-        return str(e)
+        print(str(e))
 
 
 def getZoneWiseOfficialsList(zone):

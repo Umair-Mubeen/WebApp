@@ -2,17 +2,15 @@ from datetime import datetime
 import mimetypes
 import logging
 
-from django.db.models import Case, When, IntegerField, Count
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Sum, Count
-from django.http import JsonResponse
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+
+from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee_explanation_data, getZoneRetirementList
 from .Utitlities import (
     DesignationWiseList,
     getRetirementList,
-    getZoneRetirementList,
     fetchAllDispositionList,
     getZoneWiseOfficialsList,
     ZoneWiseStrength,
@@ -22,6 +20,8 @@ from .Utitlities import (
     getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin
 )
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
+from .tables import CountLeaveIndividuals_table, CountExplanationIndividuals_table, \
+    CountTransferPostingIndividuals_table
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,6 @@ def userLogin(request):
             login(request, user)
             request.session['UserName'] = username
             return redirect('Dashboard')
-            # return render(request, 'Dashboard.html', {
-            #     'title': 'Welcome to Dashboard!',
-            #     'icon': 'success',
-            #     'message': 'Login Successful!'
-            # })
         return render(request, 'login.html', {
             'title': 'Invalid',
             'icon': 'error',
@@ -68,29 +63,29 @@ def Dashboard(request):
         if not request.user.is_authenticated:
             return redirect('/')
 
-        transfer_posting_summary = transfer_posting_chart(request)
-        leave_summary = get_employee_leave_data(request)  # admin and zone
-        explanation_summary = get_employee_explanation_data(request)
+        transfer_posting_summary = transfer_posting_chart(request)  # Graph Scripts
+        leave_summary = get_employee_leave_data(request)  # Graph Scripts
+        explanation_summary = get_employee_explanation_data(request)  # Graph Scripts
+        zone_counts = getZoneRetirementList(request.user.userType, request)  # Graph Scripts
 
         label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
         results = DesignationWiseList(request.user.userType, request)
-        employee_to_be_retired = getRetirementList(request.user.userType, request)
-        zone_counts = getZoneRetirementList(request.user.userType, request)
-        zones = list(zone_counts.keys())
-        counts = list(zone_counts.values())
+        employee_to_be_retired = getRetirementList(request.user.userType, request)  # table retired
 
         context = {
-            'zones': zones,
-            'counts': counts,
-            'retired': employee_to_be_retired,
+            'zones': list(zone_counts.keys()),  # Zones name Graph
+            'counts': list(zone_counts.values()),  # No. of Employee Retired
+            'retired': employee_to_be_retired,  # Retired Employee List
             'results': results,
             'Comparison': Comparison,
             'label': label,
-            'leave_summary': leave_summary,
-            'count_leave_individuals': CountLeaveIndividuals(request),
-            'explanation_summary': explanation_summary,
-            'transfer_posting_summary' : transfer_posting_summary
+            'leave_summary': leave_summary,  # Employee Leave Application Request
+            'count_leave_individuals': CountLeaveIndividuals_table(request),  # Leave Summary Data In Form of Table
+            'explanation_summary': explanation_summary,  # Graph Scripts
+            'transfer_posting_summary': transfer_posting_summary,
+            'CountExplanationIndividuals': CountExplanationIndividuals_table(request),  # Explanation Summary table Data
+            'CountTransferPostingIndividuals': CountTransferPostingIndividuals_table(request)
 
         }
         return render(request, 'Dashboard.html', context)
@@ -114,7 +109,7 @@ def getDispositionList(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def Search(request):
     try:
-        if is_admin(request.user) == 1:  # admin
+        if is_admin(request.user):  # admin
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'CNIC_No', 'Date_of_Birth',
                                                   'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement')
         if is_zone_admin(request.user):
@@ -149,19 +144,21 @@ def Search(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def Zone(request):
     try:
-        context = ZoneWiseStrength()
-        if request.method == 'POST':
-            search_zone = request.POST.get('Zone')
-            results = getZoneWiseOfficialsList(search_zone)
-            context.update({"results": results, 'zone': search_zone})
-        return render(request, 'Zone.html', context)
+        if is_admin(request.user):
+            context = ZoneWiseStrength()
+            if request.method == 'POST':
+                search_zone = request.POST.get('Zone')
+                results = getZoneWiseOfficialsList(search_zone)
+                context.update({"results": results, 'zone': search_zone})
+            return render(request, 'Zone.html', context)
+        return redirect('/')
     except Exception as e:
         logger.error(f"Error in Zone view: {e}")
         return HttpResponse("An error occurred.", status=500)
 
 
 @login_required(login_url='userLogin')  # redirect when user is not logged in
-def EmployeeTransferPosting(request):
+def EmployeeTransferPosting(request):  # Transfer Posting Form
     try:
         row = {}
         empId = request.GET.get('empId', '')
@@ -348,7 +345,7 @@ def EmployeeTransferPosting(request):
         return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
 
-@login_required(login_url='userLogin')
+@login_required(login_url='userLogin')  # Template Data
 def ManageEmployeeTransferPosting(request):
     try:
         transfer_records = getAllEmpTransferPosting(request.user.is_superuser, request.user.userType)
@@ -377,7 +374,7 @@ def ManageEmployeeTransferPosting(request):
 
 
 @login_required(login_url='userLogin')  # Redirect when user is not logged in
-def submitLeaveApplication(request):
+def submitLeaveApplication(request):  # Leave Submission Form
     try:
         empId = request.GET.get('empId', '')
         rowId = request.GET.get('rowId', '')
@@ -441,15 +438,12 @@ def submitLeaveApplication(request):
             if hd_rowId:
                 # Update existing record
                 query_params = {'id': hd_rowId, 'employee_id': employee_name}
-                print(query_params)
                 if is_zone_admin(request.user):
                     query_params['zone_type'] = request.user.userType
                 elif is_admin(request.user):
                     query_params['zone_type'] = request.POST.get('hd_zone_type')
-                    print(query_params)
 
                 row = LeaveApplication.objects.filter(**query_params).first()
-                print(row)
 
                 if row:
                     row.leave_type = leave_type
@@ -459,7 +453,8 @@ def submitLeaveApplication(request):
                     row.reason = reason
                     row.days_granted = leave_duration
                     row.save()
-                    context.update({'message': 'Record Updated Successfully.', 'icon': 'success', 'empId' : employee_name})
+                    context.update(
+                        {'message': 'Record Updated Successfully.', 'icon': 'success', 'empId': employee_name})
                 else:
                     context.update({'message': 'Record not found.', 'icon': 'error'})
             else:
@@ -472,10 +467,11 @@ def submitLeaveApplication(request):
                     leave_document=leave_document,
                     reason=reason,
                     days_granted=leave_duration,
-                    zone_type=zone_type
+                    zone_type=request.user.userType if is_zone_admin(request.user) else zone_type
                 )
                 context.update(
-                    {'message': 'Your leave application has been submitted successfully.', 'icon': 'success', 'empId' : employee_name})
+                    {'message': 'Your leave application has been submitted successfully.', 'icon': 'success',
+                     'empId': employee_name})
 
         context.update({'data': data, 'rowId': rowId, 'empId': empId, 'row': row})
         return render(request, 'LeaveApplication.html', context)
@@ -485,7 +481,7 @@ def submitLeaveApplication(request):
 
 
 @login_required(login_url='userLogin')  # redirect when user is not logged in
-def ManageEmployeeLeaveApplication(request):
+def ManageEmployeeLeaveApplication(request):  # Data Template Leave
     try:
         leave_application = getAllEmpLeaveApplication(request.user.is_superuser, request.user.userType)
         for item in leave_application:
@@ -502,247 +498,8 @@ def ManageEmployeeLeaveApplication(request):
         return HttpResponse("An error occurred.", status=500)
 
 
-@login_required(login_url='userLogin')  # redirect when user is not logged in
-def Strength(request):
-    try:
-        final_data = StrengthComparison(request.user.userType, None)
-        return render(request, 'strength.html', {
-            'data': final_data,
-            'Comparison': ZoneDesignationWiseComparison(),
-        })
-    except Exception as e:
-        logger.error(f"Error in Strength view: {e}")
-        return render(request, 'strength.html', {'error_message': str(e)})
-
-
-def Logout(request):
-    logout(request)
-    return redirect('/')
-
-
-def get_employee_leave_data(request, emp_id=None):
-    try:
-        leave_summary = {}
-        zoneType = None
-
-        # Determine if the user is an admin
-        if is_admin(request.user):
-            # Filter by the user's zone_type if not admin
-            if emp_id:
-                leave_data = LeaveApplication.objects.filter(employee_id=emp_id)
-                for zone in leave_data:
-                    zoneType = zone.zone_type
-
-                casual_leave = leave_data.filter(leave_type='Casual Leave', zone_type=zoneType)
-                earned_leave = leave_data.filter(leave_type='Earned Leave', zone_type=zoneType)
-                ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave', zone_type=zoneType)
-                medical_leave = leave_data.filter(leave_type='Medical Leave', zone_type=zoneType)
-                study_leave = leave_data.filter(leave_type='Study Leave', zone_type=zoneType)
-                maternity_leave = leave_data.filter(leave_type='Maternity Leave', zone_type=zoneType)
-                special_leave = leave_data.filter(leave_type='Special Leave', zone_type=zoneType)
-                leave_summary = {
-                    'casual_leave': {
-                        'count': casual_leave.count(),
-                        'days': casual_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'earned_leave': {
-                        'count': earned_leave.count(),
-                        'days': earned_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'ex_pakistan_leave': {
-                        'count': ex_pakistan_leave.count(),
-                        'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-
-                    'medical_leave': {
-                        'count': medical_leave.count(),
-                        'days': medical_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'study_leave': {
-                        'count': study_leave.count(),
-                        'days': study_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'maternity_leave': {
-                        'count': maternity_leave.count(),
-                        'days': maternity_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'special_leave': {
-                        'count': special_leave.count(),
-                        'days': special_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                }
-                print(leave_summary)
-                return JsonResponse(leave_summary)
-
-            # Group by zone_type Graph Leave Chart
-            zones = LeaveApplication.objects.values('zone_type').distinct()
-            for zone in zones:
-                zone_type = zone['zone_type']
-                print(zone_type)
-
-                casual_leave = LeaveApplication.objects.filter(leave_type='Casual Leave', zone_type=zone_type)
-                earned_leave = LeaveApplication.objects.filter(leave_type='Earned Leave', zone_type=zone_type)
-                ex_pakistan_leave = LeaveApplication.objects.filter(leave_type='Ex-Pakistan Leave', zone_type=zone_type)
-                medical_leave = LeaveApplication.objects.filter(leave_type='Medical Leave', zone_type=zone_type)
-                study_leave = LeaveApplication.objects.filter(leave_type='Study Leave', zone_type=zone_type)
-                maternity_leave = LeaveApplication.objects.filter(leave_type='Maternity Leave', zone_type=zone_type)
-                special_leave = LeaveApplication.objects.filter(leave_type='Special Leave', zone_type=zone_type)
-
-                leave_summary[zone_type] = {
-                    'casual_leave': {
-                        'count': casual_leave.count(),
-                        'days': casual_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'earned_leave': {
-                        'count': earned_leave.count(),
-                        'days': earned_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'ex_pakistan_leave': {
-                        'count': ex_pakistan_leave.count(),
-                        'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-
-                    'medical_leave': {
-                        'count': medical_leave.count(),
-                        'days': medical_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'study_leave': {
-                        'count': study_leave.count(),
-                        'days': study_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'maternity_leave': {
-                        'count': maternity_leave.count(),
-                        'days': maternity_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                    'special_leave': {
-                        'count': special_leave.count(),
-                        'days': special_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                    },
-                }
-
-        if is_zone_admin(request.user):
-            print(zoneType)
-            if emp_id:
-                leave_data = LeaveApplication.objects.filter(employee_id=emp_id)
-            else:
-                leave_data = LeaveApplication.objects.filter(zone_type=request.user.userType)
-
-            zoneType = request.user.userType
-            casual_leave = leave_data.filter(leave_type='Casual Leave', zone_type=zoneType)
-            earned_leave = leave_data.filter(leave_type='Earned Leave', zone_type=zoneType)
-            ex_pakistan_leave = leave_data.filter(leave_type='Ex-Pakistan Leave', zone_type=zoneType)
-            medical_leave = leave_data.filter(leave_type='Medical Leave', zone_type=zoneType)
-            study_leave = leave_data.filter(leave_type='Study Leave', zone_type=zoneType)
-            maternity_leave = leave_data.filter(leave_type='Maternity Leave',zone_type=zoneType)
-            special_leave = leave_data.filter(leave_type='Special Leave', zone_type=zoneType)
-
-            leave_summary = {
-                'casual_leave': {
-                    'count': casual_leave.count(),
-                    'days': casual_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-                'earned_leave': {
-                    'count': earned_leave.count(),
-                    'days': earned_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-                'ex_pakistan_leave': {
-                    'count': ex_pakistan_leave.count(),
-                    'days': ex_pakistan_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-
-                'medical_leave': {
-                    'count': medical_leave.count(),
-                    'days': medical_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-                'study_leave': {
-                    'count': study_leave.count(),
-                    'days': study_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-                'maternity_leave': {
-                    'count': maternity_leave.count(),
-                    'days': maternity_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-                'special_leave': {
-                    'count': special_leave.count(),
-                    'days': special_leave.aggregate(total_days=Sum('days_granted'))['total_days'] or 0,
-                },
-            }
-            if emp_id:
-                print(leave_summary)
-                return JsonResponse(leave_summary)
-
-        return leave_summary
-    except Exception as e:
-        logger.error(f"Error in get_employee_leave_data function: {e}")
-        return {'error': str(e)}
-
-
-# count Leaves ZOne wise table
-def CountLeaveIndividuals(request):
-    if is_admin(request.user):
-        queryset = LeaveApplication.objects.select_related('employee') \
-            .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
-            .annotate(
-            leave_count=Count('leave_type'),
-            total_days_granted=Sum('days_granted')
-        )
-    if is_zone_admin(request.user):
-        queryset = LeaveApplication.objects.select_related('employee').filter(zone_type=request.user.userType) \
-            .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
-            .annotate(
-            leave_count=Count('leave_type'),
-            total_days_granted=Sum('days_granted')
-        )
-    paginator = Paginator(queryset, 10)  # Show 10 records per page
-    page = request.GET.get('page')
-
-    try:
-        data = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        data = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        data = paginator.page(paginator.num_pages)
-
-    return data
-
-
-def get_employee_unit_data(request, emp_id):
-    try:
-        if emp_id:
-            # Get the latest transfer record based on created_at
-            latest_transfer_record = TransferPosting.objects.filter(employee_id=emp_id).order_by('-created_at').first()
-
-            if latest_transfer_record:
-                posting_summary = {
-                    'units': {
-                        'current_unit': latest_transfer_record.new_unit,
-                        'previous_unit': latest_transfer_record.old_unit,
-                    }
-                }
-
-                # Include zone information if the user is an admin
-                if request.user.is_superuser == 1 or 2:
-                    posting_summary['zones'] = {
-                        'old_zone': latest_transfer_record.old_zone,
-                        'new_zone': latest_transfer_record.new_zone,
-                    }
-
-                return JsonResponse(posting_summary)
-            else:
-                return JsonResponse({'error': 'No transfer records found'}, status=404)
-
-        else:
-            return JsonResponse({'error': 'Unauthorized or invalid employee ID'}, status=403)
-
-    except Exception as e:
-        logger.error(f"Error in get_employee_unit_data function: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
-
-
 @login_required(login_url='userLogin')  # Redirect when user is not logged in
-def EmployeeExplanation(request):
+def EmployeeExplanation(request):  # Explanation Submission Form
     try:
         empId = request.GET.get('empId', '')
         rowId = request.GET.get('rowId', '')
@@ -819,7 +576,7 @@ def EmployeeExplanation(request):
 
 
 @login_required(login_url='userLogin')  # redirect when user is not logged in
-def ManageEmployeeExplanation(request):
+def ManageEmployeeExplanation(request):  # Data Template
     try:
         employee_explanation = getAllEmpLeaveExplanation(request.user.is_superuser, request.user.userType)
         for item in employee_explanation:
@@ -836,166 +593,24 @@ def ManageEmployeeExplanation(request):
         return HttpResponse("An error occurred.", status=500)
 
 
-def get_employee_exp_data(request, emp_id):
+@login_required(login_url='userLogin')  # redirect when user is not logged in
+def Strength(request):
     try:
-        if emp_id:
-            # Get all explanation records based on employee_id
-            explanation_records = Explanation.objects.filter(employee_id=emp_id).order_by('-created_at').all()
-            explanations_list = []
-
-            # Prepare the data in a JSON-friendly format
-            for record in explanation_records:
-                explanations_list.append({
-                    'exp_type': record.exp_type,
-                    'exp_issue_date': record.exp_issue_date.strftime('%Y-%m-%d'),
-                    'exp_reply_date': record.exp_reply_date.strftime('%Y-%m-%d'),
-                    'exp_document': record.exp_document.url if record.exp_document else None,
-                    'zone_type': record.zone_type,
-                    'created_at': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'updated_at': record.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-                })
-            return JsonResponse({'explanations': explanations_list}, status=200)
-        else:
-            return JsonResponse({'error': 'Unauthorized or invalid employee ID'}, status=403)
-    except Exception as e:
-        logger.error(f"Error in get_employee_exp_data function: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-def get_employee_explanation_data(request, emp_id=None):
-    try:
-        explanation_summary = {}
-
-        # Check if user is admin
         if is_admin(request.user):
-            # Group by zone_type and aggregate explanation data for each zone
-            zones = Explanation.objects.values('zone_type').distinct()
-
-            for zone in zones:
-                zone_type = zone['zone_type']
-
-                explanations = Explanation.objects.filter(zone_type=zone_type)
-
-                explanation_summary[zone_type] = {
-                    'unapproved_leave': {
-                        'count': explanations.filter(exp_type='Unapproved Leave').count(),
-                    },
-                    'attendance_issue': {
-                        'count': explanations.filter(exp_type='Attendance Issue').count(),
-                    },
-                    'absent': {
-                        'count': explanations.filter(exp_type='Absent').count(),
-                    },
-                    'habitual_absentee': {
-                        'count': explanations.filter(exp_type='Habitual Absentee').count(),
-                    },
-                    'performance': {
-                        'count': explanations.filter(exp_type='Performance').count(),
-                    },
-                    'misconduct_explanation': {
-                        'count': explanations.filter(exp_type='Misconduct Explanation').count(),
-                    },
-                    'delay_explanation': {
-                        'count': explanations.filter(exp_type='Delay Explanation').count(),
-                    },
-                    'leave_explanation': {
-                        'count': explanations.filter(exp_type='Leave Explanation').count(),
-                    },
-                    'disciplinary': {
-                        'count': explanations.filter(exp_type='Disciplinary').count(),
-                    },
-                }
-
-        elif is_zone_admin(request.user):
-            # Filter by the user's zone_type if not admin
-            explanations = Explanation.objects.filter(zone_type=request.user.userType)
-            if emp_id:
-                explanations = explanations.filter(employee__id=emp_id)
-
-            explanation_summary = {
-                'unapproved_leave': {
-                    'count': explanations.filter(exp_type='Unapproved Leave').count(),
-                },
-                'attendance_issue': {
-                    'count': explanations.filter(exp_type='Attendance Issue').count(),
-                },
-                'absent': {
-                    'count': explanations.filter(exp_type='Absent').count(),
-                },
-                'habitual_absentee': {
-                    'count': explanations.filter(exp_type='Habitual Absentee').count(),
-                },
-                'performance': {
-                    'count': explanations.filter(exp_type='Performance').count(),
-                },
-                'misconduct_explanation': {
-                    'count': explanations.filter(exp_type='Misconduct Explanation').count(),
-                },
-                'delay_explanation': {
-                    'count': explanations.filter(exp_type='Delay Explanation').count(),
-                },
-                'leave_explanation': {
-                    'count': explanations.filter(exp_type='Leave Explanation').count(),
-                },
-                'disciplinary': {
-                    'count': explanations.filter(exp_type='Disciplinary').count(),
-                },
-            }
-
-            if emp_id:
-                return JsonResponse(explanation_summary)
-        return explanation_summary
-
+            final_data = StrengthComparison(request.user.userType, None)
+            return render(request, 'strength.html', {
+                'data': final_data,
+                'Comparison': ZoneDesignationWiseComparison(),
+            })
+        return redirect('userLogin')
     except Exception as e:
-        logger.error(f"Error in get_employee_explanation_data function: {e}")
-        return {'error': str(e)}
+        logger.error(f"Error in Strength view: {e}")
+        return render(request, 'strength.html', {'error_message': str(e)})
 
 
-def transfer_posting_chart(request):
-    try:
-        userType = None
-        # Aggregating transfers by zone_type
-        if is_admin(request.user):
-            userType = 1
-            # For admin, get data for all zones (returns list of dicts)
-            zone_transfer_data = TransferPosting.objects.values('zone_type').annotate(total_transfers=Count('id')).order_by(
-                'zone_type')
+def Logout(request):
+    logout(request)
+    return redirect('/')
 
-            # For this case, use dictionary-style access
-            zones = [entry['zone_type'] for entry in zone_transfer_data]
-            total_transfers = [entry['total_transfers'] for entry in zone_transfer_data]
-            context = {
-                'zones': zones,
-                'total_transfers': total_transfers,
-                'userType' : userType
-            }
-            return context
-        elif is_zone_admin(request.user):
-            userType = 2
-            # Filter records based on the user's zone_type (which corresponds to userType)
-            zone_transfer_data = TransferPosting.objects.filter(zone_type=request.user.userType).values('zone_type',
-                                                                                                        'new_unit').annotate(
-                total_transfers=Count('id')
-            ).order_by('zone_type', 'new_unit')
 
-            # Prepare data for Chart.js
-            zones = list(set(entry['zone_type'] for entry in zone_transfer_data))  # Unique zone names
-            units = list(set(entry['new_unit'] for entry in zone_transfer_data))  # Unique units
-            unit_counts = {unit: 0 for unit in units}
 
-            # Aggregate the total number of transfers for each unit
-            for entry in zone_transfer_data:
-                unit = entry['new_unit']
-                unit_counts[unit] = entry['total_transfers']
-
-        # Return the context to the template
-        context = {
-            'zones': zones,
-            'units': units,
-            'unit_counts': unit_counts,
-            'userType': userType
-
-        }
-        return context
-    except Exception as e:
-        print(str(e))

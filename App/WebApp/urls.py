@@ -2,7 +2,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from . import views
+from . import views, tables
 
 urlpatterns = [
 
@@ -22,8 +22,8 @@ urlpatterns = [
     path('ManageEmployeeExplanation', views.ManageEmployeeExplanation, name='ManageEmployeeExplanation'),
 
     path('get_employee_leave_data/<int:emp_id>/', views.get_employee_leave_data, name='get_employee_leave_data'),
-    path('get_employee_unit_data/<int:emp_id>/', views.get_employee_unit_data, name='get_employee_unit_data'),
-    path('get_employee_exp_data/<int:emp_id>/', views.get_employee_exp_data, name='get_employee_exp_data'),
+    path('get_employee_unit_data/<int:emp_id>/', tables.get_employee_unit_data_table, name='get_employee_unit_data_table'),
+    path('get_employee_exp_data/<int:emp_id>/', tables.get_employee_exp_data_table, name='get_employee_exp_data_table'),
 
 ]
 if settings.DEBUG:

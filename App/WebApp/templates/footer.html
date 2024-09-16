@@ -186,129 +186,32 @@
     });
 
     // Leave Summary Data
-    const userType = '{{ request.user.is_superuser }}';
-    const leaveSummary = {{ leave_summary|safe }};
-    const ctx = document.getElementById('leaveSummary').getContext('2d');
+const userType = {{leave_summary.userType|safe}};
+const leaveSummary = {{ leave_summary|safe }};
+const leaveCtx = document.getElementById('leaveSummary').getContext('2d');
+const leaveLabels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave', 'Maternity Leave', 'Study Leave', 'Special Leave'];
 
-    if (userType == 'True') {
-        // Admin-specific logic for grouped bar chart
-        const labels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave','Maternity Leave','Study Leave','Special Leave'];
-        const datasets = Object.keys(leaveSummary).map(zone => ({
-            label: zone,
-            data: [
-                leaveSummary[zone].casual_leave.count,
-                leaveSummary[zone].earned_leave.count,
-                leaveSummary[zone].ex_pakistan_leave.count,
-                leaveSummary[zone].medical_leave.count,
-                leaveSummary[zone].maternity_leave.count,
-                leaveSummary[zone].study_leave.count,
-                leaveSummary[zone].special_leave.count,
-
-            ],
-            backgroundColor: generateRandomColors(3)
-        }));
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Leave Summary by Zone (Admin View)'
-                    }
-                },
-                animation: {
-                    duration: 1200, // Animation duration in ms
-                    easing: 'easeOutBounce' // Easing effect
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    } else {
-        // Employee-specific logic for doughnut chart
-        const chartData = {
-            labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave', 'Maternity Leave', 'Study Leave', 'Special Leave'],
-            datasets: [{
-                label: 'Leave Count',
-                data: [
-                    leaveSummary.casual_leave.count,
-                    leaveSummary.earned_leave.count,
-                    leaveSummary.ex_pakistan_leave.count,
-                    leaveSummary.medical_leave.count,
-                    leaveSummary.maternity_leave.count,
-                    leaveSummary.study_leave.count,
-                    leaveSummary.special_leave.count,
-
-                ],
-                backgroundColor: generateRandomColors(3)
-            }]
-        };
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: chartData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Your Leave Summary (Employee View)'
-                    }
-                },
-                animation: {
-                    duration: 1300, // Animation duration in ms
-                    easing: 'easeInOutCubic' // Easing effect
-                }
-            }
-        });
-    }
-
-    // Explanation Summary Data
-const explanationSummary = {{ explanation_summary|safe }};
-const exp_ctx = document.getElementById('expSummary').getContext('2d');
-
-if (userType == 'True') {
+if (userType == 1) {
     // Admin-specific logic for grouped bar chart
-    const labels = ['Unapproved Leave', 'Attendance Issue', 'Absent', 'Habitual Absentee', 'Performance', 'Misconduct Explanation', 'Delay Explanation', 'Leave Explanation', 'Disciplinary'];
-    const datasets = Object.keys(explanationSummary).map(zone => ({
+    const leaveDatasets = Object.keys(leaveSummary).map(zone => ({
         label: zone,
         data: [
-            explanationSummary[zone].unapproved_leave.count,
-            explanationSummary[zone].attendance_issue.count,
-            explanationSummary[zone].absent.count,
-            explanationSummary[zone].habitual_absentee.count,
-            explanationSummary[zone].performance.count,
-            explanationSummary[zone].misconduct_explanation.count,
-            explanationSummary[zone].delay_explanation.count,
-            explanationSummary[zone].leave_explanation.count,
-            explanationSummary[zone].disciplinary.count
+            leaveSummary[zone]?.casual_leave?.count || 0,
+            leaveSummary[zone]?.earned_leave?.count || 0,
+            leaveSummary[zone]?.ex_pakistan_leave?.count || 0,
+            leaveSummary[zone]?.medical_leave?.count || 0,
+            leaveSummary[zone]?.maternity_leave?.count || 0,
+            leaveSummary[zone]?.study_leave?.count || 0,
+            leaveSummary[zone]?.special_leave?.count || 0,
         ],
-        backgroundColor: generateRandomColors(9)
+        backgroundColor: generateRandomColors(leaveLabels.length)
     }));
 
-    new Chart(exp_ctx, {
+    new Chart(leaveCtx, {
         type: 'bar',
         data: {
-            labels: labels,
-            datasets: datasets
+            labels: leaveLabels,
+            datasets: leaveDatasets
         },
         options: {
             responsive: true,
@@ -318,12 +221,12 @@ if (userType == 'True') {
                 },
                 title: {
                     display: true,
-                    text: 'Explanation Summary by Zone (Admin View)'
+                    text: 'Leave Summary by Zone (Admin View)'
                 }
             },
             animation: {
-                duration: 1200, // Animation duration in ms
-                easing: 'easeOutBounce' // Easing effect
+                duration: 1200,
+                easing: 'easeOutBounce'
             },
             scales: {
                 x: {
@@ -338,26 +241,24 @@ if (userType == 'True') {
 } else {
     // Employee-specific logic for doughnut chart
     const chartData = {
-        labels: ['Unapproved Leave', 'Attendance Issue', 'Absent', 'Habitual Absentee', 'Performance', 'Misconduct Explanation', 'Delay Explanation', 'Leave Explanation', 'Disciplinary'],
+        labels: leaveLabels,
         datasets: [{
-            label: 'Explanation Count',
+            label: 'Leave Count',
             data: [
-                explanationSummary.unapproved_leave.count,
-                explanationSummary.attendance_issue.count,
-                explanationSummary.absent.count,
-                explanationSummary.habitual_absentee.count,
-                explanationSummary.performance.count,
-                explanationSummary.misconduct_explanation.count,
-                explanationSummary.delay_explanation.count,
-                explanationSummary.leave_explanation.count,
-                explanationSummary.disciplinary.count
+                leaveSummary?.casual_leave?.count || 0,
+                leaveSummary?.earned_leave?.count || 0,
+                leaveSummary?.ex_pakistan_leave?.count || 0,
+                leaveSummary?.medical_leave?.count || 0,
+                leaveSummary?.maternity_leave?.count || 0,
+                leaveSummary?.study_leave?.count || 0,
+                leaveSummary?.special_leave?.count || 0,
             ],
-            backgroundColor: generateRandomColors(9)
+            backgroundColor: generateRandomColors(leaveLabels.length)
         }]
     };
 
-    new Chart(exp_ctx, {
-        type: 'bar',
+    new Chart(leaveCtx, {
+        type: 'bar',  // Assuming you wanted a doughnut chart for employees
         data: chartData,
         options: {
             responsive: true,
@@ -367,89 +268,165 @@ if (userType == 'True') {
                 },
                 title: {
                     display: true,
-                    text: 'Your Explanation Summary (Employee View)'
+                    text: 'Your Leave Summary (Employee View)'
                 }
             },
             animation: {
-                duration: 1300, // Animation duration in ms
-                easing: 'easeInOutCubic' // Easing effect
+                duration: 1300,
+                easing: 'easeInOutCubic'
             }
         }
     });
 }
 
-    // Function to generate random colors
-    function generateRandomColors(count) {
+
+    // Explanation Summary Data
+    const explanationSummary = {{ explanation_summary|safe }};
+    const expCtx = document.getElementById('expSummary').getContext('2d');
+            const expLabels = ['Unapproved Leave', 'Attendance Issue', 'Absent', 'Habitual Absentee', 'Performance', 'Misconduct Explanation', 'Delay Explanation', 'Leave Explanation', 'Disciplinary'];
+
+    if (userType == 1) {
+        const expDatasets = Object.keys(explanationSummary).map(zone => ({
+            label: zone,
+            data: [
+                explanationSummary[zone].unapproved_leave.count,
+                explanationSummary[zone].attendance_issue.count,
+                explanationSummary[zone].absent.count,
+                explanationSummary[zone].habitual_absentee.count,
+                explanationSummary[zone].performance.count,
+                explanationSummary[zone].misconduct_explanation.count,
+                explanationSummary[zone].delay_explanation.count,
+                explanationSummary[zone].leave_explanation.count,
+                explanationSummary[zone].disciplinary.count
+            ],
+            backgroundColor: generateRandomColors(expLabels.length)
+        }));
+
+        new Chart(expCtx, {
+            type: 'bar',
+            data: {
+                labels: expLabels,
+                datasets: expDatasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Explanation Summary by Zone (Admin View)'
+                    }
+                },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutBounce'
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    } else {
+        const chartData = {
+            labels: ['Unapproved Leave', 'Attendance Issue', 'Absent', 'Habitual Absentee', 'Performance', 'Misconduct Explanation', 'Delay Explanation', 'Leave Explanation', 'Disciplinary'],
+            datasets: [{
+                label: 'Explanation Count',
+                data: [
+                    explanationSummary.unapproved_leave.count,
+                    explanationSummary.attendance_issue.count,
+                    explanationSummary.absent.count,
+                    explanationSummary.habitual_absentee.count,
+                    explanationSummary.performance.count,
+                    explanationSummary.misconduct_explanation.count,
+                    explanationSummary.delay_explanation.count,
+                    explanationSummary.leave_explanation.count,
+                    explanationSummary.disciplinary.count
+                ],
+                backgroundColor: generateRandomColors(expLabels.length)
+            }]
+        };
+
+        new Chart(expCtx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Your Explanation Summary (Employee View)'
+                    }
+                },
+                animation: {
+                    duration: 1300,
+                    easing: 'easeInOutCubic'
+                }
+            }
+        });
+    }
+
+    // Transfer Posting Summary
+    const transferCtx = document.getElementById('transferChart').getContext('2d');
+    const transferUserType = {{ transfer_posting_summary.userType|safe }};
+    let transferLabels = [], transferData = [];
+
+    if (transferUserType == 1) {
+        transferLabels = {{ transfer_posting_summary.zones|default:"[]"|safe }};
+        transferData = {{ transfer_posting_summary.total_transfers|default:"[]"|safe }};
+    } else if (transferUserType === 2) {
+        transferLabels = {{ transfer_posting_summary.units|default:"[]"|safe }};
+        const unitCounts = {{ transfer_posting_summary.unit_counts|default:"{}"|safe }};
+        transferData = transferLabels.map(label => unitCounts[label] || 0);
+    }
+
+    new Chart(transferCtx, {
+        type: transferLabels[0]?.includes('Unit') ? 'pie' : 'bar',
+        data: {
+            labels: transferLabels,
+            datasets: [{
+                label: transferLabels[0]?.includes('Unit') ? 'Total Transfers by Unit' : 'Total Transfers by Zone',
+                data: transferData,
+                backgroundColor: generateRandomColors(transferLabels.length),
+                borderColor: 'rgba(0, 0, 0, 0.2)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Transfer Posting Summary'
+                }
+            },
+            animation: {
+                duration: 1400,
+                easing: 'easeOutElastic'
+            }
+        }
+    });
+
+    // Function for generating random colors
+    function generateRandomColors(length) {
         const colors = [];
-        for (let i = 0; i < count; i++) {
-            const randomColor = 'rgba(' +
-                Math.floor(Math.random() * 256) + ',' +
-                Math.floor(Math.random() * 256) + ',' +
-                Math.floor(Math.random() * 256) + ',' +
-                '0.5)';
-            colors.push(randomColor);
+        for (let i = 0; i < length; i++) {
+            colors.push(`rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`);
         }
         return colors;
     }
 });
 
-</script>
-
-
-<script>
-    const transfer_ctx = document.getElementById('transferChart').getContext('2d');
-    var userType =  {{transfer_posting_summary.userType|safe}}
-
-    // Retrieve the userType value from Django context (1 for True, 2 for False)
-    var labels = [], data = [];
-
-    if (userType == 1) {
-        // If user is an admin (superuser)
-        labels = {{ transfer_posting_summary.zones|default:"[]"|safe }};  // Ensure this is a JSON array from Django
-        data = {{ transfer_posting_summary.total_transfers|default:"[]"|safe }};  // Ensure this is a JSON array from Django
-    } else if (userType == 2) {
-        // If user is a non-admin (zone admin)
-        labels = {{ transfer_posting_summary.units|default:"[]"|safe }};  // Ensure this is a JSON array from Django
-        var unitCounts = {{ transfer_posting_summary.unit_counts|default:"{}"|safe }};  // Ensure this is a JSON object
-        data = [];
-
-        // Generate data from unit_counts
-        for (var i = 0; i < labels.length; i++) {
-            data.push(unitCounts[labels[i]] || 0);  // Use 0 if unit not found in unit_counts
-        }
-    } else {
-        // Handle unexpected userType values
-        console.error('Unexpected userType value:', userType);
-    }
-
-    // Initialize the Chart.js chart
-    var isUnitData = labels.length > 0 && labels[0].includes('Unit');
-    var transferChart = new Chart(transfer_ctx, {
-        type: isUnitData ? 'pie' : 'bar',  // Choose the chart type based on data
-        data: {
-            labels: labels,
-            datasets: [{
-                label: isUnitData ? 'Total Transfers by Unit' : 'Total Transfers by Zone / CCIR',
-                data: data,
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
 </script>
