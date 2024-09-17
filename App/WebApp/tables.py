@@ -9,24 +9,38 @@ logger = logging.getLogger(__name__)
 
 
 # Employee Leave Application By Zone and Unit History Table
-def CountLeaveIndividuals_table(request):
+def CountLeaveIndividuals_table(request, empId : str | None = None):
     try:
         if is_admin(request.user):
-            queryset = LeaveApplication.objects.select_related('employee') \
-                .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
-                .annotate(
-                leave_count=Count('leave_type'),
-                total_days_granted=Sum('days_granted')
-            ).order_by('-created_at')  # Order the queryset by 'employee__Name' or any other relevant field
+            if empId:
+                queryset = LeaveApplication.objects.select_related('employee').filter(employee_id=empId) \
+                    .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
+                    .annotate(
+                    leave_count=Count('leave_type'),
+                    total_days_granted=Sum('days_granted')
+                ).order_by('-created_at')  # Order the queryset by 'employee__Name' or any other relevant field
+                return queryset
+            else:
+                queryset = LeaveApplication.objects.select_related('employee').values('employee__Name',
+                'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type').\
+                annotate(leave_count=Count('leave_type'),total_days_granted=Sum('days_granted')).order_by('-created_at')
 
         if is_zone_admin(request.user):
-            queryset = LeaveApplication.objects.select_related('employee') \
-                .filter(zone_type=request.user.userType) \
-                .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
-                .annotate(
-                leave_count=Count('leave_type'),
-                total_days_granted=Sum('days_granted')
-            ).order_by('-created_at')  # Order the queryset by 'employee__Name' or another field
+            if empId:
+                queryset = LeaveApplication.objects.select_related('employee').filter(employee_id=empId) \
+                    .filter(zone_type=request.user.userType) \
+                    .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
+                    .annotate(leave_count=Count('leave_type'),total_days_granted=Sum('days_granted')).order_by('-created_at')
+                # Order the queryset by 'employee__Name' or another field
+                return queryset
+            else:
+                queryset = LeaveApplication.objects.select_related('employee') \
+                    .filter(zone_type=request.user.userType) \
+                    .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'leave_type') \
+                    .annotate(
+                    leave_count=Count('leave_type'),
+                    total_days_granted=Sum('days_granted')
+                ).order_by('-created_at')  # Order the queryset by 'employee__Name' or another field
 
         leave_paginator = Paginator(queryset, 10)  # Show 10 records per page
         page = request.GET.get('page')
@@ -47,24 +61,40 @@ def CountLeaveIndividuals_table(request):
 
 
 # Employee Leave Application By Zone and Unit History Table
-def CountExplanationIndividuals_table(request):
+def CountExplanationIndividuals_table(request, empId : str | None = None):
     try:
         queryset = None
 
         # Admin logic
         if is_admin(request.user):
-            queryset = Explanation.objects.select_related('employee') \
-                .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'exp_type') \
-                .annotate(exp_count=Count('exp_type')) \
-                .order_by('employee__Name')  # Sort by Name or other relevant field
+            if empId:
+                queryset = Explanation.objects.select_related('employee').filter(employee_id=empId) \
+                    .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'exp_type') \
+                    .annotate(exp_count=Count('exp_type')) \
+                    .order_by('employee__Name')  # Sort by Name or other relevant field
+                return queryset
+            else:
+                queryset = Explanation.objects.select_related('employee') \
+                    .values('employee__Name', 'employee__Designation', 'employee__BPS', 'employee__ZONE', 'exp_type') \
+                    .annotate(exp_count=Count('exp_type')) \
+                    .order_by('employee__Name')  # Sort by Name or other relevant field
 
         # Zone admin logic
         if is_zone_admin(request.user):
-            queryset = Explanation.objects.select_related('employee') \
-                .filter(employee__ZONE=request.user.userType).values('employee__Name', 'employee__Designation',
-                                                                     'employee__BPS', 'employee__ZONE', 'exp_type') \
-                .annotate(exp_count=Count('exp_type')) \
-                .order_by('employee__Name')  # Sort by Name or other relevant field
+            if empId:
+                print(empId)
+                queryset = Explanation.objects.select_related('employee').filter(employee_id=empId) \
+                    .filter(employee__ZONE=request.user.userType).values('employee__Name', 'employee__Designation',
+                                                                         'employee__BPS', 'employee__ZONE', 'exp_type') \
+                    .annotate(exp_count=Count('exp_type')) \
+                    .order_by('employee__Name')  # Sort by Name or other relevant field
+                return queryset
+            else:
+                queryset = Explanation.objects.select_related('employee') \
+                    .filter(employee__ZONE=request.user.userType).values('employee__Name', 'employee__Designation',
+                                                                         'employee__BPS', 'employee__ZONE', 'exp_type') \
+                    .annotate(exp_count=Count('exp_type')) \
+                    .order_by('employee__Name')  # Sort by Name or other relevant field
 
         if queryset:
             # Pagination logic
@@ -84,20 +114,36 @@ def CountExplanationIndividuals_table(request):
 
 
 # Employee Transfer Posting By Zone and Unit History Table
-def CountTransferPostingIndividuals_table(request):
+def CountTransferPostingIndividuals_table(request, empId : str | None = None):
     try:
         queryset = None
 
         # Admin logic
         if is_admin(request.user):
-            queryset = TransferPosting.objects.select_related('employee') \
+            if empId:
+                queryset = TransferPosting.objects.select_related('employee').filter(employee_id=empId) \
+                    .values('employee__Name', 'employee__Designation', 'employee__CNIC_No', 'employee__BPS',
+                            'employee__ZONE', 'old_zone',
+                            'new_zone', 'old_unit', 'new_unit', 'chief_transfer_date', 'chief_order_number').order_by(
+                    '-created_at')  # Sort by Name or other relevant
+            else:
+                queryset = TransferPosting.objects.select_related('employee') \
                 .values('employee__Name', 'employee__Designation', 'employee__CNIC_No', 'employee__BPS',
                         'employee__ZONE', 'old_zone',
                         'new_zone', 'old_unit', 'new_unit', 'chief_transfer_date', 'chief_order_number').order_by(
                 '-created_at')  # Sort by Name or other relevant
+
         # Zone admin logic
         if is_zone_admin(request.user):
-            queryset = TransferPosting.objects.select_related('employee') \
+            if empId:
+                queryset = TransferPosting.objects.select_related('employee').filter(employee_id=empId) \
+                    .values('employee__Name', 'employee__Designation', 'employee__CNIC_No', 'employee__BPS',
+                            'employee__ZONE', 'old_zone',
+                            'new_zone', 'old_unit', 'new_unit', 'zone_order_number', 'zone_transfer_date').filter(
+                    zone_type=request.user.userType) \
+                    .order_by('-created_at')  # Sort by Name or other relevant field
+            else:
+                queryset = TransferPosting.objects.select_related('employee') \
                 .values('employee__Name', 'employee__Designation', 'employee__CNIC_No', 'employee__BPS',
                         'employee__ZONE', 'old_zone',
                         'new_zone', 'old_unit', 'new_unit', 'zone_order_number', 'zone_transfer_date').filter(
@@ -115,7 +161,6 @@ def CountTransferPostingIndividuals_table(request):
                 data = paginator.page(1)
             except EmptyPage:
                 data = paginator.page(paginator.num_pages)
-        print(data)
         return data
 
     except Exception as e:

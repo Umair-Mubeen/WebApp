@@ -68,17 +68,14 @@
         </section>
 
 
-        <div class="container-fluid col-lg-12">
-            {% if result %}
-            {% include 'retired.html' with retired=result type='Employee Details' %}
-            {% endif %}
-        </div>
 
         <div class="container-fluid col-lg-12">
             {% if leave_application %}
             {% include 'viewHistory.html' with leave_application=leave_application transfer_records=transfer_records %}
             {% endif %}
         </div>
+
+
     </div>
     <!-- Content Wrapper. Contains page content  Ends Here -->
 

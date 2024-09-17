@@ -34,7 +34,7 @@
 <div class="row">
 
     {% if count_leave_individuals %}
-    <div class="col-lg-6">
+        <div class="col-lg-6">
         <div class="card card-dark">
             <div class="card-header">
                 <h3 class="card-title">Employee Leave Application Details Zone Wise</h3>
@@ -115,7 +115,7 @@
     {% endif %}
 
     {% if CountExplanationIndividuals %}
-    <div class="col-lg-6">
+        <div class="col-lg-6">
         <div class="card card-dark">
             <div class="card-header">
                 <h3 class="card-title">Employee Explanation Details Zone Wise</h3>
@@ -194,7 +194,7 @@
     </div>
     {% endif %}
 
-        <!-- Transfer Posting Table  -->
+    {% if CountTransferPostingIndividuals %}
         <div class="col-lg-6">
         <div class="card card-dark">
             <div class="card-header">
@@ -288,6 +288,7 @@
         </div>
         <!-- /.card -->
     </div>
+    {% endif %}
 
     <div class="col-lg-6">
         <div class="card card-dark">
