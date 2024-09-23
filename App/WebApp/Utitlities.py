@@ -1,10 +1,10 @@
 import json
 import logging
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta  # More accurate for months
 from django.db.models import Value, Case, When, CharField, F
-from django.db.models.functions import Replace, Substr, Concat, Cast
+from django.db.models.functions import Replace, Substr, Concat, Cast, ExtractYear
 from django.db.models.fields import DateField
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -13,6 +13,7 @@ from django.db.models.functions import Substr, Trim, Concat
 from django.db.models import Case, When, BooleanField, F
 from datetime import datetime, timedelta
 from django.db.models.functions import Concat, Replace
+from django.http import JsonResponse
 
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 
@@ -183,18 +184,10 @@ def ZoneDesignationWiseComparison():
         # Prepare data for Chart.js
         labels = list(pivoted_data.keys())
         datasets = []
-        colors = ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(75, 192, 192, 0.2)',
-                  'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 99, 71, 0.2)']
         zones = ['CCIR', 'IP/TFD/HRM', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'Refund Zone']
 
         for i, zone in enumerate(zones):
-            datasets.append({
-                'label': zone,
-                'data': [pivoted_data[designation].get(zone, 0) for designation in labels],
-                'backgroundColor': colors[i % len(colors)],
-                'borderColor': colors[i % len(colors)].replace('0.2', '1'),
-                'borderWidth': 1
-            })
+            datasets.append({'label': zone,'data': [pivoted_data[designation].get(zone, 0) for designation in labels]})
 
         data_json = json.dumps({'labels': labels, 'datasets': datasets})
         return {'data_json': data_json}
@@ -377,3 +370,5 @@ def is_admin(user):
 
 def is_zone_admin(user):
     return user.is_superuser == 2
+
+

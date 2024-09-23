@@ -80,6 +80,49 @@
 
 <div class="row">
 
+    <!-- Age Chart  Summary Report -->
+    <div class="col-lg-6">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Age Graph Summary Report, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                <canvas id="ageRangeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Age Distribution by Zone -->
+    <div class="col-lg-6">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Employee Age Distribution by Zone Summary Report, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                    <canvas id="zoneAgeRangeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Leave Summary Report -->
     <div class="col-lg-6">
         <div class="card card-dark">
@@ -209,3 +252,5 @@
         </div>
     </div>
 </div>
+
+

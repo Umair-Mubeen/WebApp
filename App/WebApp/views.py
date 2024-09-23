@@ -1,4 +1,18 @@
 from datetime import datetime
+
+"""
+The code consists of Django views for managing user authentication, dashboard data, employee
+transfer postings, leave applications, explanations, and related functionalities.
+
+:param request: The code you provided is a Django application that includes views for managing user
+authentication, dashboard display, employee transfer postings, leave applications, explanations, and
+various data management functionalities. Here's a brief overview of the main views:
+:return: The code provided contains views and functions for a Django web application related to
+employee management, including functionalities for login, dashboard, transfer posting, leave
+applications, explanations, and managing employee data. The code returns rendered HTML templates
+with context data for the respective views, such as 'Dashboard.html', 'DispositionList.html',
+'search.html', 'Zone.html', 'TransferPosting.html', 'ManageTransferPosting.html
+"""
 import mimetypes
 import logging
 
@@ -7,18 +21,12 @@ from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
-from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee_explanation_data, getZoneRetirementList
-from .Utitlities import (
-    DesignationWiseList,
-    getRetirementList,
-    fetchAllDispositionList,
-    getZoneWiseOfficialsList,
-    ZoneWiseStrength,
-    ZoneDesignationWiseComparison,
-    StrengthComparison,
-    getAllEmpTransferPosting,
-    getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin
-)
+from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee_explanation_data, \
+    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart
+from .Utitlities import (DesignationWiseList, getRetirementList, fetchAllDispositionList, getZoneWiseOfficialsList,
+                         ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison, getAllEmpTransferPosting,
+                         getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin
+                         )
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 from .tables import CountLeaveIndividuals_table, CountExplanationIndividuals_table, \
     CountTransferPostingIndividuals_table
@@ -67,6 +75,8 @@ def Dashboard(request):
         leave_summary = get_employee_leave_data(request)  # Graph Scripts
         explanation_summary = get_employee_explanation_data(request)  # Graph Scripts
         zone_counts = getZoneRetirementList(request.user.userType, request)  # Graph Scripts
+        age_range_count = get_age_range_count(request)  # Graph Scripts
+        zone_age_ranges = get_zone_age_range_chart(request)  # Graph Scripts
 
         label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
@@ -85,9 +95,12 @@ def Dashboard(request):
             'explanation_summary': explanation_summary,  # Graph Scripts
             'transfer_posting_summary': transfer_posting_summary,
             'CountExplanationIndividuals': CountExplanationIndividuals_table(request),  # Explanation Summary table Data
-            'CountTransferPostingIndividuals': CountTransferPostingIndividuals_table(request)
+            'CountTransferPostingIndividuals': CountTransferPostingIndividuals_table(request),
+            'age_range_count': age_range_count,
+            'zone_age_ranges': zone_age_ranges
 
         }
+
         return render(request, 'Dashboard.html', context)
     except Exception as e:
         logger.error(f"Error in Dashboard view: {e}")
@@ -120,9 +133,9 @@ def Search(request):
         if request.method == 'POST':
             # search_type = request.POST.get('type')
             search_value = request.POST.get('emp_name')
-            leave_application = CountLeaveIndividuals_table(request,search_value)
-            explanation_application = CountExplanationIndividuals_table(request,search_value)
-            transfer_application = CountTransferPostingIndividuals_table(request,search_value)
+            leave_application = CountLeaveIndividuals_table(request, search_value)
+            explanation_application = CountExplanationIndividuals_table(request, search_value)
+            transfer_application = CountTransferPostingIndividuals_table(request, search_value)
             # filter_args = {'CNIC_No': search_value} if search_type == 'CNIC' else {'Personal_No': search_value}
             # result = DispositionList.objects.filter(id=search_value)
             result = DispositionList.objects.get(id=search_value)
@@ -132,7 +145,7 @@ def Search(request):
                 'data': data,
                 'id': search_value,
                 'leave_application': leave_application,
-                'explanation_application' :explanation_application,
+                'explanation_application': explanation_application,
                 'transfer_application': transfer_application
             }
             return render(request, 'search.html', context)
@@ -612,6 +625,3 @@ def Strength(request):
 def Logout(request):
     logout(request)
     return redirect('/')
-
-
-

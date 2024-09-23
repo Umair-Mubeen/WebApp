@@ -79,6 +79,8 @@
 </script>
 <!--Select 2 Option Ends Here -->
 
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
     // Designation WISE Data using Group By
@@ -394,14 +396,94 @@ if (userType == 1) {
         }
     });
 
-    // Function for generating random colors
-    function generateRandomColors(length) {
-        const colors = [];
-        for (let i = 0; i < length; i++) {
-            colors.push(`rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`);
+    // Get the age range data from Django context
+        const ageRanges = {{ age_range_count|safe }};
+
+        // Prepare data for Chart.js
+        const labels = Object.keys(ageRanges);  // ['18-30', '31-40', '41-50', '51-60']
+        const data = Object.values(ageRanges);  // [106, 140, 75, 305]
+
+        // Create the chart
+        const ctx = document.getElementById('ageRangeChart').getContext('2d');
+        const ageRangeChart = new Chart(ctx, {
+            type: 'bar',  // You can change 'bar' to 'pie', 'line', etc.
+            data: {
+                labels: labels,  // X-axis labels
+                datasets: [{
+                    label: 'Number of Employees',
+                    data: data,  // Y-axis data
+                    backgroundColor: generateRandomColors({{ age_range_count|length }}),
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+
+        // Employee Age Distribution by Zone from Django context
+        const zoneAgeRanges = {{ zone_age_ranges|safe }};
+        // Extracting age ranges and zone names
+        const zone_ageRanges = Object.keys(zoneAgeRanges.zone_age_ranges);
+        zone_names = ['CCIR', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V','Refund Zone', 'CSO']
+        function generateRandomColor() {
+            const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+            return `#${randomColor}`;  }
+        const datasets = zone_names.map(zone => {
+
+            return {
+                label: zone,
+                // Data for each age range with unique colors for each bar
+                data: zone_ageRanges.map((ageRange, index) => {
+                    return zoneAgeRanges.zone_age_ranges[ageRange][zone] || 0; // Handle missing data
+                }),
+                backgroundColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for each age range
+                borderColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for the border of each age range
+                borderWidth: 1
+            };
+        });
+
+
+        // Create the chart
+        const age_ctx = document.getElementById('zoneAgeRangeChart').getContext('2d');
+        const myChart = new Chart(age_ctx, {
+            type: 'bar',
+            data: {
+                labels: zone_ageRanges,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+        // Function for generating random colors
+        function generateRandomColors(length) {
+            const colors = [];
+            for (let i = 0; i < length; i++) {
+                colors.push(`rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`);
+            }
+            return colors;
         }
-        return colors;
-    }
-});
+    });
 
 </script>
+
+

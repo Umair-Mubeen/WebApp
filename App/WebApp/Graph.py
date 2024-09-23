@@ -1,8 +1,9 @@
 import logging
 from collections import defaultdict
+from datetime import date, datetime
 
-from django.db.models import Count, Sum
-from django.db.models.functions import Substr
+from django.db.models import Count, Sum, Q
+from django.db.models.functions import Substr, ExtractYear
 from django.http import JsonResponse
 
 from .Utitlities import is_admin, is_zone_admin
@@ -338,4 +339,70 @@ def getZoneRetirementList(zone, request):
     except Exception as e:
         return str(e)
 
-# <............ Graph Functions Starts Ends Here ...............>
+
+def get_age_range_count(request):
+    try:
+        current_year = date.today().year
+        # Get all employees' dates of birth
+        employees = DispositionList.objects.values_list('Date_of_Birth', flat=True)
+        # Dictionary to count people in each age range
+        age_ranges = {
+            '18-30': 0,
+            '31-40': 0,
+            '41-50': 0,
+            '51-60': 0
+        }
+
+        # Loop through employees and calculate age
+        for dob in employees:
+            try:
+                if dob:  # Check if Date_of_Birth is not null
+                    # Calculate the age
+                    dob_cleaned = dob.strip()  # Remove any leading/trailing spaces
+                    dob_date = datetime.strptime(dob_cleaned, '%d.%m.%Y').date()
+
+                    # Calculate the age
+                    age = current_year - dob_date.year
+                    # Increment the appropriate age range
+                    if 18 <= age <= 30:
+                        age_ranges['18-30'] += 1
+                    elif 31 <= age <= 40:
+                        age_ranges['31-40'] += 1
+                    elif 41 <= age <= 50:
+                        age_ranges['41-50'] += 1
+                    elif 51 <= age <= 60:
+                        age_ranges['51-60'] += 1
+            except ValueError:
+                print(f"Error parsing Date_of_Birth: {dob}")
+                break
+        # Return the age range data as JSON
+        return age_ranges
+
+    except Exception as e:
+        print(str(e))
+
+
+def get_zone_age_range_chart(request):
+    try:
+        # Define the zones (assuming you have a zone field in the DispositionList model)
+        zones = ['Refund Zone', 'CSO', 'CCIR', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V']
+
+        # Initialize a dictionary to hold counts for each age range and zone
+        zone_age_ranges = {
+            '18-30': {zone: 0 for zone in zones},
+            '31-40': {zone: 0 for zone in zones},
+            '41-50': {zone: 0 for zone in zones},
+            '51-60': {zone: 0 for zone in zones}
+        }
+
+        # Count employees for each age range and zone
+        for zone in zones:
+            zone_age_ranges['18-30'][zone] = DispositionList.objects.filter(Q(emp_age__gte=18) & Q(emp_age__lte=30), ZONE=zone).count()
+            zone_age_ranges['31-40'][zone] = DispositionList.objects.filter(Q(emp_age__gte=31) & Q(emp_age__lte=40), ZONE=zone).count()
+            zone_age_ranges['41-50'][zone] = DispositionList.objects.filter(Q(emp_age__gte=41) & Q(emp_age__lte=50), ZONE=zone).count()
+            zone_age_ranges['51-60'][zone] = DispositionList.objects.filter(Q(emp_age__gte=51) & Q(emp_age__lte=60), ZONE=zone).count()
+
+        context = {'zone_age_ranges': zone_age_ranges, 'zones': zones}
+        return context
+    except Exception as e:
+        print(str("Error", str(e)))
