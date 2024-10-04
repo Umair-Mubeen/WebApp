@@ -372,3 +372,51 @@ def is_zone_admin(user):
     return user.is_superuser == 2
 
 
+def calculate_tax(income, tax_brackets,apply_surcharge):
+    try:
+        print(income)
+
+        surcharge_threshold = 10000000
+        surcharge_rate = 0.10
+        for (lower, upper), (rate, base_tax) in tax_brackets.items():
+            if lower <= income <= upper:
+                month = 0
+                if rate == 0:
+                    tax = 0
+                else:
+                    amount_exceeding = income - lower
+                    tax_on_exceeding = amount_exceeding * rate
+                    if lower == 600001 and upper == 1200000:
+                        tax = round(tax_on_exceeding)  # No base tax added
+                        month = round(tax / 12)
+                    else:
+                        tax = round(base_tax + tax_on_exceeding)
+                        month = round(tax / 12)
+                total_tax_with_surcharge = 0
+                surcharge = 0
+                if apply_surcharge and income > surcharge_threshold:
+                    surcharge = round(tax * surcharge_rate)
+                    print("Tax Before 10% surcharge", str(tax))
+                    print("Surcharge 10% (Base Tax + Tax on Exceeding amount)", str(surcharge))
+                    print(f"{tax} + {surcharge} = {tax + surcharge}")
+                    tax = tax + surcharge
+                    total_tax_with_surcharge = round(tax)
+                    print("tax + surcharge", str(total_tax_with_surcharge))
+                    month = round(total_tax_with_surcharge / 12)
+
+                return {
+                        'income': income,
+                        'lower': lower,
+                        'upper': upper,
+                        'base_tax': base_tax,
+                        'amount_exceeding': amount_exceeding if rate != 0 else 0,
+                        'rate': rate * 100,
+                        'tax_on_exceeding': round(tax_on_exceeding) if rate != 0 else 0,
+                        'total_tax': tax,
+                        'per_month' : month,
+                        'total_tax_with_surcharge' : total_tax_with_surcharge,
+                        'surcharge' : surcharge
+                    }
+        return None
+    except Exception as e:
+        print(str(e))

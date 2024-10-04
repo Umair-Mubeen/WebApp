@@ -432,37 +432,32 @@ if (userType == 1) {
         });
 
 
+        // Get the retirement year e data from Django context
+        const retirement_count = {{ retirement_year_count|safe }};
 
-        // Employee Age Distribution by Zone from Django context
-        const zoneAgeRanges = {{ zone_age_ranges|safe }};
-        // Extracting age ranges and zone names
-        const zone_ageRanges = Object.keys(zoneAgeRanges.zone_age_ranges);
-        zone_names = ['CCIR', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V','Refund Zone', 'CSO']
-        function generateRandomColor() {
-            const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-            return `#${randomColor}`;  }
-        const datasets = zone_names.map(zone => {
+        // Prepare data for Chart.js
+        const year_labels = Object.keys(retirement_count);  // ['2024', '2025', '2025', '2026']
 
-            return {
-                label: zone,
-                // Data for each age range with unique colors for each bar
-                data: zone_ageRanges.map((ageRange, index) => {
-                    return zoneAgeRanges.zone_age_ranges[ageRange][zone] || 0; // Handle missing data
-                }),
-                backgroundColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for each age range
-                borderColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for the border of each age range
-                borderWidth: 1
-            };
-        });
-
+        const year_data = Object.values(retirement_count);  // [106, 140, 75, 305]
 
         // Create the chart
-        const age_ctx = document.getElementById('zoneAgeRangeChart').getContext('2d');
-        const myChart = new Chart(age_ctx, {
-            type: 'bar',
+        const retirement_year = document.getElementById('retirement_year').getContext('2d');
+        const yearly_retirement_chart = new Chart(retirement_year, {
+            type: 'bar',  // You can change 'bar' to 'pie', 'line', etc.
             data: {
-                labels: zone_ageRanges,
-                datasets: datasets
+                labels: year_labels,  // X-axis labels
+                datasets: [{
+                    label: 'Number of Employees',
+                    data: year_data,  // Y-axis data
+                    backgroundColor: generateRandomColors({{ retirement_year_count|length }}),
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
             },
             options: {
                 scales: {
@@ -472,6 +467,67 @@ if (userType == 1) {
                 }
             }
         });
+
+
+
+        // Employee Age Distribution by Zone from Django context
+    const adminType = {{ request.user.is_superuser|add:0 }};
+let zoneAgeRanges = {};
+let zone_ageRanges = [];
+let zone_names = [];
+
+// Check if the user is an admin or zone admin
+if (adminType === 1) {
+    // For admin (superuser)
+    zoneAgeRanges = {{ zone_age_ranges|safe }};
+    zone_ageRanges = Object.keys(zoneAgeRanges.zone_age_ranges);
+    zone_names = ['CCIR', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'Refund Zone', 'CSO'];
+} else if (adminType === 2) {
+    // For zone admin (regular user)
+    zoneAgeRanges = {{ zone_age_ranges|safe }};
+    // Assuming 'request.user.userType' holds the zone name (e.g., 'Zone-I')
+    const userZone = "{{ request.user.userType }}";
+    zone_ageRanges = Object.keys(zoneAgeRanges.zone_age_ranges);
+    zone_names = [userZone];  // Only show the zone admin's zone
+}
+
+// Helper function to generate random colors
+function generateRandomColor() {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    return `#${randomColor}`;
+}
+
+// Generate dataset for the chart
+const datasets = zone_names.map(zone => {
+    return {
+        label: zone,
+        // Data for each age range with unique colors for each bar
+        data: zone_ageRanges.map((ageRange) => {
+            if(adminType === 1){ return zoneAgeRanges.zone_age_ranges[ageRange][zone] || 0; }
+            if(adminType === 2){ return zoneAgeRanges.zone_age_ranges[ageRange] || 0; }
+        }),
+        backgroundColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for each age range
+        borderColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for the border of each age range
+        borderWidth: 1
+    };
+});
+
+// Create the age distribution chart
+const age_ctx = document.getElementById('zoneAgeRangeChart').getContext('2d');
+const myChart = new Chart(age_ctx, {
+    type: 'bar',
+    data: {
+        labels: zone_ageRanges,  // X-axis labels (age ranges)
+        datasets: datasets
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
 
 
         // Function for generating random colors
@@ -485,5 +541,3 @@ if (userType == 1) {
     });
 
 </script>
-
-

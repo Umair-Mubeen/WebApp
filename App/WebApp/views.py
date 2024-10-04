@@ -22,10 +22,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee_explanation_data, \
-    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart
+    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart, get_retirement_year_count
 from .Utitlities import (DesignationWiseList, getRetirementList, fetchAllDispositionList, getZoneWiseOfficialsList,
                          ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison, getAllEmpTransferPosting,
-                         getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin
+                         getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin, calculate_tax
                          )
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 from .tables import CountLeaveIndividuals_table, CountExplanationIndividuals_table, \
@@ -77,6 +77,7 @@ def Dashboard(request):
         zone_counts = getZoneRetirementList(request.user.userType, request)  # Graph Scripts
         age_range_count = get_age_range_count(request)  # Graph Scripts
         zone_age_ranges = get_zone_age_range_chart(request)  # Graph Scripts
+        retirement_year_count = get_retirement_year_count(request)  # Graph Scripts
 
         label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
@@ -97,7 +98,8 @@ def Dashboard(request):
             'CountExplanationIndividuals': CountExplanationIndividuals_table(request),  # Explanation Summary table Data
             'CountTransferPostingIndividuals': CountTransferPostingIndividuals_table(request),
             'age_range_count': age_range_count,
-            'zone_age_ranges': zone_age_ranges
+            'zone_age_ranges': zone_age_ranges,
+            'retirement_year_count': retirement_year_count
 
         }
 
@@ -625,3 +627,93 @@ def Strength(request):
 def Logout(request):
     logout(request)
     return redirect('/')
+
+
+def TaxSlab(request):
+    try:
+        if request.method == 'POST':
+            income_type = request.POST.get('income_type')  # 'monthly' or 'yearly'
+            income_amount = int(request.POST.get('income_amount'))  # Either monthly or yearly salary based on user
+
+            # If monthly income, convert it to yearly income
+            if income_type == 'Monthly':
+                yearly_income = income_amount * 12
+                print(yearly_income)
+            else:
+                yearly_income = income_amount  # Already yearly income
+                print(yearly_income)
+
+            # Define the tax brackets for 2023 and 2024
+            tax_brackets_2023 = {
+                (0, 600000): (0, 0),
+                (600001, 1200000): (0.025, 600000),
+                (1200001, 2400000): (0.125, 15000),
+                (2400001, 3600000): (0.225, 165000),
+                (3600001, 6000000): (0.275, 435000),
+                (6000001, float('inf')): (0.35, 1095000)
+            }
+
+            tax_brackets_2024 = {
+                (0, 600000): (0, 0),
+                (600001, 1200000): (0.05, 600000),
+                (1200001, 2200000): (0.15, 30000),
+                (2200001, 3200000): (0.25, 180000),
+                (3200001, 4100000): (0.30, 430000),
+                (4100001, float('inf')): (0.35, 700000)
+            }
+
+            apply_surcharge_2023 = False
+            apply_surcharge_2024 = True
+
+            # Calculate taxes for both 2023 and 2024 based on yearly income
+            tax_2023 = calculate_tax(yearly_income, tax_brackets_2023, apply_surcharge_2023)
+            tax_2024 = calculate_tax(yearly_income, tax_brackets_2024, apply_surcharge_2024)
+
+            # Calculate the percentage tax and growth between 2023 and 2024
+            if yearly_income == 0:
+                tax_2023_percentage = 0
+                tax_2024_percentage = 0
+            else:
+                tax_2023_percentage = (tax_2023['total_tax'] / yearly_income) * 100 if tax_2023['total_tax'] > 0 else 0
+                tax_2024_percentage = (tax_2024['total_tax'] / yearly_income) * 100 if tax_2024['total_tax'] > 0 else 0
+
+                if tax_2023_percentage > 0 and tax_2024_percentage > 0:
+                    growth_percentage = ((tax_2024_percentage - tax_2023_percentage) / tax_2023_percentage) * 100
+                    growth_percentage = round(growth_percentage, 2)
+                else:
+                    growth_percentage = 0
+
+            # Prepare the context for the template
+            context = {
+                'tax_2023_year': '2023 - 2024',
+                'tax_2024_year': '2024 - 2025',
+                'tax_2023': tax_2023,
+                'tax_2024': tax_2024,
+                'tax_2023_percentage': tax_2023_percentage,
+                'tax_2024_percentage': tax_2024_percentage,
+                'yearly_income': yearly_income,
+                'monthly_income': income_amount if income_type == 'Monthly' else yearly_income,
+                'growth_percentage': growth_percentage,
+                'income_type' : income_type
+            }
+            print(context)
+            return render(request, 'TaxSlab.html', context)
+
+        # Render an empty form when the page is loaded initially
+        context = {
+            'tax_2023_year': '2023 - 2024',
+            'tax_2024_year': '2024 - 2025',
+            'tax_2023': '',
+            'tax_2024': '',
+            'tax_2023_percentage': '',
+            'tax_2024_percentage': '',
+            'yearly_income': '',
+            'growth_percentage': '',
+            'income_type': ''
+
+        }
+        return render(request, 'TaxSlab.html', context)
+
+    except Exception as e:
+        print(str(e))
+        return HttpResponse(str(e))

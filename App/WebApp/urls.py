@@ -9,6 +9,8 @@ urlpatterns = [
     path('', views.index, name='index'),  # Login Page
     path('login', views.userLogin, name='userLogin'),
     path('Dashboard', views.Dashboard, name='Dashboard'),
+    path('TaxSlab', views.TaxSlab, name='TaxSlab'),
+
     path('Logout', views.Logout, name='Logout'),
     path('DispositionList', views.getDispositionList, name='DispositionList'),
     path('Search', views.Search, name='Search'),

@@ -213,7 +213,6 @@ def get_employee_leave_data(request, emp_id=None):
                 return JsonResponse(leave_summary)
 
         leave_summary.update({'userType': request.user.is_superuser})
-        print(leave_summary)
         return leave_summary
     except Exception as e:
         logger.error(f"Error in get_employee_leave_data function: {e}")
@@ -344,14 +343,12 @@ def get_age_range_count(request):
     try:
         current_year = date.today().year
         # Get all employees' dates of birth
-        employees = DispositionList.objects.values_list('Date_of_Birth', flat=True)
+        if is_admin(request.user):
+            employees = DispositionList.objects.values_list('Date_of_Birth', flat=True)
+        if is_zone_admin(request.user):
+            employees = DispositionList.objects.values_list('Date_of_Birth', flat=True).filter(ZONE=request.user.userType)
         # Dictionary to count people in each age range
-        age_ranges = {
-            '18-30': 0,
-            '31-40': 0,
-            '41-50': 0,
-            '51-60': 0
-        }
+        age_ranges = {'18-30': 0,'31-40': 0,'41-50': 0,'51-60': 0}
 
         # Loop through employees and calculate age
         for dob in employees:
@@ -376,6 +373,7 @@ def get_age_range_count(request):
                 print(f"Error parsing Date_of_Birth: {dob}")
                 break
         # Return the age range data as JSON
+        print(age_ranges)
         return age_ranges
 
     except Exception as e:
@@ -386,7 +384,6 @@ def get_zone_age_range_chart(request):
     try:
         # Define the zones (assuming you have a zone field in the DispositionList model)
         zones = ['Refund Zone', 'CSO', 'CCIR', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V']
-
         # Initialize a dictionary to hold counts for each age range and zone
         zone_age_ranges = {
             '18-30': {zone: 0 for zone in zones},
@@ -396,13 +393,91 @@ def get_zone_age_range_chart(request):
         }
 
         # Count employees for each age range and zone
-        for zone in zones:
-            zone_age_ranges['18-30'][zone] = DispositionList.objects.filter(Q(emp_age__gte=18) & Q(emp_age__lte=30), ZONE=zone).count()
-            zone_age_ranges['31-40'][zone] = DispositionList.objects.filter(Q(emp_age__gte=31) & Q(emp_age__lte=40), ZONE=zone).count()
-            zone_age_ranges['41-50'][zone] = DispositionList.objects.filter(Q(emp_age__gte=41) & Q(emp_age__lte=50), ZONE=zone).count()
-            zone_age_ranges['51-60'][zone] = DispositionList.objects.filter(Q(emp_age__gte=51) & Q(emp_age__lte=60), ZONE=zone).count()
+        if is_admin(request.user):
+            for zone in zones:
+                zone_age_ranges['18-30'][zone] = DispositionList.objects.filter(Q(emp_age__gte=18) & Q(emp_age__lte=30), ZONE=zone).count()
+                zone_age_ranges['31-40'][zone] = DispositionList.objects.filter(Q(emp_age__gte=31) & Q(emp_age__lte=40), ZONE=zone).count()
+                zone_age_ranges['41-50'][zone] = DispositionList.objects.filter(Q(emp_age__gte=41) & Q(emp_age__lte=50), ZONE=zone).count()
+                zone_age_ranges['51-60'][zone] = DispositionList.objects.filter(Q(emp_age__gte=51) & Q(emp_age__lte=60), ZONE=zone).count()
+            context = {'zone_age_ranges': zone_age_ranges}
 
-        context = {'zone_age_ranges': zone_age_ranges, 'zones': zones}
+        if is_zone_admin(request.user):
+            zone = request.user.userType
+            zone_age_ranges['18-30'] = DispositionList.objects.filter(Q(emp_age__gte=18) & Q(emp_age__lte=30),ZONE=zone).count()
+            zone_age_ranges['31-40'] = DispositionList.objects.filter(Q(emp_age__gte=31) & Q(emp_age__lte=40),ZONE=zone).count()
+            zone_age_ranges['41-50'] = DispositionList.objects.filter(Q(emp_age__gte=41) & Q(emp_age__lte=50),ZONE=zone).count()
+            zone_age_ranges['51-60'] = DispositionList.objects.filter(Q(emp_age__gte=51) & Q(emp_age__lte=60),ZONE=zone).count()
+            context = {'zone_age_ranges':zone_age_ranges}
+
+            print(context)
         return context
     except Exception as e:
         print(str("Error", str(e)))
+
+
+def get_retirement_year_count(request):
+    try:
+        yearList = [2024, 2025, 2026, 2027, 2028, 2029, 2030]
+        current_year = date.today().year
+        # Get all employees' dates of birth
+        if is_admin(request.user):
+            employees = DispositionList.objects.values_list('Date_of_Retirement', flat=True)
+        if is_zone_admin(request.user):
+            employees = DispositionList.objects.values_list('Date_of_Retirement', flat=True).filter(ZONE=request.user.userType)
+
+        # Dictionary to count people in each age range
+        year_ranges = {
+            '2024': 0,
+            '2025': 0,
+            '2026': 0,
+            '2027': 0,
+            '2028': 0,
+            '2029': 0,
+            '2030': 0,
+            '2031': 0,
+            '2032': 0,
+            '2033': 0,
+            '2034': 0
+
+        }
+
+        # Loop through employees and calculate retirement year
+        for retirement in employees:
+            try:
+                if retirement:  # Check if Date_of_Retirement is not null
+                    # Calculate the age
+                    dob_cleaned = retirement.strip()  # Remove any leading/trailing spaces
+                    retirement_date = datetime.strptime(dob_cleaned, '%d.%m.%Y').date()
+
+                    # Calculate the year
+                    year = retirement_date.year
+                    if year == 2024:
+                        year_ranges['2024'] += 1
+                    if year == 2025:
+                        year_ranges['2025'] += 1
+                    if year == 2026:
+                        year_ranges['2026'] += 1
+                    if year == 2027:
+                        year_ranges['2027'] += 1
+                    elif year == 2028:
+                        year_ranges['2028'] += 1
+                    if year == 2029:
+                        year_ranges['2029'] += 1
+                    if year == 2030:
+                        year_ranges['2030'] += 1
+                    if year == 2031:
+                        year_ranges['2031'] += 1
+                    if year == 2032:
+                        year_ranges['2032'] += 1
+                    if year == 2033:
+                        year_ranges['2033'] += 1
+                    if year == 2034:
+                        year_ranges['2034'] += 1
+            except ValueError:
+                print(f"Error parsing Date_of_Retirement: {retirement}")
+                break
+        # Return the age range data as JSON
+        return year_ranges
+
+    except Exception as e:
+        print(str(e))
