@@ -374,8 +374,6 @@ def is_zone_admin(user):
 
 def calculate_tax(income, tax_brackets,apply_surcharge):
     try:
-        print(income)
-
         surcharge_threshold = 10000000
         surcharge_rate = 0.10
         for (lower, upper), (rate, base_tax) in tax_brackets.items():
@@ -404,7 +402,7 @@ def calculate_tax(income, tax_brackets,apply_surcharge):
                     print("tax + surcharge", str(total_tax_with_surcharge))
                     month = round(total_tax_with_surcharge / 12)
 
-                return {
+                context = {
                         'income': income,
                         'lower': lower,
                         'upper': upper,
@@ -417,6 +415,6 @@ def calculate_tax(income, tax_brackets,apply_surcharge):
                         'total_tax_with_surcharge' : total_tax_with_surcharge,
                         'surcharge' : surcharge
                     }
-        return None
+        return context
     except Exception as e:
         print(str(e))

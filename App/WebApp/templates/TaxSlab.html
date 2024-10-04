@@ -63,12 +63,12 @@
             <form name="tax_slab" method="POST">
                 {% csrf_token %}
                 <div class="row">
-                    <input type="hidden" name="hd_yearly_income" value="{{income_type}}">
+                    <input type="hidden" name="hd_income_type" value="{{income_type}}" id="hd_income_type">
 
                     <!-- Radio buttons to choose income type -->
                     <div class="col-lg-2">
-                         <select class="form-control" name="income_type">
-                              <option disabled> Select Income Type </option>
+                         <select class="js-example-basic-single form-control" name="income_type" id="income_type">
+                              <option value="" selected disabled> Select Income Type </option>
                              <option value="Monthly"> Monthly Income</option>
                              <option value="Yearly"> Yearly Income</option>
 
@@ -120,7 +120,7 @@
                                 <th>Tax on Amount Exceeding Bracket</th>
                                 <td>Rs. {{ tax_2023.tax_on_exceeding|intcomma }}</td>
                             </tr>
-                            {% if tax_2023.surcharge %}
+                            {% if tax_2024.surcharge %}
                             <tr class="bg-light">
                                 <th>Surcharge</th>
                                 <td>Rs. {{ tax_2023.surcharge|intcomma }}</td>
@@ -159,7 +159,7 @@
                         <h5 class="text-primary">Tax Calculation for {{tax_2024_year}}</h5>
                         <table class="table table-bordered table-hover">
                             <tr>
-                                <th>Income</th>
+                                <th>Yearly Income</th>
                                 <td>Rs. {{ tax_2024.income|intcomma }}</td>
                             </tr>
                             <tr>
@@ -184,7 +184,7 @@
                             </tr>
                             {% if tax_2024.surcharge %}
                             <tr class="bg-light">
-                                <th>Surcharge</th>
+                                <th>Surcharge (Tax on Exceeding Bracket	+ Base Tax)</th>
                                 <td>Rs. {{ tax_2024.surcharge|intcomma }}</td>
                             </tr>
                             <tr class="bg-light">
@@ -249,4 +249,17 @@
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+
+  $(document).ready(function () {
+   // Initialize select2
+
+    // Get the value from the hidden input element
+    var income_type = document.getElementById('hd_income_type').value;
+
+    // Set the value of another input element and trigger a change event
+    $('#income_type').val(income_type).trigger('change');
+    $('.js-example-basic-single').select2();
+
+});
+
 </script>

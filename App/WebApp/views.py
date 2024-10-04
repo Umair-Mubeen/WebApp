@@ -638,10 +638,8 @@ def TaxSlab(request):
             # If monthly income, convert it to yearly income
             if income_type == 'Monthly':
                 yearly_income = income_amount * 12
-                print(yearly_income)
             else:
                 yearly_income = income_amount  # Already yearly income
-                print(yearly_income)
 
             # Define the tax brackets for 2023 and 2024
             tax_brackets_2023 = {
@@ -696,7 +694,6 @@ def TaxSlab(request):
                 'growth_percentage': growth_percentage,
                 'income_type' : income_type
             }
-            print(context)
             return render(request, 'TaxSlab.html', context)
 
         # Render an empty form when the page is loaded initially
