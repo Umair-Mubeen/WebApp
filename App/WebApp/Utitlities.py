@@ -384,11 +384,18 @@ def calculate_tax(income, tax_brackets,apply_surcharge):
                 else:
                     amount_exceeding = income - lower
                     tax_on_exceeding = amount_exceeding * rate
+                    print(tax_on_exceeding)
+
                     if lower == 600001 and upper == 1200000:
                         tax = round(tax_on_exceeding)  # No base tax added
                         month = round(tax / 12)
+                    elif lower == 600001 and upper == 800000:
+                        tax = round(tax_on_exceeding)  # No base tax added
+                        month = tax / 12
+
                     else:
                         tax = round(base_tax + tax_on_exceeding)
+
                         month = round(tax / 12)
                 total_tax_with_surcharge = 0
                 surcharge = 0
@@ -402,7 +409,7 @@ def calculate_tax(income, tax_brackets,apply_surcharge):
                     print("tax + surcharge", str(total_tax_with_surcharge))
                     month = round(total_tax_with_surcharge / 12)
 
-                context = {
+                return {
                         'income': income,
                         'lower': lower,
                         'upper': upper,
@@ -415,6 +422,6 @@ def calculate_tax(income, tax_brackets,apply_surcharge):
                         'total_tax_with_surcharge' : total_tax_with_surcharge,
                         'surcharge' : surcharge
                     }
-        return context
+        return None
     except Exception as e:
         print(str(e))

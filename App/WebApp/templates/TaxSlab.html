@@ -64,9 +64,12 @@
                 {% csrf_token %}
                 <div class="row">
                     <input type="hidden" name="hd_income_type" value="{{income_type}}" id="hd_income_type">
+                    <input type="hidden" name="hd_taxpayer_type" value="{{taxpayer_type}}" id="hd_taxpayer_type">
+
+
 
                     <!-- Radio buttons to choose income type -->
-                    <div class="col-lg-2">
+                    <div class="col-lg-3">
                          <select class="js-example-basic-single form-control" name="income_type" id="income_type">
                               <option value="" selected disabled> Select Income Type </option>
                              <option value="Monthly"> Monthly Income</option>
@@ -75,9 +78,18 @@
                          </select>
                       </div>
 
+                    <div class="col-lg-3">
+                         <select class="js-example-basic-single form-control" name="taxpayer_type" id="taxpayer_type">
+                              <option value="" selected disabled> Select TaxPayer Type </option>
+                             <option value="salaried"> Salaried Person</option>
+                             <option value="business"> Business</option>
+
+                         </select>
+                      </div>
+
                     <!-- Input field for yearly or monthly income -->
                     <div class="col-lg-3">
-                        <input type="text" name="income_amount" class="form-control" placeholder="Enter Income" required value="{{monthly_income}}"/>
+                        <input type="number" name="income_amount" class="form-control" placeholder="Enter Income" required value="{{monthly_income}}"/>
                     </div>
 
                     <div class="col-lg-3">
@@ -255,9 +267,13 @@
 
     // Get the value from the hidden input element
     var income_type = document.getElementById('hd_income_type').value;
+    var taxpayer_type = document.getElementById('hd_taxpayer_type').value;
+
+
 
     // Set the value of another input element and trigger a change event
     $('#income_type').val(income_type).trigger('change');
+    $('#taxpayer_type').val(taxpayer_type).trigger('change');
     $('.js-example-basic-single').select2();
 
 });
