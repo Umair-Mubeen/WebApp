@@ -1,70 +1,125 @@
 import re
-try:
-    def extract_basic_pay(path, personnel):
-        try:
-            # Open the text file and read lines
-            with open(path, 'r', encoding='utf-8', errors='replace') as file:
-                lines = file.readlines()
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 
+
+def extract_basic_pay(path, personnel_excel):
+    try:
+        # Read the personnel numbers from the provided Excel file
+        df = pd.read_excel(personnel_excel)
+
+        # Add a new column 'Basic Pay' to store the extracted basic pay, if it doesn't already exist
+        if 'Basic Pay' not in df.columns:
+            df['Basic Pay'] = None
+
+        # Clean the personnel list, ignoring empty and zero values
+        personnel_list = df['Personnel'].dropna().astype(str).tolist()
+        personnel_list = [
+            str(int(float(num))) for num in personnel_list
+            if num.strip() and num.strip() != "0"
+        ]
+
+        if not personnel_list:
+            print("No valid personnel found.")
+            return
+
+        with open(path, 'r', encoding='utf-8', errors='replace') as file:
+            lines = file.readlines()
+
+        for idx, personnel in enumerate(personnel_list):
+            print(personnel)
+            personnel = personnel.strip()
             basic_pay = None
             found_pers = False
-            pers_column = None  # To track which column the personnel number was found in
+            pers_column = None
 
-            # Iterate through the lines of the file
+            print(f"\nSearching for Personnel # {personnel}")
+
             for line in lines:
-                # Check if the current line contains the exact "Pers #"
-                # Check if the current line contains the exact "Pers #"
                 left_column = line[:80].strip()
                 right_column = line[80:].strip()
 
                 if f"Pers #: {personnel}" in left_column:
-                    print(f'Personnel record found in left column: {left_column}')
                     found_pers = True
                     pers_column = 'left'
-                    continue  # Skip to the next line to find "Basic Pay"
-
+                    continue
                 elif f"Pers #: {personnel}" in right_column:
-                    print(f'Personnel record found in right column: {right_column}')
                     found_pers = True
                     pers_column = 'right'
-                    continue  # Skip to the next line to find "Basic Pay"
+                    continue
 
-                # If we found the personnel number, look for "Basic Pay"
                 if found_pers and "0001-Basic Pay" in line:
-                    # Debugging output for columns
-                    print(f'Checking for Basic Pay in line: {line.strip()}')
-
-                    # Use regex to find the basic pay
                     pay_pattern = r'0001-Basic Pay\s+([\d,]+\.\d{2})'
                     left_match = re.search(pay_pattern, left_column)
                     right_match = re.search(pay_pattern, right_column)
 
                     if left_match and pers_column == 'left':
                         basic_pay = left_match.group(1)
-                        print(f'Basic Pay found in left column: {basic_pay}')
                     elif right_match and pers_column == 'right':
                         basic_pay = right_match.group(1)
-                        print(f'Basic Pay found in right column: {basic_pay}')
 
-                    # Stop searching once basic pay is found
                     if basic_pay:
                         break
 
-            # Output result
             if basic_pay:
-                print(f'Basic Pay for Pers # {pers_number}: {basic_pay}')
+                df.at[idx, 'Basic Pay'] = basic_pay
+                print(f'Basic Pay for Pers # {personnel}: {basic_pay}')
             else:
-                print(f'Basic Pay not found for Pers # {pers_number}')
+                df.at[idx, 'Basic Pay'] = 'Not In Pay Roll'
+                print(f'Basic Pay not found for Pers # {personnel}')
 
-        except Exception as e:
-            print(f'An error occurred: {str(e)}')
+        df.to_excel(personnel_excel, index=False)
+
+        # Load the workbook and select the active sheet
+        workbook = load_workbook(personnel_excel)
+        sheet = workbook.active
+
+        # Define styles
+        border_style = Border(left=Side(style='thin'), right=Side(style='thin'),
+                              top=Side(style='thin'), bottom=Side(style='thin'))
+        fill_style_header = PatternFill(start_color='FFCCFF', end_color='FFCCFF', fill_type='solid')  # Light purple
+        fill_style_valid = PatternFill(start_color='FFFF99', end_color='FFFF99', fill_type='solid')  # Light yellow
+        fill_style_row = PatternFill(start_color='E0E0E0', end_color='E0E0E0', fill_type='solid')  # Light gray for rows
+        font_style = Font(name='Book Antiqua', bold=True, color='000000')  # Black text
+        alignment_style = Alignment(wrap_text=True)
+
+        # Apply styles to header row
+        for col in range(1, len(df.columns) + 1):
+            header_cell = sheet.cell(row=1, column=col)
+            header_cell.fill = fill_style_header
+            header_cell.font = font_style
+            header_cell.border = border_style
+            header_cell.alignment = alignment_style
+
+        # Apply styles to data rows
+        for row in range(2, len(df) + 2):
+            for col in range(1, len(df.columns) + 1):
+                cell = sheet.cell(row=row, column=col)
+                cell.border = border_style
+                cell.alignment = alignment_style  # Wrap text for all cells
+
+                # Fill entire row up to "Basic Pay" with background color
+                if col < df.columns.get_loc('Basic Pay') + 1:
+                    cell.fill = fill_style_row
+
+                if col == df.columns.get_loc('Basic Pay') + 1 and cell.value == 'Not In Pay Roll':
+                    cell.fill = fill_style_valid
+
+        # Adjust column widths for better visibility
+        for col in range(1, len(df.columns) + 1):
+            column_letter = sheet.cell(row=1, column=col).column_letter
+            max_length = max(len(str(cell.value)) for cell in sheet[column_letter])
+            sheet.column_dimensions[column_letter].width = max_length + 2  # Adding padding
+
+        # Save the workbook
+        workbook.save(personnel_excel)
+
+    except Exception as e:
+        print(f'An error occurred: {str(e)}')
 
 
-    # Example usage
-    file_path = 'C:/Users/umair/Downloads/AUG-24.txt'
-    pers_number = '50564658'  # Example personnel number
-    extract_basic_pay(file_path, pers_number)
-
-
-except Exception as e:
-    print(str(e))
+# Example usage
+file_path = 'C:/Users/umair/Downloads/AUG-24.txt'
+personnel_excel_path = 'C:/Users/umair/Downloads/PayRoll.xlsx'
+extract_basic_pay(file_path, personnel_excel_path)
