@@ -13,7 +13,7 @@ from django.db.models.functions import Substr, Trim, Concat
 from django.db.models import Case, When, BooleanField, F
 from datetime import datetime, timedelta
 from django.db.models.functions import Concat, Replace
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 
@@ -22,15 +22,16 @@ logger = logging.getLogger(__name__)
 
 def fetchAllDispositionList(request):
     try:
-        # Paginate results
+        # Determine the base queryset based on user role
         if is_zone_admin(request.user):
             result = DispositionList.objects.filter(ZONE=request.user.userType)
-        if is_admin(request.user):
+        elif is_admin(request.user):
             result = DispositionList.objects.all()
-        paginator = Paginator(result, 10)
-        page = request.GET.get('page')
-        disposition_result = paginator.get_page(page)
-        return disposition_result, None
+        else:
+            result = DispositionList.objects.none()  # No results for other roles
+
+        return result, None
+
     except Exception as e:
         return None, str(e)
 
@@ -135,7 +136,7 @@ def getZoneWiseOfficialsList(zone):
             .values("zone", "designation").annotate(total=Count('id'))
         results_list = list(results)
         results_json = json.dumps(results_list, indent=4)
-
+        print(results_json)
         return results_json
     except Exception as e:
         return str(e)
@@ -235,20 +236,21 @@ def StrengthComparison(userType, user_zone=None):
         # Base queryset with aggregation
         base_queryset = DispositionList.objects.values('ZONE', 'Designation', 'BPS').annotate(total=Count('id'))
 
-        # Filter based on userType
-        if userType == 2:  # Employee
-            if user_zone:  # Ensure user_zone is provided
-                base_queryset = base_queryset.filter(ZONE=user_zone)
-            else:
-                return "Error: Zone information is missing for the employee."
-
         # Aggregate data
         aggregated_data = defaultdict(lambda: defaultdict(int))
+        total_zones = defaultdict(int)  # For storing totals per zone
+
         for item in base_queryset:
             designation = item['Designation']
             bps = item['BPS']
             zone = item['ZONE']
-            aggregated_data[(designation, bps)][zone] = item['total']
+            total = item['total']
+
+            # Add to aggregated data
+            aggregated_data[(designation, bps)][zone] += total
+
+            # Add to total_zones for respective zone
+            total_zones[zone] += total
 
         # Convert aggregated data to a list
         final_data = [
@@ -263,10 +265,32 @@ def StrengthComparison(userType, user_zone=None):
                 'CCIR': zone_data.get('CCIR', 0),
                 'Refund_Zone': zone_data.get('Refund Zone', 0),
                 'IP_TFD_HRM': zone_data.get('IP/TFD/HRM', 0),
+                'CSO': zone_data.get('CSO', 0),
+                'AdPool': zone_data.get('Admin Pool', 0),
                 'total_sum': sum(zone_data.values()),
+
             }
             for (designation, bps), zone_data in aggregated_data.items()
         ]
+        # Append totals row
+        total_row = {
+            'Designation': 'Total',
+            'BPS': '',
+            'CCIR': total_zones.get('CCIR', 0),
+            'Zone_I': total_zones.get('Zone-I', 0),
+            'Zone_II': total_zones.get('Zone-II', 0),
+            'Zone_III': total_zones.get('Zone-III', 0),
+            'Zone_IV': total_zones.get('Zone-IV', 0),
+            'Zone_V': total_zones.get('Zone-V', 0),
+            'Refund_Zone': total_zones.get('Refund Zone', 0),
+            'IP_TFD_HRM': total_zones.get('IP/TFD/HRM', 0),
+            'CSO': total_zones.get('CSO', 0),
+            'AdPool': total_zones.get('Admin Pool', 0),
+            'total_sum': sum(total_zones.values()),
+            'row_color' : 'table-info'
+        }
+
+        final_data.append(total_row)
 
         return final_data
 

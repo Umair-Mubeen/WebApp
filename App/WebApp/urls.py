@@ -10,11 +10,14 @@ urlpatterns = [
     path('login', views.userLogin, name='userLogin'),
     path('Dashboard', views.Dashboard, name='Dashboard'),
     path('TaxSlab', views.TaxSlab, name='TaxSlab'),
+    path('verify', views.verify, name='verify'),
 
     path('Logout', views.Logout, name='Logout'),
     path('DispositionList', views.getDispositionList, name='DispositionList'),
     path('Search', views.Search, name='Search'),
     path('Zone', views.Zone, name='Zone'),
+    path('Sanction_Strength', views.Sanction_Strength, name='Sanction_Strength'),
+
     path('Strength', views.Strength, name='Strength'),
     path('TransferPosting', views.EmployeeTransferPosting, name='TransferPosting'),
     path('ManageTransferPosting', views.ManageEmployeeTransferPosting, name='ManageTransferPosting'),

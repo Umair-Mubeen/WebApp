@@ -310,14 +310,14 @@ def get_employee_explanation_data(request, emp_id=None):
 
 def getZoneRetirementList(zone, request):
     try:
-        # Group retirements by zone and count them
+        # Group retirements by zone and count them from November 2024 to December 2025
         if is_admin(request.user):
             retirement = DispositionList.objects.annotate(
                 year=Substr('Date_of_Retirement', 7, 4),
                 month=Substr('Date_of_Retirement', 4, 2)
             ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
+                Q(year='2024', month__gte='11') | Q(year__in=[str(y) for y in range(2025, 2034)]) | Q(year='2034',
+                                                                                                      month__lte='12')
             ).order_by('ZONE')
 
         if is_zone_admin(request.user):
@@ -325,15 +325,16 @@ def getZoneRetirementList(zone, request):
                 year=Substr('Date_of_Retirement', 7, 4),
                 month=Substr('Date_of_Retirement', 4, 2)
             ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-                ZONE=zone
+                Q(year='2024', month__gte='11') | Q(year__in=[str(y) for y in range(2025, 2034)]) | Q(year='2034',
+                                                                                                      month__lte='12'),
+            ZONE=zone
             ).order_by('ZONE')
 
         zone_counts = defaultdict(int)
         for item in retirement.values('ZONE'):
             zone_counts[item['ZONE']] += 1
 
+        print(zone_counts)
         return zone_counts
     except Exception as e:
         return str(e)
@@ -481,3 +482,33 @@ def get_retirement_year_count(request):
 
     except Exception as e:
         print(str(e))
+
+
+
+def get_zone_wise_count(request):
+    try:
+        # Dictionary to count the number of dispositions in each zone
+        zone_counts = defaultdict(int)
+
+        # Query all dispositions from the database and order by ZONE
+        employees = DispositionList.objects.all().order_by('ZONE')
+
+        # Loop through employees and count them by zone
+        for employee in employees:
+            zone = employee.ZONE  # Get the zone from the employee record
+            if zone:  # Check if the zone is not null
+                zone_counts[zone] += 1  # Increment the count for the corresponding zone
+
+        # Convert defaultdict to a regular dict
+        zone_counts = dict(zone_counts)
+
+        # Sort the zone counts by total count in descending order
+        sorted_zone_counts = dict(sorted(zone_counts.items(), key=lambda item: item[1]))
+
+        # Return the sorted zone counts as JSON or render it in a template
+        return {'zone_counts': sorted_zone_counts}
+
+    except Exception as e:
+        print(str(e))
+        # Handle exception (e.g., return an error response)
+        return {'error': str(e)}

@@ -1,4 +1,8 @@
+import os
 from datetime import datetime
+
+from django.core.paginator import Paginator
+from django.http import JsonResponse
 
 """
 The code consists of Django views for managing user authentication, dashboard data, employee
@@ -16,13 +20,13 @@ with context data for the respective views, such as 'Dashboard.html', 'Dispositi
 import mimetypes
 import logging
 
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.shortcuts import render, HttpResponse, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee_explanation_data, \
-    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart, get_retirement_year_count
+    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart, get_retirement_year_count,get_zone_wise_count
 from .Utitlities import (DesignationWiseList, getRetirementList, fetchAllDispositionList, getZoneWiseOfficialsList,
                          ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison, getAllEmpTransferPosting,
                          getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin, calculate_tax
@@ -78,6 +82,7 @@ def Dashboard(request):
         age_range_count = get_age_range_count(request)  # Graph Scripts
         zone_age_ranges = get_zone_age_range_chart(request)  # Graph Scripts
         retirement_year_count = get_retirement_year_count(request)  # Graph Scripts
+        zone_wise_count = get_zone_wise_count(request)
 
         label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
@@ -99,7 +104,8 @@ def Dashboard(request):
             'CountTransferPostingIndividuals': CountTransferPostingIndividuals_table(request),
             'age_range_count': age_range_count,
             'zone_age_ranges': zone_age_ranges,
-            'retirement_year_count': retirement_year_count
+            'retirement_year_count': retirement_year_count,
+            'zone_wise_count' : zone_wise_count
 
         }
 
@@ -112,10 +118,46 @@ def Dashboard(request):
 @login_required(login_url='userLogin')  # redirect when user is not logged in
 def getDispositionList(request):
     try:
-        disposition_result, error = fetchAllDispositionList(request)
-        if error:
-            logger.error(f"An error occurred: {error}", status=500)
-        return render(request, 'DispositionList.html', {'DispositionResult': disposition_result})
+        search_query = request.GET.get('search', '')
+        disposition_result = None  # Initialize variable
+
+        if is_admin(request.user):
+            if search_query:
+                # Filter by CNIC_No, Name, ZONE, or Designation
+                disposition_result = DispositionList.objects.filter(
+                    Q(Personal_No__icontains=search_query) |
+                    Q(CNIC_No__icontains=search_query) |
+                    Q(Name__icontains=search_query) |
+                    Q(ZONE__icontains=search_query) |
+                    Q(Designation__icontains=search_query)
+                )
+            else:
+                disposition_result, error = fetchAllDispositionList(request)
+
+        elif is_zone_admin(request.user):
+            if search_query:
+                # Filter by CNIC_No, Name, ZONE, Designation, and restrict by user's zone type
+                disposition_result = DispositionList.objects.filter(
+                    Q(Personal_No__icontains=search_query) |
+                    Q(CNIC_No__icontains=search_query) |
+                    Q(Name__icontains=search_query) |
+                    Q(ZONE__icontains=search_query) |
+                    Q(Designation__icontains=search_query)
+                )
+            else:
+                disposition_result, error = fetchAllDispositionList(request)
+
+        # Handle pagination
+        if disposition_result is not None:
+            page = request.GET.get('page')
+            paginator = Paginator(disposition_result, 10)  # 10 items per page
+            disposition_result = paginator.get_page(page)
+            # Calculate the starting serial number for the current page
+            start_serial_number = (disposition_result.number - 1) * paginator.per_page + 1
+
+        return render(request, 'DispositionList.html', {'DispositionResult': disposition_result, 'search': search_query,
+                                                        'start_serial_number': start_serial_number})
+
     except Exception as e:
         logger.error(f"Error in getDispositionList view: {e}")
         return HttpResponse("An error occurred.", status=500)
@@ -171,6 +213,84 @@ def Zone(request):
     except Exception as e:
         logger.error(f"Error in Zone view: {e}")
         return HttpResponse("An error occurred.", status=500)
+
+
+@login_required(login_url='userLogin')  # redirect when user is not logged in
+def Sanction_Strength(request):
+    try:
+        if is_admin(request.user):  # Checking if the user is an admin
+            posts_data = [
+                {"s_no": 1, "name": "Chief Commissioner-IR", "bs": 21, "sanctioned": 1, "working": 1, "vacancy": 0},
+                {"s_no": 2, "name": "Commissioner-IR", "bs": 20, "sanctioned": 5, "working": 5, "vacancy": 0},
+                {"s_no": 3, "name": "Additional Commissioner-IR", "bs": 19, "sanctioned": 11, "working": 8,
+                 "vacancy": 3},
+                {"s_no": 4, "name": "Cost Accountant", "bs": 19, "sanctioned": 1, "working": 1, "vacancy": 0},
+                {"s_no": 5, "name": "Deputy/Assistant Commissioner-IR", "bs": "18/17", "sanctioned": 34, "working": 27,
+                 "vacancy": 7},
+                {"s_no": 6, "name": "Accounts Officer", "bs": 18, "sanctioned": 1, "working": 1, "vacancy": 0},
+                {"s_no": 7, "name": "Deputy Director (MIS)", "bs": 18, "sanctioned": 1, "working": 0, "vacancy": 1},
+                {"s_no": 8, "name": "Assistant Director Audit", "bs": 18, "sanctioned": 13, "working": 7, "vacancy": 6},
+                {"s_no": 9, "name": "Treasury Officer", "bs": 17, "sanctioned": 1, "working": 0, "vacancy": 1},
+                {"s_no": 10, "name": "Administrative Officer", "bs": 17, "sanctioned": 2, "working": 1, "vacancy": 1},
+                {"s_no": 11, "name": "Assistant Director (MIS)", "bs": 17, "sanctioned": 4, "working": 4, "vacancy": 0},
+                {"s_no": 12, "name": "Department Representative", "bs": 17, "sanctioned": 2, "working": 0,
+                 "vacancy": 2},
+                {"s_no": 13, "name": "MIS Officer", "bs": 16, "sanctioned": 10, "working": 12, "vacancy": -2},
+                {"s_no": 14, "name": "Assistant Private Secretary", "bs": 16, "sanctioned": 11, "working": 9,
+                 "vacancy": 2},
+                {"s_no": 15, "name": "Inland Revenue Officer", "bs": 16, "sanctioned": 36, "working": 31,
+                 "vacancy": 5},
+                {"s_no": 16, "name": "Senior Auditor", "bs": 16, "sanctioned": 12, "working": 10, "vacancy": 2},
+                {"s_no": 17, "name": "Inspector", "bs": 16, "sanctioned": 163, "working": 30, "vacancy": 133},
+                {"s_no": 18, "name": "Superintendent", "bs": 16, "sanctioned": 11, "working": 0, "vacancy": 11},
+                {"s_no": 19, "name": "Deputy Superintendent", "bs": 16, "sanctioned": 3, "working": 0, "vacancy": 3},
+                {"s_no": 20, "name": "Office Superintendent", "bs": 16, "sanctioned": 26, "working": 17,
+                 "vacancy": 9},
+                {"s_no": 21, "name": "Total", "bs": "", "sanctioned": 348, "working": 164, "vacancy": 184},
+                {"s_no": 22, "name": "Stenotypist", "bs": 14, "sanctioned": 42, "working": 16, "vacancy": 26},
+                {"s_no": 23, "name": "Head Clerk", "bs": 14, "sanctioned": 3, "working": 15, "vacancy": -12},
+                {"s_no": 24, "name": "Assistant", "bs": "15/16", "sanctioned": 2, "working": 1, "vacancy": 1},
+                {"s_no": 25, "name": "Supervisor", "bs": 14, "sanctioned": 66, "working": 64, "vacancy": 2},
+                {"s_no": 26, "name": "DEO *", "bs": 12, "sanctioned": 21, "working": 15, "vacancy": 6},
+                {"s_no": 27, "name": "Library Assistant", "bs": 11, "sanctioned": 2, "working": 1, "vacancy": 1},
+                {"s_no": 28, "name": "UDC", "bs": 11, "sanctioned": 162, "working": 72, "vacancy": 90},
+                {"s_no": 29, "name": "LDC", "bs": 9, "sanctioned": 113, "working": 79, "vacancy": 34},
+                {"s_no": 30, "name": "Hawaldar", "bs": 7, "sanctioned": 16, "working": 14, "vacancy": 2},
+                {"s_no": 31, "name": "Telephone Operator/Telex Operator", "bs": 7, "sanctioned": 3, "working": 3,
+                 "vacancy": 0},
+                {"s_no": 32, "name": "Sepoy/Jamadar", "bs": 5, "sanctioned": 59, "working": 40, "vacancy": 19},
+                {"s_no": 33, "name": "Dispatch Rider", "bs": 4, "sanctioned": 1, "working": 2, "vacancy": -1},
+                {"s_no": 34, "name": "Motor Mechanic", "bs": 4, "sanctioned": 1, "working": 0, "vacancy": 1},
+                {"s_no": 35, "name": "Duplicating Machine Operator (DMO)", "bs": 4, "sanctioned": 1, "working": 0,
+                 "vacancy": 1},
+                {"s_no": 36, "name": "Driver", "bs": 4, "sanctioned": 29, "working": 25, "vacancy": 4},
+                {"s_no": 37, "name": "Daftari", "bs": 2, "sanctioned": 41, "working": 28, "vacancy": 13},
+                {"s_no": 38, "name": "Record Sorter", "bs": 2, "sanctioned": 5, "working": 3, "vacancy": 2},
+                {"s_no": 39, "name": "Qasid", "bs": 2, "sanctioned": 3, "working": 0, "vacancy": 3},
+                {"s_no": 40, "name": "Bailiff", "bs": 1, "sanctioned": 18, "working": 13, "vacancy": 5},
+                {"s_no": 41, "name": "Chowkidar", "bs": 1, "sanctioned": 2, "working": 1, "vacancy": 1},
+                {"s_no": 42, "name": "Mali", "bs": 1, "sanctioned": 6, "working": 8, "vacancy": -2},
+                {"s_no": 43, "name": "Farash", "bs": 1, "sanctioned": 8, "working": 2, "vacancy": 6},
+                {"s_no": 44, "name": "Naib Qasid", "bs": 1, "sanctioned": 120, "working": 49, "vacancy": 71},
+                {"s_no": 45, "name": "Dresser", "bs": 1, "sanctioned": 1, "working": 0, "vacancy": 1},
+                {"s_no": 46, "name": "Notice Server *", "bs": 1, "sanctioned": 34, "working": 0, "vacancy": 34},
+                {"s_no": 47, "name": "Water Carrier", "bs": 1, "sanctioned": 1, "working": 0, "vacancy": 1},
+                {"s_no": 48, "name": "Sanitary Worker", "bs": 1, "sanctioned": 4, "working": 0, "vacancy": 4},
+                {"s_no": 49, "name": "Armed Guard", "bs": 1, "sanctioned": 14, "working": 7, "vacancy": 7},
+                {"s_no": 50, "name": "Total BS-01 to 16", "bs": "", "sanctioned": 778, "working": 458, "vacancy": 320},
+                {"s_no": 51, "name": "Grand Total", "bs": "", "sanctioned": 1126, "working": 622, "vacancy": 504}
+            ]
+            paginator = Paginator(posts_data, 10)  # Show 10 posts per page
+            page_number = request.GET.get('page')
+            page_obj = paginator.get_page(page_number)
+
+            return render(request, 'Sanction_Strenght.html', {'page_obj': page_obj})
+            # return render(request, 'Sanction_Strenght.html', {'posts_data': posts_data})
+        else:
+            return HttpResponse("You do not have permission to view this page.")
+    except Exception as e:
+        logger.error(f"Error in Sanction & Strength view: {e}")
+        return HttpResponse(f"An error occurred: {str(e)}")
 
 
 @login_required(login_url='userLogin')  # redirect when user is not logged in
@@ -614,6 +734,7 @@ def Strength(request):
     try:
         if is_admin(request.user):
             final_data = StrengthComparison(request.user.userType, None)
+            #return HttpResponse(str(final_data))
             return render(request, 'strength.html', {
                 'data': final_data,
                 'Comparison': ZoneDesignationWiseComparison(),
@@ -628,6 +749,56 @@ def Logout(request):
     logout(request)
     return redirect('/')
 
+
+def verify(request):
+    try:
+        # This function remains a GET request
+        def read_txt_file(file_path):
+            with open(file_path, 'r') as file:
+                data = file.readlines()  # Read each line of the text file
+            return data
+
+        def check_record_in_db(record_id):
+            # Check if the record exists in the database
+            return DispositionList.objects.filter(Personal_No=record_id).exists()
+
+        def check_records(file_path):
+            records = read_txt_file(file_path)
+            all_records = []
+
+            for record in records:
+                record_id = record.strip()  # Process the record data
+                if check_record_in_db(record_id):
+                    all_records.append(f"{record_id} - exists")
+                else:
+                    all_records.append(f"{record_id} - does not exist")
+
+            # Save all records (both existing and non-existing) to a single file
+            output_file_path = os.path.join('C:/Users/ACS/Documents', 'records_verification.txt')
+            with open(output_file_path, 'w') as output_file:
+                for record in all_records:
+                    output_file.write(f"{record}\n")
+
+            return output_file_path
+
+        # Hardcoded file path, as in your original code
+        file_path = 'C:/Users/ACS/Documents/personnel.txt'
+
+        # Call the check_records function to check records and save them
+        output_file_path = check_records(file_path)
+
+        # Return the file path of saved results
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Records verified successfully.',
+            'output_file_path': output_file_path
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        })
 
 def TaxSlab(request):
     try:
@@ -669,7 +840,7 @@ def TaxSlab(request):
                 (800001, 1200000): (0.15, 15000),
                 (1200001, 2400000): (0.2, 75000),
                 (2400001, 3000000): (0.25, 315000),  # Higher bracket percentages
-                (3000001, 4000000): (0.3, 465000) , # Adjusted for higher business earnings
+                (3000001, 4000000): (0.3, 465000),  # Adjusted for higher business earnings
                 (4000001, float('inf')): (0.35, 765000)
 
             }
@@ -681,8 +852,6 @@ def TaxSlab(request):
                 (3200001, 5600000): (0.4, 650000),  # Higher bracket percentages
                 (5600001, float('inf')): (0.45, 1610000)
             }
-
-
 
             apply_surcharge_2023 = False
             apply_surcharge_2024 = True
@@ -720,7 +889,7 @@ def TaxSlab(request):
                 'yearly_income': yearly_income,
                 'monthly_income': income_amount if income_type == 'Monthly' else yearly_income,
                 'growth_percentage': growth_percentage,
-                'income_type' : income_type,
+                'income_type': income_type,
                 'taxpayer_type': taxpayer_type
             }
             return render(request, 'TaxSlab.html', context)
@@ -736,7 +905,7 @@ def TaxSlab(request):
             'yearly_income': '',
             'growth_percentage': '',
             'income_type': '',
-            'taxpayer_type' : ''
+            'taxpayer_type': ''
 
         }
         return render(request, 'TaxSlab.html', context)

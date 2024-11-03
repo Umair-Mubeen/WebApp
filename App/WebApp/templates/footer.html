@@ -82,7 +82,7 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+   document.addEventListener('DOMContentLoaded', function() {
     // Designation WISE Data using Group By
     const designationData = {
         labels: [
@@ -119,9 +119,29 @@
             animation: {
                 duration: 1000, // Animation duration in ms
                 easing: 'easeInOutBounce' // Easing effect
+            },
+            plugins: {
+                tooltip: {
+                    enabled: true, // Tooltips are enabled
+                    mode: 'index', // Show for all items on the index
+                    intersect: false, // Tooltips do not require intersection
+                    external: function(context) {
+                        // Show tooltips by default when the chart is rendered
+                        const chart = context.chart;
+                        const tooltip = chart.tooltip;
+
+                        // If tooltip is not active, show the tooltip
+                        if (!tooltip._active) {
+                            const activeElements = chart.getDatasetMeta(0).data;
+                            chart.tooltip.setActiveElements(activeElements, { x: 0, y: 0 });
+                            chart.update();
+                        }
+                    }
+                }
             }
         }
     });
+
 
     // Retirement ZONE WISE Data using Group By
     const zones = {{ zones|safe }};
@@ -529,6 +549,37 @@ const myChart = new Chart(age_ctx, {
     }
 });
 
+   /// Get the zone wise count data from Django context
+const zone_range_count = {{ zone_wise_count|safe }};
+
+// Prepare data for Chart.js
+const zone_labels = Object.keys(zone_range_count.zone_counts);  // Get labels
+const zone_count = Object.values(zone_range_count.zone_counts);  // Get counts
+console.log(zone_count);
+
+// Create the chart
+const zone_count_data = document.getElementById('zone_wise_range').getContext('2d');
+const zone_wise_chart = new Chart(zone_count_data, {
+    type: 'bar',  // Change 'bar' to 'pie', 'line', etc., as needed
+    data: {
+        labels: zone_labels,  // X-axis labels
+        datasets: [{
+            label: 'Total No of Employees',
+            data: zone_count,  // Y-axis data
+            backgroundColor: generateRandomColors(zone_labels.length),
+            borderColor: 'rgba(0, 0, 0, 1)',  // Static border color for clarity
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
 
         // Function for generating random colors
         function generateRandomColors(length) {
@@ -539,5 +590,8 @@ const myChart = new Chart(age_ctx, {
             return colors;
         }
     });
+
+
+
 
 </script>
