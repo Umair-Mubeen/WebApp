@@ -22,6 +22,10 @@
     display: none !important;
 }
 
+.error-border {
+    border: 2px solid red;
+}
+
 </style>
 
 {% load static %}
@@ -88,7 +92,13 @@
 
 
                                 <div class="card-body" style="display:block">
-                                    <input type="hidden" name="hd_emp" value="" id="hd_emp">
+
+                                    <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
+                                    <input type="hidden" name="hd_rowId" value="{{rowId}}" id="hd_rowId">
+                                    <input type="hidden" name="hd_leave_type" value="{{row.leave_type}}"
+                                           id="hd_leave_type">
+                                    <input type="hidden" name="hd_zone_type" value="{{row.zone_type}}"
+                                           id="hd_zone_type">
                                     <div class="form-group">
                                         <label>Employee Name </label>
 
@@ -109,6 +119,7 @@
                                     <div class="form-group">
                                         <label for="leave_type">Type of Leave:</label><br>
                                         <select id="leave_type" name="leave_type" class="form-control">
+                                            <option value="" selected disabled>Select an Leave</option>
                                             <option value="Casual Leave">Casual Leave (Max 20 days)</option>
                                             <option value="Earned Leave">Earned Leave (Max 48 days)</option>
                                             <option value="Ex-Pakistan Leave">Ex-Pakistan Leave</option>
@@ -124,22 +135,40 @@
                                     <div class="form-group">
                                         <label for="leave_start_date">Leave Start Date:</label><br>
                                         <input type="date" id="leave_start_date" name="leave_start_date"
-                                               class="form-control">
+                                               class="form-control" value="{% if row.leave_start_date %}{{ row.leave_start_date|date:'Y-m-d' }}{% else %} {% endif %}">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="leave_end_date">Leave End Date:</label>
                                         <input type="date" id="leave_end_date" name="leave_end_date"
-                                               class="form-control">
+                                               class="form-control" value="{% if row.leave_end_date %}{{ row.leave_end_date|date:'Y-m-d' }}{% else %} {% endif %}">
+
 
                                     </div>
 
                                     <div class="form-group">
                                         <label for="reason">Reason for Leave:</label>
-                                        <textarea id="reason" name="reason" rows="4" cols="50"
-                                                  class="form-control"></textarea>
+                                        <textarea id="reason" name="reason" rows="2" cols="50" class="form-control">{% if row.reason %}{{ row.reason}}{% else %} {% endif %}</textarea>
 
                                     </div>
+
+                                     {% if request.user.is_superuser == 1 %}
+                                        <div class="form-group">
+                                        <label for="zone_type">Zone Type:</label>
+                                        <select name="zone_type" class="form-control" id="zone_type">
+                                            <option value="" selected disabled>Select an zone</option>
+                                            <option value="CCIR">CCIR</option>
+                                            <option value="Zone-I">Zone-I</option>
+                                            <option value="Zone-II">Zone-II</option>
+                                            <option value="Zone-III">Zone-III</option>
+                                            <option value="Zone-IV">Zone-Iv</option>
+                                            <option value="Zone-V">Zone-V</option>
+
+                                        </select>
+
+
+                                    </div>
+                                     {% endif %}
 
                                     <div class="form-group">
                                         <label for="leave_document">Leave Application Document:</label>
@@ -200,6 +229,27 @@
                                                 <td id="exPakistanLeave_days">0</td>
                                                 <td id="exPakistanLeave">As per policy</td>
                                             </tr>
+                                            <tr>
+                                                <td>Medical Leave</td>
+                                                <td id="medical_leave_days">0</td>
+                                                <td id="medical_leave">As per policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Maternity Leave</td>
+                                                <td id="maternity_leave_days">0</td>
+                                                <td id="maternity_leave">As per policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Special Leave</td>
+                                                <td id="special_leave_days">0</td>
+                                                <td id="special_leave">As per policy</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Study Leave</td>
+                                                <td id="study_leave_days">0</td>
+                                                <td id="study_leave">As per policy</td>
+                                            </tr>
+
                                             </tbody>
                                         </table>
                                     </div>
@@ -226,10 +276,174 @@
 
 </body>
 
+
+<script>
+    document.getElementById('LeaveApplication').addEventListener('submit', function(event) {
+        // Get form elements
+        const empName = document.getElementById('emp_name');
+        const leaveType = document.getElementById('leave_type');
+        const leaveStartDate = document.getElementById('leave_start_date');
+        const leaveEndDate = document.getElementById('leave_end_date');
+        const reason = document.getElementById('reason');
+        const leaveDocument = document.getElementById('leave_document');
+        const zoneType = document.getElementById('zone_type');
+        let isValid = true;
+
+        // Clear any previous error borders
+        empName.classList.remove('error-border');
+        leaveType.classList.remove('error-border');
+        leaveStartDate.classList.remove('error-border');
+        leaveEndDate.classList.remove('error-border');
+        reason.classList.remove('error-border');
+        leaveDocument.classList.remove('error-border');
+        if (zoneType) zoneType.classList.remove('error-border');
+
+        // Employee Name validation
+        if (!empName.value) {
+            empName.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please select an employee!',
+            });
+            empName.focus();
+            isValid = false;
+        }
+
+        // Leave Type validation
+        if (!leaveType.value) {
+            leaveType.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please select a type of leave!',
+            });
+            leaveType.focus();
+            isValid = false;
+        }
+
+        // Leave Start Date validation
+        if (!leaveStartDate.value) {
+            leaveStartDate.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please select a start date for the leave!',
+            });
+            leaveStartDate.focus();
+            isValid = false;
+        }
+
+        // Leave End Date validation
+        if (!leaveEndDate.value) {
+            leaveEndDate.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please select an end date for the leave!',
+            });
+            leaveEndDate.focus();
+            isValid = false;
+        }
+
+        // Check if End Date is after Start Date
+        if (leaveStartDate.value && leaveEndDate.value && leaveEndDate.value < leaveStartDate.value) {
+            leaveEndDate.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'The end date cannot be before the start date!',
+            });
+            leaveEndDate.focus();
+            isValid = false;
+        }
+
+        // Reason validation
+        if (!reason.value.trim()) {
+            reason.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please provide a reason for the leave!',
+            });
+            reason.focus();
+            isValid = false;
+        }
+
+        // Leave Document validation
+        const allowedExtensions = /(\.pdf|\.jpg|\.jpeg|\.png)$/i;
+        if (!leaveDocument.value) { // Check if no file is selected
+            leaveDocument.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please upload a leave application document!',
+            });
+            leaveDocument.focus();
+            isValid = false;
+        } else if (!allowedExtensions.exec(leaveDocument.value)) { // Validate file format if a file is selected
+            leaveDocument.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Invalid file format. Please upload a PDF, JPG, JPEG, or PNG file!',
+            });
+            leaveDocument.focus();
+            isValid = false;
+        }
+
+        // Zone Type validation (for superusers only)
+        const isSuperuser = {{ request.user.is_superuser }};
+        if (isSuperuser == 1 && !zoneType.value) {
+            zoneType.classList.add('error-border');
+            Swal.fire({
+                icon: 'error',
+                title: 'Required !',
+                text: 'Please select a zone!',
+            });
+            zoneType.focus();
+            isValid = false;
+        }
+
+        // Prevent form submission if validation fails
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        var hd_leave_type = document.getElementById('hd_leave_type').value; // Get the hidden input value
+        $('#leave_type').val(hd_leave_type).trigger('change');
+
+        var hd_zone_type = document.getElementById('hd_zone_type').value; // Get the hidden input value
+        $('#zone_type').val(hd_zone_type).trigger('change');
+
+
+        var hd_emp = document.getElementById('hd_emp').value; // Get the hidden input value
+        // Set the selected value and trigger select2 to update
+        $('#emp_name').val(hd_emp).trigger('change');
+
+        // Disable the select element
+        if(hd_emp !=''){$('#emp_name').val(hd_emp).prop('disabled', true);}
+        if(hd_zone_type !=''){$('#zone_type').val(hd_zone_type).prop('disabled', true);}
+
+        // Initialize select2
+        $('.js-example-basic-single').select2();
+    });
+
+
+
+
+
+</script>
+
 <script>
     $(document).ready(function () {
        $("select").select2();
     });
+
 
 
 </script>
@@ -270,7 +484,6 @@
                 method: 'GET',
                 success: function(data) {
                     updateLeaveInfo(data);
-                    console.log(data);
                 },
                 error: function(xhr, status, error) {
                     console.error("An error occurred while fetching leave data:", status, error);
@@ -294,6 +507,18 @@
             $('#exPakistanLeave').text(data.ex_pakistan_leave.count || "");
             $('#exPakistanLeave_days').text(data.ex_pakistan_leave.days || "");
 
+            $('#medical_leave').text(data.medical_leave.count || "");
+            $('#medical_leave_days').text(data.medical_leave.days || "");
+
+            $('#maternity_leave').text(data.maternity_leave.count || "");
+            $('#maternity_leave_days').text(data.maternity_leave.days || "");
+
+            $('#special_leave').text(data.special_leave.count || "");
+            $('#special_leave_days').text(data.special_leave.days || "");
+
+            $('#study_leave').text(data.study_leave.count || "");
+            $('#study_leave_days').text(data.study_leave.days || "");
+
             $('#leaveInfo').show(); // Show the table with updated data
         } else {
             console.warn("No data received.");
@@ -314,7 +539,9 @@
                 }, 1000);
             }
         });
+
     }
+
 
 
 

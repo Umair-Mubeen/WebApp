@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-=z(yj_3zgp-uo17x_!fap0te2i+mat0splo=e^1#r^(z-wt&+b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['10.1.191.234', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'WebApp',
+    'django.contrib.humanize',
+
 ]
 
 MIDDLEWARE = [
@@ -82,7 +84,7 @@ WSGI_APPLICATION = 'App.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'irisdb',
+        'NAME': 'rto-ii',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',

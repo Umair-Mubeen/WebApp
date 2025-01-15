@@ -24,9 +24,6 @@
 }
 
 
-
-
-
 </style>
 
 {% load static %}
@@ -111,9 +108,12 @@
                                         <label>Employee Name {{emp_id }} </label>
 
                                         <select class="js-example-basic-single form-control" name="emp_name"
-                                                id="emp_name">
+                                                id="emp_name" required>
+                                            <option value="" selected disabled>Select an employee</option>
+
                                             {% for item in data %}
-                                            <option value="{{item.id}}">{{item.Name}} - ({{item.Designation}}) -
+                                            <option value="{{item.id}}" empZone="{{item.ZONE}}">{{item.Name}} -
+                                                ({{item.Designation}}) -
                                                 {{item.ZONE}}
                                             </option>
                                             {% endfor %}
@@ -123,14 +123,42 @@
 
                                     {% if request.user.is_superuser == 1 %}
                                     <div class="form-group">
-                                        <label> Old Zone </label>
-                                        <select name="old_zone" class="form-control" id="old_zone_name">
+                                        <label> From </label>
+                                        <select name="old_zone" class="form-control" id="old_zone_name" required>
+                                            <option value="" selected disabled>Select an zone</option>
+                                            <option value="Board">On Transfer From Board</option>
                                             <option value="CCIR">CCIR</option>
+                                            <option value="CSO">CSO</option>
+                                            <option value="Refund Zone">Refund Zone</option>
+                                            <option value="IP/TFD/HRM">IP /TFD / HRM</option>
                                             <option value="Zone-I">Zone-I</option>
                                             <option value="Zone-II">Zone-II</option>
                                             <option value="Zone-III">Zone-III</option>
                                             <option value="Zone-IV">Zone-Iv</option>
                                             <option value="Zone-V">Zone-V</option>
+                                            <option value="RTO Karachi-I">RTO Karachi - I</option>
+                                            <option value="RTO Karachi-II">RTO Karachi - II</option>
+                                            <option value="MTO Karachi">MTO Karachi</option>
+                                            <option value="RTO Lahore">RTO Lahore</option>
+                                            <option value="RTO Islamabad">RTO Islamabad</option>
+                                            <option value="RTO Rawalpindi">RTO Rawalpindi</option>
+                                            <option value="RTO Peshawar">RTO Peshawar</option>
+                                            <option value="RTO Quetta">RTO Quetta</option>
+                                            <option value="RTO Faisalabad">RTO Faisalabad</option>
+                                            <option value="RTO Multan">RTO Multan</option>
+                                            <option value="RTO Hyderabad">RTO Hyderabad</option>
+                                            <option value="RTO Sukkur">RTO Sukkur</option>
+                                            <option value="RTO Abbottabad">RTO Abbottabad</option>
+                                            <option value="RTO Sialkot">RTO Sialkot</option>
+                                            <option value="RTO Bahawalpur">RTO Bahawalpur</option>
+                                            <option value="RTO Gujranwala">RTO Gujranwala</option>
+                                            <option value="RTO Sargodha">RTO Sargodha</option>
+                                            <option value="LTO Karachi">LTO Karachi</option>
+                                            <option value="LTO Lahore">LTO Lahore</option>
+                                            <option value="LTO Islamabad">LTO Islamabad</option>
+                                            <option value="CTO Islamabad">CTO Islamabad</option>
+                                            <option value="CTO Karachi">CTO Karachi</option>
+                                            <option value="CTO Lahore">CTO Lahore</option>
 
                                         </select>
 
@@ -138,15 +166,45 @@
 
 
                                     <div class="form-group">
-                                        <label>New Zone </label>
-                                        <select name="new_zone" class="form-control" id="new_zone_name">
+                                        <label>To </label>
+                                        <select name="new_zone" class="form-control" id="new_zone_name" required>
+                                            <option value="" selected disabled>Select an zone</option>
+
                                             <option value="CCIR">CCIR</option>
+                                            <option value="CSO">CSO</option>
+                                            <option value="Refund Zone">Refund Zone</option>
+                                            <option value="IP/TFD/HRM">IP /TFD / HRM</option>
+
 
                                             <option value="Zone-I">Zone-I</option>
                                             <option value="Zone-II">Zone-II</option>
                                             <option value="Zone-III">Zone-III</option>
                                             <option value="Zone-IV">Zone-Iv</option>
                                             <option value="Zone-V">Zone-V</option>
+
+                                            <option value="RTO Karachi-I">RTO Karachi - I</option>
+                                            <option value="RTO Karachi-II">RTO Karachi - II</option>
+                                            <option value="MTO Karachi">MTO Karachi</option>
+                                            <option value="RTO Lahore">RTO Lahore</option>
+                                            <option value="RTO Islamabad">RTO Islamabad</option>
+                                            <option value="RTO Rawalpindi">RTO Rawalpindi</option>
+                                            <option value="RTO Peshawar">RTO Peshawar</option>
+                                            <option value="RTO Quetta">RTO Quetta</option>
+                                            <option value="RTO Faisalabad">RTO Faisalabad</option>
+                                            <option value="RTO Multan">RTO Multan</option>
+                                            <option value="RTO Hyderabad">RTO Hyderabad</option>
+                                            <option value="RTO Sukkur">RTO Sukkur</option>
+                                            <option value="RTO Abbottabad">RTO Abbottabad</option>
+                                            <option value="RTO Sialkot">RTO Sialkot</option>
+                                            <option value="RTO Bahawalpur">RTO Bahawalpur</option>
+                                            <option value="RTO Gujranwala">RTO Gujranwala</option>
+                                            <option value="RTO Sargodha">RTO Sargodha</option>
+                                            <option value="LTO Karachi">LTO Karachi</option>
+                                            <option value="LTO Lahore">LTO Lahore</option>
+                                            <option value="LTO Islamabad">LTO Islamabad</option>
+                                            <option value="CTO Islamabad">CTO Islamabad</option>
+                                            <option value="CTO Karachi">CTO Karachi</option>
+                                            <option value="CTO Lahore">CTO Lahore</option>
 
                                         </select>
 
@@ -158,7 +216,7 @@
                                     <div class="form-group">
                                         <label> Prev Unit </label>
                                         <input type="text" name="zone_prev_unit" class="form-control"
-                                               value="{{row.zone_current_unit}}">
+                                               value="{{row.zone_current_unit}}" required>
 
                                     </div>
 
@@ -166,7 +224,7 @@
                                     <div class="form-group">
                                         <label>Current Unit </label>
                                         <input type="text" name="zone_new_unit" class="form-control"
-                                               value="{{row.zone_new_unit}}">
+                                               value="{{row.zone_new_unit}}" required>
                                     </div>
 
                                     <div class="form-group">
@@ -183,33 +241,42 @@
 
                                     <div class="form-group">
                                         <label> Order #</label>
-                                        <input type="number" name="order_number" class="form-control"
-                                               value="{% if row.zone_order_number %}{{ row.zone_order_number }}{% else %}{{ row.chief_order_number }}{% endif %}">
+                                        <input type="text" name="order_number" class="form-control"
+                                               value="{% if row.zone_order_number %}{{ row.zone_order_number }}{% else %}{{ row.chief_order_number }}{% endif %}"
+                                               required>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Transfer Order Date</label>
                                         <input type="date" name="transfer_order_date" class="form-control"
-                                               value="{% if row.zone_transfer_date %}{{ row.zone_transfer_date|date:'Y-m-d' }}{% else %}{{ row.chief_transfer_date|date:'Y-m-d' }}{% endif %}">
+                                               value="{% if row.zone_transfer_date %}{{ row.zone_transfer_date|date:'Y-m-d' }}{% else %}{{ row.chief_transfer_date|date:'Y-m-d' }}{% endif %}"
+                                               required>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Transfer Reason </label>
                                         <input type="text" name="transfer_reason" class="form-control"
-                                               value="{% if row.zone_transfer_reason %}{{row.zone_transfer_reason}}{% else %}{{ row.chief_reason_for_transfer}}{% endif %}">
+                                               value="{% if row.zone_transfer_reason %}{{row.zone_transfer_reason}}{% else %}{{ row.chief_reason_for_transfer}}{% endif %}"
+                                               required>
 
                                     </div>
 
                                     <div class="form-group">
                                         <label>Order Approved By </label>
-                                        <input type="text" name="order_approved_by" class="form-control"
-                                               value="{% if row.zone_order_approved_by %}{{row.zone_order_approved_by}}{% else %}{{ row.chief_order_approved_by}}{% endif %}">
+                                        <select name="order_approved_by" class="form-control" id="order_approved_by">
+                                            <option value="" selected disabled>Select Authority</option>
+                                            <option value="Board">Board</option>
+                                            <option value="ADC (HQS)">RTO - II (HQS)</option>
+                                        </select>
+
+                                        <!--                                        <input type="text" name="order_approved_by" class="form-control"-->
+                                        <!--                                               value="{% if row.zone_order_approved_by %}{{row.zone_order_approved_by}}{% else %}{{ row.chief_order_approved_by}}{% endif %}" required>-->
 
                                     </div>
 
                                     <div class="form-group">
                                         <label>Order Image / PDF </label>
-                                        <input type="file" name="image" class="form-control">
+                                        <input type="file" name="image" class="form-control" required>
 
                                     </div>
 
@@ -246,8 +313,8 @@
                                                 <th>Previous Unit</th>
                                                 <th>Current Unit</th>
                                                 {% if user.is_superuser == 1 %}
-                                                <th>Old Zone</th>
-                                                <th>New Zone</th>
+                                                <th>From</th>
+                                                <th>To</th>
                                                 {% endif %}
                                             </tr>
                                             </thead>
@@ -307,155 +374,90 @@
 });
 
 
-
-
-
-
-
-
-
-
-
 </script>
 
 <script>
-{% if message %}
-Swal.fire({
-    title: "{{ title }}",
-    text: "{{ message }}",
-    icon: "{{ icon }}",
-    didOpen: () => {
-        setTimeout(() => {
-            // Initialize Select2 here
-            $('.js-example-basic-single').select2();
-        }, 100);
-    }
-});
-{% endif %}
-
-
-
-
-
-
-
-
-
-
-
-</script>
-
-<!--<script>-->
-<!--$(document).ready(function() {-->
-<!--    // Initialize Select2 on page load-->
-<!--    initializeSelect2();-->
-
-<!--    // Attach the change event handler for employee selection-->
-<!--    $('#emp_name').change(function() {-->
-<!--        var empId = $(this).val();-->
-<!--        if (empId) {-->
-<!--            fetchEmployeeUnitData(empId);-->
-<!--        }-->
-<!--    });-->
-
-
-<!--    // Function to initialize Select2-->
-<!--    function initializeSelect2() {-->
-<!--        $('.js-example-basic-single').select2();-->
-<!--    }-->
-<!--    // Function to fetch employee unit data-->
-<!--    function fetchEmployeeUnitData(empId) {-->
-<!--        $.ajax({-->
-<!--            url: '/get_employee_unit_data/' + empId + '/',-->
-<!--            type: 'GET',-->
-<!--            dataType: 'json',-->
-<!--            success: function(response) {-->
-<!--                if (response.units) {-->
-<!--                    $('#prev_unit').text(response.units.previous_unit || 'N/A');-->
-<!--                    $('#new_unit').text(response.units.current_unit || 'N/A');-->
-<!--                } else {-->
-<!--                    $('#prev_unit').text('N/A');-->
-<!--                    $('#new_unit').text('N/A');-->
-<!--                }-->
-<!--            },-->
-<!--            error: function(xhr, status, error) {-->
-<!--                console.error('Error fetching employee unit data:', error);-->
-<!--                $('#prev_unit').text('Error');-->
-<!--                $('#new_unit').text('Error');-->
-<!--            }-->
-<!--        });-->
-<!--    }-->
-
-<!--    // Automatically fetch data on page load if the hidden input has a value-->
-<!--    var hd_emp = $('#empId').val();-->
-<!--    if (hd_emp) {-->
-<!--        fetchEmployeeUnitData(hd_emp);-->
-<!--    }-->
-
-
-<!--});-->
-<!--</script>-->
-
-
-<script>
-$(document).ready(function() {
-    // Initialize Select2 on page load
-    initializeSelect2();
-
-    // Attach the change event handler for employee selection
-    $('#emp_name').change(function() {
-        var empId = $(this).val();
-        if (empId) {
-            fetchEmployeeUnitData(empId);
+    {% if message %}
+    Swal.fire({
+        title: "{{ title }}",
+        text: "{{ message }}",
+        icon: "{{ icon }}",
+        didOpen: () => {
+            setTimeout(() => {
+                // Initialize Select2 here
+                $('.js-example-basic-single').select2();
+            }, 100);
         }
     });
+    {% endif %}
 
-    // Function to initialize Select2
-    function initializeSelect2() {
-        $('.js-example-basic-single').select2();
-    }
 
-    // Function to fetch employee unit data
-    function fetchEmployeeUnitData(empId) {
-        $.ajax({
-            url: '/get_employee_unit_data/' + empId + '/',
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                if (response.units) {
-                    $('#prev_unit').text(response.units.previous_unit || '');
-                    $('#new_unit').text(response.units.current_unit || '');
-                    {% if request.user.is_superuser == 1 %}
-                    $('#old_zones').text(response.zones.old_zone || '');
-                    $('#new_zones').text(response.zones.new_zone || '');
-                    {% endif %}
-                } else {
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 on page load
+        initializeSelect2();
+
+        // Attach the change event handler for employee selection
+        $('#emp_name').change(function() {
+            var empId = $(this).val();
+            var empZone = $(this).find(':selected').attr('empZone'); // Get empZone from the selected option
+            $('#old_zone_name').val(empZone).trigger('change');
+
+
+            if (empId) {
+                fetchEmployeeUnitData(empId);
+            }
+        });
+
+        // Function to initialize Select2
+        function initializeSelect2() {
+            $('.js-example-basic-single').select2();
+        }
+
+        // Function to fetch employee unit data
+        function fetchEmployeeUnitData(empId) {
+            $.ajax({
+                url: '/get_employee_unit_data/' + empId + '/',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.units) {
+                        $('#prev_unit').text(response.units.previous_unit || '');
+                        $('#new_unit').text(response.units.current_unit || '');
+                        {% if request.user.is_superuser == 1 %}
+                        $('#old_zones').text(response.zones.old_zone || '');
+                        $('#new_zones').text(response.zones.new_zone || '');
+                        {% endif %}
+                    } else {
+                        $('#prev_unit').text('');
+                        $('#new_unit').text('');
+                        {% if request.user.is_superuser == 1 %}
+                        $('#old_zones').text('');
+                        $('#new_zones').text('');
+                        {% endif %}
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching employee unit data:', error);
                     $('#prev_unit').text('');
                     $('#new_unit').text('');
-                    {% if request.user.is_superuser == 1 %}
+                    {% if user.is_superuser %}
                     $('#old_zones').text('');
                     $('#new_zones').text('');
                     {% endif %}
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error fetching employee unit data:', error);
-                $('#prev_unit').text('Error');
-                $('#new_unit').text('Error');
-                {% if user.is_superuser %}
-                $('#old_zones').text('Error');
-                $('#new_zones').text('Error');
-                {% endif %}
-            }
-        });
-    }
+            });
+        }
 
-    // Automatically fetch data on page load if the hidden input has a value
-    var hd_emp = $('#empId').val();
-    if (hd_emp) {
-        fetchEmployeeUnitData(hd_emp);
-    }
-});
+        // Automatically fetch data on page load if the hidden input has a value
+        var hd_emp = $('#empId').val();
+        if (hd_emp) {
+            fetchEmployeeUnitData(hd_emp);
+        }
+    });
 
 
 </script>

@@ -4,99 +4,88 @@
 <body class="sidebar-mini layout-fixed sidebar-collapse">
 <div class="wrapper">
 
-    <!-- Navbar Starts Here -->
-    {% include 'navbar.html' %}
-    <!-- /.Navbar Ends Here -->
-    <!-- SideBar Start Here  -->
-    {% include 'sidebar.html' %}
-    <!-- SideBar Ends Here  -->
+        <!-- Navbar Starts Here -->
+        {% include 'navbar.html' %}
+        <!-- /.Navbar Ends Here -->
+        <!-- SideBar Start Here  -->
+        {% include 'sidebar.html' %}
+        <!-- SideBar Ends Here  -->
 
-    <!-- Content Wrapper. Contains page content -->
-    <div class="content-wrapper">
-        <!-- Content Header (Page header) -->
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
-                    </div><!-- /.col -->
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
-                                    class="fa fa-home"></i></a>
-                            </li>
-                            <li class="breadcrumb-item active">Search</li>
-                        </ol>
-                    </div><!-- /.col -->
-                </div><!-- /.row -->
-            </div><!-- /.container-fluid -->
-        </div>
-        <!-- /.content-header -->
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
+                        </div><!-- /.col -->
+                        <div class="col-sm-6">
+                            <ol class="breadcrumb float-sm-right">
+                                <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                        class="fa fa-home"></i></a>
+                                </li>
+                                <li class="breadcrumb-item active">Search</li>
+                            </ol>
+                        </div><!-- /.col -->
+                    </div><!-- /.row -->
+                </div><!-- /.container-fluid -->
+            </div>
+            <!-- /.content-header -->
 
-        <!-- Main content -->
-        <section class="content">
-            <div class="container-fluid">
-                <form action="Search" method="POST">
-                    {% csrf_token %}
-                    <div class="row">
-                        <div class="col-lg-4">
-                            <input type="hidden" name="hd_id" value="{{id}}" id="hd_id">
-                            <select name="emp_name" class="form-control" id="emp_name">
-                                <!--                                <option value="CNIC">CNIC</option>-->
-                                <!--                                <option value="Personnel">Personnel</option>-->
-                                {% for item in data %}
-                                <option value="{{item.id}}">{{item.Name}} ({{item.Designation}}) - {{item.ZONE}}</option>
-                                {% endfor %}
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    <form action="Search" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <input type="hidden" name="hd_id" value="{{id}}" id="hd_id">
+                                <select name="emp_name" class="form-control" id="emp_name">
+                                    {% for item in data %}
+                                    <option value="{{item.id}}">{{item.Name}} ({{item.Designation}}) - {{item.ZONE}}
+                                    </option>
+                                    {% endfor %}
 
-                            </select>
+                                </select>
+                            </div>
+                            <div class="col-lg-3">
+                                <input type="submit" name="submit" class="form-control btn btn-primary" value="Search"/>
+                            </div>
+
                         </div>
+                    </form>
 
-                        <!--                        <div class="col-lg-3">-->
-                        <!--                            <input type="text" name="parameter" class="form-control"-->
-                        <!--                                   placeholder="Enter CNIC or Personnel # "/>-->
-                        <!--                        </div>-->
-                        <div class="col-lg-3">
-                            <input type="submit" name="submit" class="form-control btn btn-primary" value="Search"/>
-                        </div>
+                </div>
 
-                    </div>
-                </form>
+
+            </section>
+
+
+            <div class="container-fluid col-lg-12">
+            {% include 'viewHistory.html' with leave_application=leave_application transfer_records=transfer_records id=id %}
 
             </div>
 
 
-        </section>
-
-
-        <div class="container-fluid col-lg-12">
-            {% if result %}
-            {% include 'retired.html' with retired=result type='Employee Details' %}
-            {% endif %}
         </div>
-
-        <div class="container-fluid col-lg-12">
-            {% if leave_application %}
-            {% include 'viewHistory.html' with leave_application=leave_application transfer_records=transfer_records %}
-            {% endif %}
-        </div>
-    </div>
-    <!-- Content Wrapper. Contains page content  Ends Here -->
+        <!-- Content Wrapper. Contains page content  Ends Here -->
 
 
 </div>
-<!-- /.content-wrapper -->
+    <!-- /.content-wrapper -->
 
 
-{% include 'footer.html' %}
+        {% include 'footer.html' %}
 
-</div>
+
 
 </body>
 <script>
-$(document).ready(function () {
-   var hd_id = document.getElementById('hd_id').value; // Get the hidden input value
-   $('#emp_name').val(hd_id).trigger('change'); // Set the selected value and trigger select2 to update
-   $("select").select2(); // Initialize select2
-});
+    $(document).ready(function () {
+       var hd_id = document.getElementById('hd_id').value; // Get the hidden input value
+       $('#emp_name').val(hd_id).trigger('change'); // Set the selected value and trigger select2 to update
+       $("select").select2(); // Initialize select2
+    });
 
 </script>

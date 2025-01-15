@@ -1,15 +1,13 @@
 <div class="row">
-    <div class="col-12">
-
-        <div class="card">
+    {% if id %}
+    <!-- Transfer Posting Summary Card -->
+    <div class="col-lg-6">
+        <div class="card card-dark">
             <div class="card-header">
-                <h3 class="card-title">Employee Leave Application Details</h3>
-
+                <h3 class="card-title">Transfer Posting Summary </h3>
                 <div class="card-tools">
                     <div class="input-group input-group-sm" style="width: 150px;">
-                        <input type="text" id="LeaveSearch" class="form-control float-right"
-                               placeholder="Search">
-
+                        <input type="text" class="form-control float-right" placeholder="Search">
                         <div class="input-group-append">
                             <button type="submit" class="btn btn-default">
                                 <i class="fas fa-search"></i>
@@ -18,135 +16,172 @@
                     </div>
                 </div>
             </div>
-
-            <div class="card-body table-responsive p-0">
-                <table id="LeaveTable"
-                       class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
-                    <thead>
+            <div class="card-body table-responsive p-0 table-fix-scroll">
+                <table id="transfer_table"
+                       class="table table-striped table-hover table-bordered table-head-fixed text-nowrap">
+                    <thead class="sticky-top">
                     <tr>
-                        <th>Leave Type</th>
-                        <th>Leave Start Date</th>
-                        <th>Leave End Date</th>
-                        <th>Days Granted</th>
-                        <th>Leave Reason</th>
-                        <th>Image / PDF</th>
+                        <th>Name</th>
+                        <th>CNIC</th>
+                        <th>Designation</th>
+                        <th>BPS</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Date</th>
+                        <th>Order #</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for item in leave_application %}
-                    <tr>
-                        <td>{{ item.leave_type }}</td>
-                        <td>{{ item.leave_start_date }}</td>
-                        <td>{{ item.leave_end_date}}</td>
-                        <td> {{ item.days_granted }}</td>
-                        <td> {{ item.reason }}</td>
-
-                        <td>
-                            {{is_pdf}}
-                            {% if item.leave_document %}
-                            {% if item.is_pdf %}
-                            <a href="media/{{item.leave_document}}" target="_blank">
-                                PDF
-                            </a>
-                            {% else %}
-                            <span class="spnImg" data-sub-html="{{ item.employee__Name }}"
-                                  data-src="media/{{item.leave_document}}">
-                                                        <a href="media/{{ item.leave_document }}"
-                                                           data-lightgallery="item">
-                                                       Image
-                                                    </a>
-                                                    </span>
-                            {% endif %}
-                            {% else %}
-                            No document uploaded
-                            {% endif %}
-                        </td>
-
+                    {% for result in transfer_application %}
+                    <tr data-toggle="tooltip" title="Name: {{ result.Name }}, Zone: {{ result.ZONE }}">
+                        <td>{{ result.employee__Name }}</td>
+                        <td>{{ result.employee__CNIC_No }}</td>
+                        <td>{{ result.employee__Designation }}</td>
+                        <td>{{ result.employee__BPS }}</td>
+                        {% if request.user.is_superuser == 1 %}
+                        <td>{{ result.old_zone }}</td>
+                        <td>{{ result.new_zone }}</td>
+                        <td>{{ result.chief_transfer_date }}</td>
+                        <td>{{ result.chief_order_number }}</td>
+                        {% else %}
+                        <td>{{ result.old_unit }}</td>
+                        <td>{{ result.new_unit }}</td>
+                        <td>{{ result.zone_transfer_date }}</td>
+                        <td>{{ result.zone_order_number }}</td>
+                        {% endif %}
                     </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">No records found.</td>
+                    </tr>
+
                     {% endfor %}
+
                     </tbody>
-
                 </table>
-
             </div>
+            <div class="card-footer clearfix">
+            </div>
+
         </div>
-
     </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-        <div class="card-header">
-            <div class="card-tools">
-                <div class="input-group input-group-sm" style="width: 150px;">
-                    <input id='transferSearch' type="text" class="form-control float-right"
-                           placeholder="Search">
-
-                    <div class="input-group-append">
-                        <button type="submit" class="btn btn-default">
-                            <i class="fas fa-search"></i>
-                        </button>
+    <!-- Employee Leave Application Details Card -->
+    <div class="col-lg-6">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Employee Leave Application Details Zone Wise</h3>
+                <div class="card-tools">
+                    <div class="input-group input-group-sm" style="width: 150px;">
+                        <input type="text" id="leave_type" class="form-control float-right" placeholder="Search">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-default">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+            <div class="card-body table-responsive p-0 table-fix-scroll">
+                <table id="tbl_leave_type"
+                       class="table table-striped table-hover table-bordered table-head-fixed text-nowrap">
+                    <thead class="sticky-top">
+                    <tr>
+                        <th>Name</th>
+                        <th>Designation</th>
+                        <th>BPS</th>
+                        <th>ZONE</th>
+                        <th>Type</th>
+                        <th>Total</th>
+                        <th>Days</th>
+                        <th>Docx</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in leave_application %}
+                    <tr>
+                        <td>{{ record.employee__Name }}</td>
+                        <td>{{ record.employee__Designation }}</td>
+                        <td>{{ record.employee__BPS }}</td>
+                        <td>{{ record.employee__ZONE }}</td>
+                        <td>{{ record.leave_type }}</td>
+                        <td>{{ record.leave_count }}</td>
+                        <td>{{ record.total_days_granted }}</td>
+                        <td>
+                            <a href="media/{{record.leave_document}}" target="_blank">
+                                PDF
+                            </a>
+                        </td>
 
-            <h3 class="card-title">Employee Transfer / Posting Application Details</h3>
 
-        </div>
-
-        <div class="card-body table-responsive p-0">
-            <table id="transferTable"
-                   class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery zoneTable">
-                <thead>
-                <tr>
-                    <th>Previous Zone</th>
-                    <th>New Zone</th>
-                    <th>Transfer Date</th>
-                    <th>Transfer Order #</th>
-
-                    <th>Image / PDF</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in transfer_records %}
-                <tr>
-                    <td>{{ item.old_unit }}</td>
-                    <td>{{ item.new_unit }}</td>
-                    <td>{{ item.transfer_date}}</td>
-                    <td> {{ item.order_number }}</td>
-                    <td>
-                        {{is_pdf}}
-                        {% if item.transfer_document %}
-                        {% if item.is_pdf %}
-                        <a href="media/{{item.transfer_document}}" target="_blank">
-                            PDF
-                        </a>
-                        {% else %}
-                        <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
-                              data-src="media/{{item.transfer_document}}">
-                                                        <a href="media/{{ item.transfer_document }}"
-                                                           data-lightgallery="item">
-                                                       Image
-                                                    </a>
-                                                    </span>
-                        {% endif %}
-                        {% else %}
-                        No document uploaded
-                        {% endif %}
-                    </td>
-
-                </tr>
-                {% endfor %}
-                </tbody>
-
-            </table>
-
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">No records found.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+            </div>
         </div>
     </div>
 
+    <!-- Employee Explanation Details Card -->
+    <div class="col-lg-6">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Employee Explanation Details Zone Wise</h3>
+                <div class="card-tools">
+                    <div class="input-group input-group-sm" style="width: 150px;">
+                        <input type="text" id="exp_type" class="form-control float-right" placeholder="Search">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-default">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body table-responsive p-0 table-fix-scroll">
+                <table id="tbl_exp_type"
+                       class="table table-striped table-hover table-bordered table-head-fixed text-nowrap">
+                    <thead class="sticky-top">
+                    <tr>
+                        <th>Name</th>
+                        <th>Designation</th>
+                        <th>BPS</th>
+                        <th>ZONE</th>
+                        <th>Type</th>
+                        <th>Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for record in explanation_application %}
+                    <tr>
+                        <td>{{ record.employee__Name }}</td>
+                        <td>{{ record.employee__Designation }}</td>
+                        <td>{{ record.employee__BPS }}</td>
+                        <td>{{ record.employee__ZONE }}</td>
+                        <td>{{ record.exp_type }}</td>
+                        <td>{{ record.exp_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No records found.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
 </div>
-    </div>
 
 
 <script>

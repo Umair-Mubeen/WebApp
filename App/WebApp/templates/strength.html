@@ -45,11 +45,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header bg-light text-white">
-                            <h3 class="card-title">{{type}}</h3>
+                        <div class="card-header  bg-primary">
+                            <h3 class="card-title">Zone Wise Designation Table</h3>
                             <div class="card-tools">
                                 <div class="input-group input-group-sm" style="width: 200px;">
-                                    <input type="text" id="tableSearch" class="form-control float-right"
+                                    <input type="text" id="searchInput" class="form-control float-right"
                                            placeholder="Search">
                                     <div class="input-group-append">
                                         <button type="button" class="btn btn-light">
@@ -59,42 +59,41 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body table-responsive p-0" style="height: 400px;">
-                            <table id="zoneTable" class="table table-striped table-hover text-nowrap">
-                                <thead class="bg-light">
+
+                        <div class="card-body table-responsive p-0" style="height: 600px;">
+                            <table id="zoneTable" class="table table-head-fixed table-bordered table-hover">
+                                <thead class="table-info">
                                 <tr>
                                     <th>Designation</th>
                                     <th>BPS</th>
+                                    <th>CCIR</th>
                                     <th>Zone-I</th>
                                     <th>Zone-II</th>
                                     <th>Zone-III</th>
                                     <th>Zone-IV</th>
                                     <th>Zone-V</th>
-                                    <th>CCIR</th>
                                     <th>Refund Zone</th>
                                     <th>IP/TFD/HRM</th>
                                     <th>CSO</th>
-                                    <th>Zone-I / (Refund Zone)</th>
-                                    <th>Zone-V / CCIR</th>
+                                    <th>Admin Pool</th>
                                     <th>Total Sum</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {% for row in data %}
-                                <tr>
+                                <tr class={{row.row_color}}>
                                     <td>{{ row.Designation }}</td>
                                     <td>{{ row.BPS }}</td>
+                                    <td>{{ row.CCIR }}</td>
                                     <td>{{ row.Zone_I }}</td>
                                     <td>{{ row.Zone_II }}</td>
                                     <td>{{ row.Zone_III }}</td>
                                     <td>{{ row.Zone_IV }}</td>
                                     <td>{{ row.Zone_V }}</td>
-                                    <td>{{ row.CCIR }}</td>
                                     <td>{{ row.Refund_Zone }}</td>
                                     <td>{{ row.IP_TFD_HRM }}</td>
                                     <td>{{ row.CSO }}</td>
-                                    <td>{{ row.Zone_I_Refund_Zone }}</td>
-                                    <td>{{ row.Zone_V_CCIR }}</td>
+                                    <td>{{ row.AdPool }}</td>
                                     <td>{{ row.total_sum }}</td>
                                 </tr>
                                 {% endfor %}
@@ -108,21 +107,21 @@
 
             <!-- /.content-wrapper -->
 
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Designation Wise Comparison Chart Group By Zones, Regional Tax Office
-                                - II</h3>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="ComparisonChart" width="200" height="50"></canvas>
+<!--            <div class="row">-->
+<!--                <div class="col-lg-12">-->
+<!--                    <div class="card">-->
+<!--                        <div class="card-header">-->
+<!--                            <h3 class="card-title">Designation Wise Comparison Chart Group By Zones, Regional Tax Office-->
+<!--                                - II</h3>-->
+<!--                        </div>-->
+<!--                        <div class="card-body">-->
+<!--                            <canvas id="ComparisonChart" width="200" height="50"></canvas>-->
 
-                        </div>
-                    </div>
+<!--                        </div>-->
+<!--                    </div>-->
 
-                </div>
-            </div>
+<!--                </div>-->
+<!--            </div>-->
         </div>
 
 
@@ -256,5 +255,33 @@
 
 
 
+
 </script>
 <!-- Include these scripts at the end of your body tag -->
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let input = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#zoneTable tbody tr');
+        let visibleRowCount = 0;
+
+        rows.forEach(row => {
+            let cells = row.getElementsByTagName('td');
+            let match = Array.from(cells).some(cell =>
+                cell.textContent.toLowerCase().includes(input)
+            );
+            row.style.display = match ? '' : 'none';
+            if (match) visibleRowCount++;
+        });
+
+        adjustTableHeight(visibleRowCount);
+    });
+
+    function adjustTableHeight(visibleRowCount) {
+        const tableContainer = document.querySelector('.card-body');
+        if (visibleRowCount > 0) {
+            tableContainer.style.height = 'auto'; // Adjust as needed for your design
+        } else {
+            tableContainer.style.height = 'auto'; // Reset to default or set to a minimum height
+        }
+    }
+</script>

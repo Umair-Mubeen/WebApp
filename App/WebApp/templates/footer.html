@@ -57,31 +57,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 
-<script>
-    // Add search functionality
-    document.getElementById('tableSearch').addEventListener('keyup', function() {
-        const searchTerm = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#zoneTable tbody tr');
-
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const matches = Array.from(cells).some(cell => cell.textContent.toLowerCase().includes(searchTerm));
-            row.style.display = matches ? '' : 'none';
-        });
-    });
-
-    // Highlight row on hover
-    document.querySelectorAll('#zoneTable tbody tr').forEach(row => {
-        row.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#f2f2f2';
-        });
-        row.addEventListener('mouseleave', function() {
-            this.style.backgroundColor = '';
-        });
-    });
-
-
-</script>
 
 <!--Light gallery -->
 <script type="text/javascript">
@@ -104,8 +79,10 @@
 </script>
 <!--Select 2 Option Ends Here -->
 
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+   document.addEventListener('DOMContentLoaded', function() {
     // Designation WISE Data using Group By
     const designationData = {
         labels: [
@@ -142,9 +119,29 @@
             animation: {
                 duration: 1000, // Animation duration in ms
                 easing: 'easeInOutBounce' // Easing effect
+            },
+            plugins: {
+                tooltip: {
+                    enabled: true, // Tooltips are enabled
+                    mode: 'index', // Show for all items on the index
+                    intersect: false, // Tooltips do not require intersection
+                    external: function(context) {
+                        // Show tooltips by default when the chart is rendered
+                        const chart = context.chart;
+                        const tooltip = chart.tooltip;
+
+                        // If tooltip is not active, show the tooltip
+                        if (!tooltip._active) {
+                            const activeElements = chart.getDatasetMeta(0).data;
+                            chart.tooltip.setActiveElements(activeElements, { x: 0, y: 0 });
+                            chart.update();
+                        }
+                    }
+                }
             }
         }
     });
+
 
     // Retirement ZONE WISE Data using Group By
     const zones = {{ zones|safe }};
@@ -186,33 +183,127 @@
     });
 
     // Leave Summary Data
-    const userType = '{{ request.user.is_superuser }}';
-    const leaveSummary = {{ leave_summary|safe }};
-    const ctx = document.getElementById('leaveSummary').getContext('2d');
+const userType = {{leave_summary.userType|safe}};
+const leaveSummary = {{ leave_summary|safe }};
+const leaveCtx = document.getElementById('leaveSummary').getContext('2d');
+const leaveLabels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave', 'Maternity Leave', 'Study Leave', 'Special Leave'];
 
-    if (userType == 'True') {
-        // Admin-specific logic for grouped bar chart
-        const labels = ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave','Maternity Leave','Study Leave','Special Leave'];
-        const datasets = Object.keys(leaveSummary).map(zone => ({
+if (userType == 1) {
+    // Admin-specific logic for grouped bar chart
+    const leaveDatasets = Object.keys(leaveSummary).map(zone => ({
+        label: zone,
+        data: [
+            leaveSummary[zone]?.casual_leave?.count || 0,
+            leaveSummary[zone]?.earned_leave?.count || 0,
+            leaveSummary[zone]?.ex_pakistan_leave?.count || 0,
+            leaveSummary[zone]?.medical_leave?.count || 0,
+            leaveSummary[zone]?.maternity_leave?.count || 0,
+            leaveSummary[zone]?.study_leave?.count || 0,
+            leaveSummary[zone]?.special_leave?.count || 0,
+        ],
+        backgroundColor: generateRandomColors(leaveLabels.length)
+    }));
+
+    new Chart(leaveCtx, {
+        type: 'bar',
+        data: {
+            labels: leaveLabels,
+            datasets: leaveDatasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Leave Summary by Zone (Admin View)'
+                }
+            },
+            animation: {
+                duration: 1200,
+                easing: 'easeOutBounce'
+            },
+            scales: {
+                x: {
+                    beginAtZero: true
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+} else {
+    // Employee-specific logic for doughnut chart
+    const chartData = {
+        labels: leaveLabels,
+        datasets: [{
+            label: 'Leave Count',
+            data: [
+                leaveSummary?.casual_leave?.count || 0,
+                leaveSummary?.earned_leave?.count || 0,
+                leaveSummary?.ex_pakistan_leave?.count || 0,
+                leaveSummary?.medical_leave?.count || 0,
+                leaveSummary?.maternity_leave?.count || 0,
+                leaveSummary?.study_leave?.count || 0,
+                leaveSummary?.special_leave?.count || 0,
+            ],
+            backgroundColor: generateRandomColors(leaveLabels.length)
+        }]
+    };
+
+    new Chart(leaveCtx, {
+        type: 'bar',  // Assuming you wanted a doughnut chart for employees
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Your Leave Summary (Employee View)'
+                }
+            },
+            animation: {
+                duration: 1300,
+                easing: 'easeInOutCubic'
+            }
+        }
+    });
+}
+
+
+    // Explanation Summary Data
+    const explanationSummary = {{ explanation_summary|safe }};
+    const expCtx = document.getElementById('expSummary').getContext('2d');
+            const expLabels = ['Unapproved Leave', 'Attendance Issue', 'Absent', 'Habitual Absentee', 'Performance', 'Misconduct Explanation', 'Delay Explanation', 'Leave Explanation', 'Disciplinary'];
+
+    if (userType == 1) {
+        const expDatasets = Object.keys(explanationSummary).map(zone => ({
             label: zone,
             data: [
-                leaveSummary[zone].casual_leave.count,
-                leaveSummary[zone].earned_leave.count,
-                leaveSummary[zone].ex_pakistan_leave.count,
-                leaveSummary[zone].medical_leave.count,
-                leaveSummary[zone].maternity_leave.count,
-                leaveSummary[zone].study_leave.count,
-                leaveSummary[zone].special_leave.count,
-
+                explanationSummary[zone].unapproved_leave.count,
+                explanationSummary[zone].attendance_issue.count,
+                explanationSummary[zone].absent.count,
+                explanationSummary[zone].habitual_absentee.count,
+                explanationSummary[zone].performance.count,
+                explanationSummary[zone].misconduct_explanation.count,
+                explanationSummary[zone].delay_explanation.count,
+                explanationSummary[zone].leave_explanation.count,
+                explanationSummary[zone].disciplinary.count
             ],
-            backgroundColor: generateRandomColors(3)
+            backgroundColor: generateRandomColors(expLabels.length)
         }));
 
-        new Chart(ctx, {
+        new Chart(expCtx, {
             type: 'bar',
             data: {
-                labels: labels,
-                datasets: datasets
+                labels: expLabels,
+                datasets: expDatasets
             },
             options: {
                 responsive: true,
@@ -222,12 +313,12 @@
                     },
                     title: {
                         display: true,
-                        text: 'Leave Summary by Zone (Admin View)'
+                        text: 'Explanation Summary by Zone (Admin View)'
                     }
                 },
                 animation: {
-                    duration: 1200, // Animation duration in ms
-                    easing: 'easeOutBounce' // Easing effect
+                    duration: 1200,
+                    easing: 'easeOutBounce'
                 },
                 scales: {
                     x: {
@@ -240,28 +331,27 @@
             }
         });
     } else {
-        // Employee-specific logic for doughnut chart
-        console.log(leaveSummary)
         const chartData = {
-            labels: ['Casual Leave', 'Earned Leave', 'Ex-Pakistan Leave', 'Medical Leave', 'Maternity Leave', 'Study Leave', 'Special Leave'],
+            labels: ['Unapproved Leave', 'Attendance Issue', 'Absent', 'Habitual Absentee', 'Performance', 'Misconduct Explanation', 'Delay Explanation', 'Leave Explanation', 'Disciplinary'],
             datasets: [{
-                label: 'Leave Count',
+                label: 'Explanation Count',
                 data: [
-                    leaveSummary.casual_leave.count,
-                    leaveSummary.earned_leave.count,
-                    leaveSummary.ex_pakistan_leave.count,
-                    leaveSummary.medical_leave.count,
-                    leaveSummary.maternity_leave.count,
-                    leaveSummary.study_leave.count,
-                    leaveSummary.special_leave.count,
-
+                    explanationSummary.unapproved_leave.count,
+                    explanationSummary.attendance_issue.count,
+                    explanationSummary.absent.count,
+                    explanationSummary.habitual_absentee.count,
+                    explanationSummary.performance.count,
+                    explanationSummary.misconduct_explanation.count,
+                    explanationSummary.delay_explanation.count,
+                    explanationSummary.leave_explanation.count,
+                    explanationSummary.disciplinary.count
                 ],
-                backgroundColor: generateRandomColors(3)
+                backgroundColor: generateRandomColors(expLabels.length)
             }]
         };
 
-        new Chart(ctx, {
-            type: 'doughnut',
+        new Chart(expCtx, {
+            type: 'bar',
             data: chartData,
             options: {
                 responsive: true,
@@ -271,32 +361,238 @@
                     },
                     title: {
                         display: true,
-                        text: 'Your Leave Summary (Employee View)'
+                        text: 'Your Explanation Summary (Employee View)'
                     }
                 },
                 animation: {
-                    duration: 1300, // Animation duration in ms
-                    easing: 'easeInOutCubic' // Easing effect
+                    duration: 1300,
+                    easing: 'easeInOutCubic'
                 }
             }
         });
     }
 
-    // Function to generate random colors
-    function generateRandomColors(count) {
-        const colors = [];
-        for (let i = 0; i < count; i++) {
-            const randomColor = 'rgba(' +
-                Math.floor(Math.random() * 256) + ',' +
-                Math.floor(Math.random() * 256) + ',' +
-                Math.floor(Math.random() * 256) + ',' +
-                '0.5)';
-            colors.push(randomColor);
+    // Transfer Posting Summary
+    const transferCtx = document.getElementById('transferChart').getContext('2d');
+    const transferUserType = {{ transfer_posting_summary.userType|safe }};
+
+    let transferLabels = [], transferData = [];
+
+    if (transferUserType == 1) {
+        transferLabels = {{ transfer_posting_summary.zones|default:"[]"|safe }};
+        transferData = {{ transfer_posting_summary.total_transfers|default:"[]"|safe }};
+    } else if (transferUserType === 2) {
+        transferLabels = {{ transfer_posting_summary.units|default:"[]"|safe }};
+        const unitCounts = {{ transfer_posting_summary.unit_counts|default:"{}"|safe }};
+        transferData = transferLabels.map(label => unitCounts[label] || 0);
+    }
+
+    new Chart(transferCtx, {
+        type: transferLabels[0]?.includes('Unit') ? 'pie' : 'bar',
+        data: {
+            labels: transferLabels,
+            datasets: [{
+                label: transferLabels[0]?.includes('Unit') ? 'Total Transfers by Unit' : 'Total Transfers by Zone',
+                data: transferData,
+                backgroundColor: generateRandomColors(transferLabels.length),
+                borderColor: 'rgba(0, 0, 0, 0.2)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Transfer Posting Summary'
+                }
+            },
+            animation: {
+                duration: 1400,
+                easing: 'easeOutElastic'
+            }
         }
-        return colors;
+    });
+
+    // Get the age range data from Django context
+        const ageRanges = {{ age_range_count|safe }};
+
+        // Prepare data for Chart.js
+        const labels = Object.keys(ageRanges);  // ['18-30', '31-40', '41-50', '51-60']
+        const data = Object.values(ageRanges);  // [106, 140, 75, 305]
+
+        // Create the chart
+        const ctx = document.getElementById('ageRangeChart').getContext('2d');
+        const ageRangeChart = new Chart(ctx, {
+            type: 'bar',  // You can change 'bar' to 'pie', 'line', etc.
+            data: {
+                labels: labels,  // X-axis labels
+                datasets: [{
+                    label: 'Number of Employees',
+                    data: data,  // Y-axis data
+                    backgroundColor: generateRandomColors({{ age_range_count|length }}),
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+        // Get the retirement year e data from Django context
+        const retirement_count = {{ retirement_year_count|safe }};
+
+        // Prepare data for Chart.js
+        const year_labels = Object.keys(retirement_count);  // ['2024', '2025', '2025', '2026']
+
+        const year_data = Object.values(retirement_count);  // [106, 140, 75, 305]
+
+        // Create the chart
+        const retirement_year = document.getElementById('retirement_year').getContext('2d');
+        const yearly_retirement_chart = new Chart(retirement_year, {
+            type: 'bar',  // You can change 'bar' to 'pie', 'line', etc.
+            data: {
+                labels: year_labels,  // X-axis labels
+                datasets: [{
+                    label: 'Number of Employees',
+                    data: year_data,  // Y-axis data
+                    backgroundColor: generateRandomColors({{ retirement_year_count|length }}),
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+
+
+        // Employee Age Distribution by Zone from Django context
+    const adminType = {{ request.user.is_superuser|add:0 }};
+let zoneAgeRanges = {};
+let zone_ageRanges = [];
+let zone_names = [];
+
+// Check if the user is an admin or zone admin
+if (adminType === 1) {
+    // For admin (superuser)
+    zoneAgeRanges = {{ zone_age_ranges|safe }};
+    zone_ageRanges = Object.keys(zoneAgeRanges.zone_age_ranges);
+    zone_names = ['CCIR', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'Refund Zone', 'CSO'];
+} else if (adminType === 2) {
+    // For zone admin (regular user)
+    zoneAgeRanges = {{ zone_age_ranges|safe }};
+    // Assuming 'request.user.userType' holds the zone name (e.g., 'Zone-I')
+    const userZone = "{{ request.user.userType }}";
+    zone_ageRanges = Object.keys(zoneAgeRanges.zone_age_ranges);
+    zone_names = [userZone];  // Only show the zone admin's zone
+}
+
+// Helper function to generate random colors
+function generateRandomColor() {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    return `#${randomColor}`;
+}
+
+// Generate dataset for the chart
+const datasets = zone_names.map(zone => {
+    return {
+        label: zone,
+        // Data for each age range with unique colors for each bar
+        data: zone_ageRanges.map((ageRange) => {
+            if(adminType === 1){ return zoneAgeRanges.zone_age_ranges[ageRange][zone] || 0; }
+            if(adminType === 2){ return zoneAgeRanges.zone_age_ranges[ageRange] || 0; }
+        }),
+        backgroundColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for each age range
+        borderColor: zone_ageRanges.map(() => generateRandomColor()), // Generate a random color for the border of each age range
+        borderWidth: 1
+    };
+});
+
+// Create the age distribution chart
+const age_ctx = document.getElementById('zoneAgeRangeChart').getContext('2d');
+const myChart = new Chart(age_ctx, {
+    type: 'bar',
+    data: {
+        labels: zone_ageRanges,  // X-axis labels (age ranges)
+        datasets: datasets
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
     }
 });
 
+   /// Get the zone wise count data from Django context
+const zone_range_count = {{ zone_wise_count|safe }};
+
+// Prepare data for Chart.js
+const zone_labels = Object.keys(zone_range_count.zone_counts);  // Get labels
+const zone_count = Object.values(zone_range_count.zone_counts);  // Get counts
+console.log(zone_count);
+
+// Create the chart
+const zone_count_data = document.getElementById('zone_wise_range').getContext('2d');
+const zone_wise_chart = new Chart(zone_count_data, {
+    type: 'bar',  // Change 'bar' to 'pie', 'line', etc., as needed
+    data: {
+        labels: zone_labels,  // X-axis labels
+        datasets: [{
+            label: 'Total No of Employees',
+            data: zone_count,  // Y-axis data
+            backgroundColor: generateRandomColors(zone_labels.length),
+            borderColor: 'rgba(0, 0, 0, 1)',  // Static border color for clarity
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+
+        // Function for generating random colors
+        function generateRandomColors(length) {
+            const colors = [];
+            for (let i = 0; i < length; i++) {
+                colors.push(`rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`);
+            }
+            return colors;
+        }
+    });
+
+
+
+
 </script>
-
-

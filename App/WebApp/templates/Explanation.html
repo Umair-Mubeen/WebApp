@@ -105,7 +105,7 @@
                                         <label>Employee Name </label>
 
                                         <select class="js-example-basic-single form-control" name="emp_name"
-                                                id="emp_name">
+                                                id="emp_name" required>
                                             <option value="" selected disabled>Select an employee</option>
 
                                             {% for item in data %}
@@ -120,7 +120,7 @@
 
                                     <div class="form-group">
                                         <label for="exp_type">Type of Explanation:</label><br>
-                                        <select id="exp_type" name="exp_type" class="form-control">
+                                        <select id="exp_type" name="exp_type" class="form-control" required>
                                             <option value="" selected disabled>Select an explanation</option>
                                             <option value="Unapproved Leave">Unapproved Leave</option>
                                             <option value="Attendance Issue">Attendance Issue</option>
@@ -137,22 +137,20 @@
 
                                     <div class="form-group">
                                         <label for="exp_issue_date">Issue Date:</label><br>
-                                        <input type="date" id="exp_issue_date" name="exp_issue_date"
-                                               class="form-control"
-                                               value="{% if row.exp_issue_date %}{{ row.exp_issue_date|date:'Y-m-d' }}{% else %} {% endif %}">
+                                        <input type="date" id="exp_issue_date" name="exp_issue_date" required
+                                               class="form-control" value="{% if row.exp_issue_date %}{{ row.exp_issue_date|date:'Y-m-d' }}{% else %} {% endif %}">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="exp_reply_date">Report Date:</label>
-                                        <input type="date" id="exp_reply_date" name="exp_reply_date"
-                                               class="form-control"
-                                               value="{% if row.exp_reply_date %}{{ row.exp_reply_date|date:'Y-m-d' }}{% else %} {% endif %}">
+                                        <input type="date" id="exp_reply_date" name="exp_reply_date" required
+                                               class="form-control" value="{% if row.exp_reply_date %}{{ row.exp_reply_date|date:'Y-m-d' }}{% else %} {% endif %}">
 
                                     </div>
                                     {% if request.user.is_superuser == 1 %}
                                     <div class="form-group">
                                         <label for="zone_type">Type of Zone:</label><br>
-                                        <select id="zone_type" name="zone_type" class="form-control">
+                                        <select id="zone_type" name="zone_type" class="form-control" required>
                                             <option value="" selected disabled>Select an zone</option>
                                             <option value="Zone-I">Zone-I</option>
                                             <option value="Zone-II">Zone-II</option>
@@ -166,7 +164,7 @@
                                         <label for="exp_document">Explanation Document:</label>
                                         <input type="file" id="exp_document" name="exp_document"
                                                class="form-control"
-                                               accept=".pdf,.jpg,.jpeg,.png">
+                                               accept=".pdf,.jpg,.jpeg,.png" required>
 
                                     </div>
 
@@ -393,7 +391,7 @@ function updateLeaveInfo(explanations) {
     } else {
         // Clear the table if no data
         $('#expTableBody').html('<tr><td colspan="6">No explanations found</td></tr>');
-        $('#expInfo').hide(); // Hide the table if no explanations found
+        $('#expInfo').show(); // Hide the table if no explanations found
     }
 }
 

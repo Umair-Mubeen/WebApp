@@ -1,10 +1,21 @@
 import json
 import logging
 from collections import defaultdict
-from django.core.paginator import Paginator
-from django.db.models import Count, F, When, BooleanField
-from django.db.models.functions import Substr, Trim
+from datetime import datetime, timedelta, date
+from urllib import request
+
+from dateutil.relativedelta import relativedelta  # More accurate for months
+from django.db.models import Value, Case, When, CharField, F
+from django.db.models.functions import Replace, Substr, Concat, Cast, ExtractYear
+from django.db.models.fields import DateField
+
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db.models import Count, F, When, BooleanField, Value, Func, CharField
+from django.db.models.functions import Substr, Trim, Concat
 from django.db.models import Case, When, BooleanField, F
+from datetime import datetime, timedelta
+from django.db.models.functions import Concat, Replace
+from django.http import JsonResponse, HttpResponse
 
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
 
@@ -13,16 +24,17 @@ logger = logging.getLogger(__name__)
 
 def fetchAllDispositionList(request):
     try:
-        # Paginate results
-        if request.user.is_superuser == 2:
-            result = DispositionList.objects.filter(ZONE=request.user.userType)
+        # Determine the base queryset based on user role
+        if is_zone_admin(request.user):
+            result = DispositionList.objects.filter(ZONE=request.user.userType,status=1)
+        elif is_admin(request.user):
+            result = DispositionList.objects.filter(status=1)
+            print(str(len(result)))
         else:
-            result = DispositionList.objects.all()
+            result = DispositionList.objects.none()  # No results for other roles
 
-        paginator = Paginator(result, 10)
-        page = request.GET.get('page')
-        disposition_result = paginator.get_page(page)
-        return disposition_result, None
+        return result, None
+
     except Exception as e:
         return None, str(e)
 
@@ -30,12 +42,13 @@ def fetchAllDispositionList(request):
 def DesignationWiseList(zone, request):
     try:
         # Annotate designations after trimming whitespace and count occurrences
-        if request.user.userType == 'admin':
-            results = DispositionList.objects.annotate(trimmed_designation=Trim('Designation')) \
+        if is_admin(request.user):
+            results = DispositionList.objects.filter(status=1) \
+                .annotate(trimmed_designation=Trim('Designation')) \
                 .values('trimmed_designation') \
                 .annotate(total=Count('trimmed_designation'))
-        else:
-            results = DispositionList.objects.filter(ZONE=zone). \
+        if is_zone_admin(request.user):
+            results = DispositionList.objects.filter(status=1,ZONE=zone). \
                 annotate(trimmed_designation=Trim('Designation')).values('trimmed_designation') \
                 .annotate(total=Count('trimmed_designation'))
         return results
@@ -45,76 +58,89 @@ def DesignationWiseList(zone, request):
 
 def getRetirementList(zone, request):
     try:
-        # Extract year and month, filter for 2024 retirees, and order by month
-        if request.user.userType == 'admin':
+        current_date = datetime.now().date()
+        next_year_date = current_date + relativedelta(months=12)
+        two_months_ago = current_date - relativedelta(months=3)
 
+        # Convert dates to 'YYYY-MM-DD' format for comparison
+        next_year_date_str = next_year_date.strftime('%Y-%m-%d')
+        two_months_ago_str = two_months_ago.strftime('%Y-%m-%d')
+
+        if is_admin(request.user):
             retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
+                # Standardize the Date_of_Retirement format by replacing '.' with '-'
+                standardized_retirement=Replace('Date_of_Retirement', Value('.'), Value('-')),
+                # Extract day, month, and year from standardized date
+                day=Substr('standardized_retirement', 1, 2),
+                month=Substr('standardized_retirement', 4, 2),
+                year=Substr('standardized_retirement', 7, 4),
+                # Reconstruct Date_of_Retirement in 'YYYY-MM-DD' format
+                retirement_date_str=Concat('year', Value('-'), 'month', Value('-'), 'day', output_field=CharField()),
+                # Cast the retirement_date_str into a DateField
+                retirement_date=Cast('retirement_date_str', output_field=DateField()),
+                # Annotate 'retired' as 'Yes' if retirement_date is before current date and within the past 2 months
+                emp_retired=Case(
+                    When(retirement_date__lte=two_months_ago_str, then=Value('Yes')),
+                    default=Value(''),
+                    output_field=CharField()
+                )
             ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-            ).order_by('month')
-        else:
+                # Include employees retired from two months ago to the next 12 months
+                retirement_date__gte=two_months_ago,
+                retirement_date__lte=next_year_date
+            ).order_by('retirement_date')
+        if is_zone_admin(request.user):
             retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
+                standardized_retirement=Replace('Date_of_Retirement', Value('.'), Value('-')),
+                day=Substr('standardized_retirement', 1, 2),
+                month=Substr('standardized_retirement', 4, 2),
+                year=Substr('standardized_retirement', 7, 4),
+                retirement_date_str=Concat('year', Value('-'), 'month', Value('-'), 'day', output_field=CharField()),
+                retirement_date=Cast('retirement_date_str', output_field=DateField()),
+                emp_retired=Case(
+                    When(retirement_date__lte=two_months_ago, then=Value('Yes')),
+                    default=Value('No'),
+                    output_field=CharField()
+                )
             ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-                ZONE=zone
-            ).order_by('month')
+                retirement_date__gte=two_months_ago,
+                retirement_date__lte=next_year_date,
+                ZONE=request.user.userType
+            ).order_by('retirement_date')
 
         # Return relevant fields for employees to be retired
         employee_to_be_retired = retirement.values(
             'Name', 'CNIC_No', 'Designation', 'BPS', 'ZONE', 'Date_of_Birth',
-            'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement', 'month'
+            'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement', 'month', 'emp_retired'
         )
-        return employee_to_be_retired
+
+        # Pagination
+        paginator = Paginator(employee_to_be_retired, 10)  # Show 10 records per page
+        page = request.GET.get('page')
+
+        try:
+            paginated_data = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page
+            paginated_data = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver last page of results
+            paginated_data = paginator.page(paginator.num_pages)
+
+        return paginated_data
     except Exception as e:
-        return str(e)
-
-
-def getZoneRetirementList(zone, request):
-    try:
-        # Group retirements by zone and count them
-        if request.user.userType == 'admin':
-            retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
-            ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-            ).order_by('ZONE')
-
-        else:
-            retirement = DispositionList.objects.annotate(
-                year=Substr('Date_of_Retirement', 7, 4),
-                month=Substr('Date_of_Retirement', 4, 2)
-            ).filter(
-                year='2024',
-                month__in=['08', '09', '10', '11', '12'],
-                ZONE=zone
-            ).order_by('ZONE')
-
-        zone_counts = defaultdict(int)
-        for item in retirement.values('ZONE'):
-            zone_counts[item['ZONE']] += 1
-
-        return zone_counts
-    except Exception as e:
-        return str(e)
+        print(str(e))
 
 
 def getZoneWiseOfficialsList(zone):
     try:
         # Trim fields and count officials by zone and designation
-        results = DispositionList.objects.filter(ZONE__in=[zone]) \
+        results = DispositionList.objects.filter(status=1,ZONE__in=[zone]) \
             .annotate(zone=Trim(F('ZONE')), designation=Trim(F('Designation'))) \
             .values("zone", "designation").annotate(total=Count('id'))
         results_list = list(results)
         results_json = json.dumps(results_list, indent=4)
-
+        print(results_json)
         return results_json
     except Exception as e:
         return str(e)
@@ -163,18 +189,10 @@ def ZoneDesignationWiseComparison():
         # Prepare data for Chart.js
         labels = list(pivoted_data.keys())
         datasets = []
-        colors = ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(75, 192, 192, 0.2)',
-                  'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)', 'rgba(255, 99, 71, 0.2)']
         zones = ['CCIR', 'IP/TFD/HRM', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'Refund Zone']
 
         for i, zone in enumerate(zones):
-            datasets.append({
-                'label': zone,
-                'data': [pivoted_data[designation].get(zone, 0) for designation in labels],
-                'backgroundColor': colors[i % len(colors)],
-                'borderColor': colors[i % len(colors)].replace('0.2', '1'),
-                'borderWidth': 1
-            })
+            datasets.append({'label': zone,'data': [pivoted_data[designation].get(zone, 0) for designation in labels]})
 
         data_json = json.dumps({'labels': labels, 'datasets': datasets})
         return {'data_json': data_json}
@@ -220,22 +238,24 @@ def ZoneDesignationWiseComparison():
 def StrengthComparison(userType, user_zone=None):
     try:
         # Base queryset with aggregation
-        base_queryset = DispositionList.objects.values('ZONE', 'Designation', 'BPS').annotate(total=Count('id'))
-
-        # Filter based on userType
-        if userType == 2:  # Employee
-            if user_zone:  # Ensure user_zone is provided
-                base_queryset = base_queryset.filter(ZONE=user_zone)
-            else:
-                return "Error: Zone information is missing for the employee."
+        base_queryset = DispositionList.objects.filter(status=1).values('ZONE', 'Designation', 'BPS').annotate(
+            total=Count('id'))
 
         # Aggregate data
         aggregated_data = defaultdict(lambda: defaultdict(int))
+        total_zones = defaultdict(int)  # For storing totals per zone
+
         for item in base_queryset:
             designation = item['Designation']
             bps = item['BPS']
             zone = item['ZONE']
-            aggregated_data[(designation, bps)][zone] = item['total']
+            total = item['total']
+
+            # Add to aggregated data
+            aggregated_data[(designation, bps)][zone] += total
+
+            # Add to total_zones for respective zone
+            total_zones[zone] += total
 
         # Convert aggregated data to a list
         final_data = [
@@ -250,12 +270,33 @@ def StrengthComparison(userType, user_zone=None):
                 'CCIR': zone_data.get('CCIR', 0),
                 'Refund_Zone': zone_data.get('Refund Zone', 0),
                 'IP_TFD_HRM': zone_data.get('IP/TFD/HRM', 0),
+                'CSO': zone_data.get('CSO', 0),
+                'AdPool': zone_data.get('Admin Pool', 0),
                 'total_sum': sum(zone_data.values()),
+
             }
             for (designation, bps), zone_data in aggregated_data.items()
         ]
+        # Append totals row
+        total_row = {
+            'Designation': 'Total',
+            'BPS': '',
+            'CCIR': total_zones.get('CCIR', 0),
+            'Zone_I': total_zones.get('Zone-I', 0),
+            'Zone_II': total_zones.get('Zone-II', 0),
+            'Zone_III': total_zones.get('Zone-III', 0),
+            'Zone_IV': total_zones.get('Zone-IV', 0),
+            'Zone_V': total_zones.get('Zone-V', 0),
+            'Refund_Zone': total_zones.get('Refund Zone', 0),
+            'IP_TFD_HRM': total_zones.get('IP/TFD/HRM', 0),
+            'CSO': total_zones.get('CSO', 0),
+            'AdPool': total_zones.get('Admin Pool', 0),
+            'total_sum': sum(total_zones.values()),
+            'row_color' : 'table-info'
+        }
 
-        print(final_data)
+        final_data.append(total_row)
+
         return final_data
 
     except Exception as e:
@@ -267,6 +308,7 @@ def getAllEmpTransferPosting(userType, zoneType):
         filters = {}
         if userType == 2:  # Employee
             filters['zone_type'] = zoneType
+        filters['employee__status'] = 1  # Add the status filter from the related employee table
 
         distinct_transfers = TransferPosting.objects.select_related('employee').filter(
             **filters
@@ -294,7 +336,7 @@ def getAllEmpTransferPosting(userType, zoneType):
                 default=True,
                 output_field=BooleanField()
             )
-        )
+        ).order_by('-chief_transfer_date')
 
         return distinct_transfers
 
@@ -308,6 +350,7 @@ def getAllEmpLeaveApplication(userType, zoneType):
         filters = {}
         if userType == 2:  # Employee
             filters['zone_type'] = zoneType
+        filters['employee__status'] = 1  # Add the status filter from the related employee table
 
         leave_application = LeaveApplication.objects.select_related('employee').filter(
             **filters).values(
@@ -315,6 +358,7 @@ def getAllEmpLeaveApplication(userType, zoneType):
             'employee__Name',
             'employee__Designation',
             'employee__BPS',
+            'id',
             'leave_type',
             'leave_start_date',
             'leave_end_date',
@@ -349,3 +393,103 @@ def getAllEmpLeaveExplanation(userType, zoneType):
         return employee_explanation
     except Exception as e:
         return str(e)
+
+
+def is_admin(user):
+    return user.is_superuser == 1
+
+
+def is_zone_admin(user):
+    return user.is_superuser == 2
+
+
+def calculate_tax(income, tax_brackets,apply_surcharge):
+    try:
+        surcharge_threshold = 10000000
+        surcharge_rate = 0.10
+        for (lower, upper), (rate, base_tax) in tax_brackets.items():
+            if lower <= income <= upper:
+                month = 0
+                if rate == 0:
+                    tax = 0
+                else:
+                    amount_exceeding = income - lower
+                    tax_on_exceeding = amount_exceeding * rate
+
+                    if lower == 600001 and upper == 1200000:
+                        tax = round(tax_on_exceeding)  # No base tax added
+                        month = round(tax / 12)
+                    elif lower == 600001 and upper == 800000:
+                        tax = round(tax_on_exceeding)  # No base tax added
+                        month = tax / 12
+
+                    else:
+                        tax = round(base_tax + tax_on_exceeding)
+                        month = round(tax / 12)
+                total_tax_with_surcharge = 0
+                surcharge = 0
+                if apply_surcharge and income > surcharge_threshold:
+                    surcharge = round(tax * surcharge_rate)
+                    total_tax_with_surcharge = round(tax + surcharge)
+                    print('surcharge =>',surcharge)
+                    month = round(total_tax_with_surcharge / 12)
+
+                return {
+                        'income': income,
+                        'lower': lower,
+                        'upper': upper,
+                        'base_tax': base_tax,
+                        'amount_exceeding': amount_exceeding if rate != 0 else 0,
+                        'rate': rate * 100,
+                        'tax_on_exceeding': round(tax_on_exceeding) if rate != 0 else 0,
+                        'total_tax': tax,
+                        'per_month' : month,
+                        'total_tax_with_surcharge' : total_tax_with_surcharge,
+                        'surcharge' : surcharge
+                    }
+        return None
+    except Exception as e:
+        print(str(e))
+
+
+
+def getAllBoardTransferPosting(userType, zoneType):
+    try:
+        filters = {}
+        if userType == 2:  # Employee
+            filters['zone_type'] = zoneType
+        filters['employee__status'] = 2  # Add the status filter from the related employee table
+
+        distinct_transfers = TransferPosting.objects.select_related('employee').filter(
+            **filters
+        ).values(
+            'employee__id',
+            'employee__Name',
+            'employee__Designation',
+            'employee__BPS',
+            'id',
+            'old_zone',
+            'new_zone',
+            'old_unit',
+            'new_unit',
+            'chief_order_number',
+            'chief_transfer_date',
+            'chief_transfer_document',
+            'zone_range',
+            'zone_transfer_document',
+            'zone_order_number',
+            'zone_transfer_date',
+            'zone_type'
+        ).annotate(
+            zone_changed=Case(
+                When(old_zone=F('new_zone'), then=False),
+                default=True,
+                output_field=BooleanField()
+            )
+        ).order_by('-chief_transfer_date')
+
+        return distinct_transfers
+
+    except Exception as e:
+        logger.error(f"Error in getAllEmpTransferPosting: {e}")
+        return []  # Return an empty list on error

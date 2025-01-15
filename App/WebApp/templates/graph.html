@@ -1,8 +1,9 @@
 <style>
     /* Custom styling for cards */
-    .card-primary {
-        border: 1px solid #007bff;
+    .card-dark {
+        border: 1px solid black;
         box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        margin-bottom: 20px;
     }
 
     .card-header {
@@ -13,22 +14,77 @@
 
     .card-body {
         background-color: #f9f9f9;
+        position: relative;
     }
 
-    /* Custom chart styling */
     .chart-canvas {
         padding: 10px;
     }
 
+    /* Custom progress bars */
+    .progress {
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 10px;
+    }
+
+    .progress-bar {
+        line-height: 20px;
+        font-size: 12px;
+    }
+
+    /* Button styling for report exports */
+    .export-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #28a745;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .export-btn:hover {
+        background-color: #218838;
+    }
+
+    /* Status badges */
+    .badge-status {
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .badge-approved {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-pending {
+        background-color: #ffc107;
+        color: white;
+    }
+
+    .badge-rejected {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    /* Accordion styling */
+    .accordion .card-header {
+        cursor: pointer;
+    }
 </style>
 
 <div class="row">
 
-    <!-- Leave Summary Report -->
-    <div class="col-lg-6">
-        <div class="card dark-primary">
+    <!-- Age Chart  Summary Report -->
+        <div class="col-lg-4">
+            <div class="card card-dark">
             <div class="card-header">
-                <h3 class="card-title">Leave Summary Report, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <h4 class="card-title">Age Graph Summary Report,  RTO - II, Karachi</h4>
                 <div class="card-tools">
                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
                         <i class="fas fa-minus"></i>
@@ -37,18 +93,141 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                <canvas id="ageRangeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        </div>
+    <!-- Age Chart  Summary Report Ends Here -->
+
+
+      <!-- Employee Retirement Distribution by Year -->
+        <div class="col-lg-4">
+            <div class="card card-dark">
+            <div class="card-header">
+                <h4 class="card-title">Employee Retirement Ratio by Year , RTO - II, Karachi</h4>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                    <canvas id="retirement_year" width="400" height="200"></canvas>
+            </div>
+        </div>
+       </div>
+      <!-- Employee Retirement Distribution by Year Ends Here -->
+
+         <!-- Employee Retirement Chart -->
+    <div class="col-lg-4">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h4 class="card-title">Retirement Chart Zone Wise (10) years, RTO- II, Karachi</h4>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                <canvas id="retirementChart" class="chart-canvas" width="400" height="200"></canvas>
+
+            </div>
+        </div>
+    </div>
+
+        <!-- Employee Ration Distribution by ZONE -->
+        <div class="col-lg-4">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h4 class="card-title">Employee Ratio Distribution by ZONE , RTO - II,Karachi</h4>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                    <canvas id="zone_wise_range" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+      <!-- Employee Ration Distribution by ZONE Ends Here -->
+
+
+    <!-- Employee Age Distribution by Zone -->
+        <div class="col-lg-4">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h4 class="card-title">Employee Age Distribution by Zone, RTO- II, Karachi</h4>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                    <canvas id="zoneAgeRangeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Employee Age Distribution by Zone Ends Here -->
+
+    <!-- Leave Summary Report -->
+    <div class="col-lg-4">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Leave Summary Report, {{request.user.userType}}, RTO - II, Karachi</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="export-btn">Export Report</button>
             </div>
             <div class="card-body">
                 <canvas id="leaveSummary" class="chart-canvas" width="200" height="80"></canvas>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">Casual Leave: 75%</div>
+                </div>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">Earned Leave: 50%</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Employee Retirement Chart -->
+    <!-- Explanation Summary Report -->
     <div class="col-lg-6">
-        <div class="card dark-primary">
+        <div class="card card-dark">
             <div class="card-header">
-                <h3 class="card-title">Employee Retirement Chart Zone Wise, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <h3 class="card-title">Explanation Summary Report, {{request.user.userType}}, RTO - II, Karachi</h3>
                 <div class="card-tools">
                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
                         <i class="fas fa-minus"></i>
@@ -57,29 +236,68 @@
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
+                <button class="export-btn">Export Report</button>
             </div>
             <div class="card-body">
-                <canvas id="retirementChart" class="chart-canvas" width="200" height="80"></canvas>
+                <canvas id="expSummary" class="chart-canvas" width="200" height="80"></canvas>
+                <div class="mt-4">
+                    <span class="badge-status badge-approved">Approved</span>
+                    <span class="badge-status badge-pending">Pending</span>
+                    <span class="badge-status badge-rejected">Rejected</span>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Transfer Posting Summary Report -->
+    <div class="col-lg-6">
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title">Transfer Posting Summary Report, {{request.user.userType}}, Regional Tax Office - II</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <button class="export-btn">Export Report</button>
+            </div>
+            <div class="card-body">
+                <canvas id="transferChart" class="chart-canvas" width="200" height="87"></canvas>
+                <div class="progress">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">Transfer Completed: 60%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Disposition Chart List -->
     <div class="col-lg-12">
-        <div class="card dark-primary">
-            <div class="card-header">
-                <h3 class="card-title">Disposition Chart List Designation Wise, {{request.user.userType}}, Regional Tax Office - II</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <button type="button" class="btn btn-tool" data-card-widget="remove">
-                        <i class="fas fa-times"></i>
-                    </button>
+        <div class="accordion" id="dispositionAccordion">
+            <div class="card card-dark">
+                <div class="card-header" id="headingOne">
+                    <h3 class="card-title" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Disposition Chart List Designation Wise, {{request.user.userType}}, Regional Tax Office - II
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool" data-card-widget="remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button class="export-btn">Export Report</button>
                 </div>
-            </div>
-            <div class="card-body">
-                <canvas id="designationChart" class="chart-canvas" width="200" height="80"></canvas>
+
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#dispositionAccordion">
+                    <div class="card-body">
+                        <canvas id="designationChart" class="chart-canvas" width="200" height="80"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

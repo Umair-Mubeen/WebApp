@@ -29,6 +29,9 @@ class DispositionList(models.Model):
     Remarks = models.CharField(max_length=255, null=True, blank=True)
     additional_charge = models.CharField(max_length=255, null=True, blank=True)
     additional_charge_lro = models.CharField(max_length=255, null=True, blank=True)
+    emp_age = models.CharField(max_length=255, null=True, blank=True)
+    gender = models.CharField(max_length=255, null=True, blank=True)
+    status = models.IntegerField(default=1)
 
 
 class TransferPosting(models.Model):
@@ -36,13 +39,11 @@ class TransferPosting(models.Model):
 
     old_zone = models.CharField(max_length=255, blank=True)  # ccir
     new_zone = models.CharField(max_length=255, blank=True)  # ccir
-    chief_order_number = models.IntegerField(default=0)  # chief office
+    chief_order_number = models.CharField(max_length=255)  # chief office
     chief_transfer_date = models.DateField(null=True)  # chief office
     chief_reason_for_transfer = models.TextField(blank=True, null=True)  # chief office
     chief_order_approved_by = models.CharField(max_length=255)  # Person who approved the transfer chief office
-    chief_transfer_document = models.FileField(upload_to='transfer_documents/', max_length=250, default=None,
-                                               null=True)  # ccir
-
+    chief_transfer_document = models.FileField(upload_to='transfer_documents/', max_length=250, default=None,null=True)  # ccir
     old_unit = models.CharField(max_length=255, blank=True, null=True)  # zone
     new_unit = models.CharField(max_length=255, blank=True, null=True)  # zone
     zone_range = models.CharField(max_length=255, blank=True, null=True)  # zone

@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Disposition List - RTO - II, Karachi</title>
+    {% load static %}
+    {% include 'reusable.html' %}
 </head>
-<body>
-{% load static %}
-{% include 'reusable.html' %}
-<title>RTO - II, Dashboard</title>
 <body class="sidebar-mini layout-fixed sidebar-collapse">
 <div class="wrapper">
 
     <!-- Navbar Starts Here -->
     {% include 'navbar.html' %}
     <!-- /.Navbar Ends Here -->
-    <!-- SideBar Start Here  -->
+
+    <!-- SideBar Start Here -->
     {% include 'sidebar.html' %}
-    <!-- SideBar Ends Here  -->
+    <!-- SideBar Ends Here -->
 
     <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
@@ -30,8 +29,7 @@
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-right">
                             <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
-                                    class="fa fa-home"></i></a>
-                            </li>
+                                    class="fa fa-home"></i></a></li>
                             <li class="breadcrumb-item active">Disposition List</li>
                         </ol>
                     </div><!-- /.col -->
@@ -42,109 +40,149 @@
 
         <!-- Main content -->
         <section class="content">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h3 class="card-title">Disposition List, Regional Tax
-                                        Office - II</h3>
-
-                                    <div class="card-tools">
-                                        <div class="input-group input-group-sm" style="width: 150px;">
-                                            <input type="text" name="table_search" class="form-control float-right"
-                                                   placeholder="Search">
-
-                                            <div class="input-group-append">
-                                                <button type="submit" class="btn btn-default">
-                                                    <i class="fas fa-search"></i>
-                                                </button>
-                                            </div>
-                                        </div>
+            <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <div class="card-title">
+                            <h5>Disposition List of Regional Tax Office - II, Karachi</h5>
+                        </div>
+                        <div class="card-tools">
+                            <form method="GET" action="">
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input type="text" name="search" class="form-control float-right"
+                                           placeholder="Search" value="{{ request.GET.search }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
                                     </div>
                                 </div>
-                                <!-- /.card-header -->
-                                <div class="card-body table-responsive p-0">
-                                    <table class="table table-head-fixed text-nowrap table-striped">
-                                        <thead>
-                                        <tr>
-                                            <th>S#</th>
-                                            <th>Name</th>
-                                            <th>CNIC</th>
-                                            <th>Designation</th>
-                                            <th>BPS</th>
-                                            <th>Zone</th>
-                                            <th>Date of Birth</th>
-                                            <th>Entry into Govt</th>
-                                            <th>Retirement Date</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for result in DispositionResult %}
-                                        <tr>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>{{ result.Name }}</td>
-                                            <td>{{ result.CNIC_No }}</td>
-                                            <td>{{ result.Designation }}</td>
-                                            <td>{{ result.BPS }}</td>
-                                            <td>{{ result.ZONE }}</td>
-                                            <td>{{ result.Date_of_Birth }}</td>
-                                            <td>{{ result.Date_of_Entry_into_Govt_Service }}</td>
-                                            <td>{{ result.Date_of_Retirement }}</td>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>S#</th>
+                                <th>Name</th>
+                                <th>CNIC</th>
+                                <th>Designation</th>
+                                <th>BPS</th>
+                                <th>Zone</th>
+                                <th>Date of Birth</th>
+                                <th>Entry into Govt</th>
+                                <th>Retirement Date</th>
+                                <th>Status</th>
+                                {% if user.is_superuser == 1 %} <th>Actions</th> {% endif %}
 
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for result in DispositionResult %}
+                            <tr>
+                                <td>{{ start_serial_number|add:forloop.counter0 }}</td>
+                                <td>{{ result.Name }}</td>
+                                <td>{{ result.CNIC_No }}</td>
+                                <td>{{ result.Designation }}</td>
+                                <td>{{ result.BPS }}</td>
+                                <td>{{ result.ZONE }}</td>
+                                <td>{{ result.Date_of_Birth }}</td>
+                                <td>{{ result.Date_of_Entry_into_Govt_Service }}</td>
+                                <td>{{ result.Date_of_Retirement }}</td>
+                                <td>{% if result.status == 1 %} Active {% endif %}</td>
+                                {% if user.is_superuser == 1 %}
+                                <td><a href="AddEditDisposition?rowId={{ result.id }}&empId={{ result.Personal_No }}&userType={{ request.user.userType }}&type=edit" style="color:black;">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    {% endif %}
 
-                                        </tr>
-                                        {% endfor %}
-                                        </tbody>
+                                </td>
 
-                                    </table>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <br/>
 
-                                </div>
-                                <!-- /.card-body -->
-
-                            </div>
-                            <!-- /.card -->
-                            <ul class="pagination float-right">
+                        <!-- Pagination controls -->
+                        <nav aria-label="Page navigation" style="float:right">
+                            <ul class="pagination justify-content-right">
                                 {% if DispositionResult.has_previous %}
-                                <li class="paginate_button page-item previous">
-                                    <a href="?page={{ DispositionResult.previous_page_number }}"
-                                       aria-controls="example2" data-dt-idx="0" tabindex="0"
-                                       class="page-link">Previous</a>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1&search={{ request.GET.search }}"
+                                       aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ DispositionResult.previous_page_number }}&search={{ request.GET.search }}"
+                                       aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
                                 </li>
                                 {% else %}
-                                <li class="paginate_button page-item previous disabled" id="example2_previous">
-                                    <a href="#" aria-controls="example2" data-dt-idx="0" tabindex="0" class="page-link">Previous</a>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
                                 </li>
                                 {% endif %}
 
+                                {% for num in DispositionResult.paginator.page_range %}
+                                {% if DispositionResult.number == num %}
+                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                {% elif num > DispositionResult.number|add:-5 and num < DispositionResult.number|add:5  %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}&search={{ request.GET.search }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+
                                 {% if DispositionResult.has_next %}
-                                <li class="paginate_button page-item next">
-                                    <a href="?page={{ DispositionResult.next_page_number }}" aria-controls="example2"
-                                       data-dt-idx="{{ DispositionResult.next_page_number }}" tabindex="0"
-                                       class="page-link">Next</a>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ DispositionResult.next_page_number }}&search={{ request.GET.search }}"
+                                       aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ DispositionResult.paginator.num_pages }}&search={{ request.GET.search }}"
+                                       aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
                                 </li>
                                 {% else %}
-                                <li class="paginate_button page-item next disabled" id="example2_next">
-                                    <a href="#" aria-controls="example2"
-                                       data-dt-idx="{{ DispositionResult.next_page_number }}" tabindex="0"
-                                       class="page-link">Next</a>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
                                 </li>
                                 {% endif %}
                             </ul>
-
-                        </div>
+                        </nav>
                     </div>
+                    <!-- /.card-body -->
                 </div>
+
+
             </div>
-
-
         </section>
     </div>
+
     {% include 'footer.html' %}
-
 </div>
-
-
 </body>
 </html>

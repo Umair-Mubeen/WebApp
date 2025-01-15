@@ -65,15 +65,17 @@
                     <div class="row">
                         <div class="col-lg-3">
                             <select name="Zone" class="form-control" id="zone">
-                                <option value="">Select Zone</option>
+                                     <option value="" selected disabled> Select Zone </option>
                                 <option value="CCIR">CCIR</option>
-                                <option value="Refund Zone">Refund Zone</option>
-                                 <option value="IP/TFD/HRM">IP / TFD/ HRM</option>
+                                <option value="CSO">CSO</option>
                                 <option value="Zone-I">Zone - I</option>
                                 <option value="Zone-II">Zone - II</option>
                                 <option value="Zone-III">Zone - III</option>
                                 <option value="Zone-IV">Zone - IV</option>
                                 <option value="Zone-V">Zone - V</option>
+                                <option value="Refund Zone">Refund Zone</option>
+                                 <option value="IP/TFD/HRM">IP / TFD/ HRM</option>
+
 
                             </select>
                         </div>
@@ -96,7 +98,7 @@
             {% if results|length > 0 %}
 
             <div class="card">
-                <div class="card-header">
+                <div class="card-header bg-primary">
                     <h3 class="card-title">{% if zone %} {{ zone }} - {% endif %} Designation Chart Zone Wise, Regional
                         Tax Office - II</h3>
                 </div>
@@ -109,24 +111,24 @@
         </div>
         <!-- Content Wrapper. Contains page content  Ends Here -->
 
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Disposition Chart List Zone Wise Strength, Regional Tax Office -
-                                II</h3>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="ZoneWiseCharList" width="400" height="150"></canvas>
+<!--        <div class="container-fluid">-->
+<!--            <div class="row">-->
+<!--                <div class="col-lg-12">-->
+<!--                    <div class="card">-->
+<!--                        <div class="card-header">-->
+<!--                            <h3 class="card-title">Disposition Chart List Zone Wise Strength, Regional Tax Office - -->
+<!--                                II</h3>-->
+<!--                        </div>-->
+<!--                        <div class="card-body">-->
+<!--                            <canvas id="ZoneWiseCharList" width="400" height="150"></canvas>-->
 
-                        </div>
+<!--                        </div>-->
 
-                    </div>
-                </div>
+<!--                    </div>-->
+<!--                </div>-->
 
-            </div>
-        </div>
+<!--            </div>-->
+<!--        </div>-->
     </div>
     <!-- /.content-wrapper -->
 

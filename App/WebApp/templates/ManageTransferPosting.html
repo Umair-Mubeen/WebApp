@@ -49,7 +49,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="card">
-                                    <div class="card-header">
+                                    <div class="card-header bg-primary">
                                         <h3 class="card-title">Employee Transfer Posting History</h3>
 
                                         <div class="card-tools">
@@ -68,8 +68,7 @@
                                     </div>
                                     <!-- /.card-header -->
                                     <div class="card-body table-responsive p-0">
-                                        <table id="zoneTable"
-                                               class="table table-head-fixed text-nowrap table-striped table table-head-fixed text-nowrap lightgallery">
+                                        <table id="zoneTable" class="table table-head-fixed text-nowrap table table-head-fixed text-nowrap lightgallery">
                                             <thead>
                                             <tr>
                                                 <th>S#</th>
@@ -81,13 +80,11 @@
                                                 <th>CCIR Order #</th>
                                                 <th>Order Date</th>
                                                 <th>Doc</th>
-
                                                 <th>Prev Unit</th>
                                                 <th>New Unit</th>
                                                 <th>Range</th>
                                                 <th>Transfer Date</th>
                                                 <th>Zone Order #</th>
-
                                                 <th>Zone Order</th>
                                                 <th>Actions</th>
 
@@ -124,6 +121,7 @@
                                                     {% endif %}
                                                 </td>
 
+
                                                 <td>{{ item.old_unit }}</td>
                                                 <td>{{ item.new_unit }}</td>
                                                 <td>{{ item.zone_range}}</td>
@@ -132,17 +130,17 @@
                                                 <td>
                                                     {% if item.zone_transfer_document %}
                                                     {% if item.is_pdf %}
-                                                        <a href="media/{{item.zone_transfer_document}}" target="_blank">
-                                                            PDF
-                                                        </a>
+                                                    <a href="media/{{item.zone_transfer_document}}" target="_blank">
+                                                        PDF
+                                                    </a>
                                                     {% else %}
-                                                        <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
-                                                              data-src="media/{{item.zone_transfer_document}}">
-                                                            <a href="media/{{ item.zone_transfer_document}}"
-                                                               data-lightgallery="item">
-                                                           Image
-                                                        </a>
-                                                        </span>
+                                                    <span class="spnImg" data-sub-html="{{ item.employee_id__Name }}"
+                                                          data-src="media/{{item.zone_transfer_document}}">
+                                                                <a href="media/{{ item.zone_transfer_document}}"
+                                                                   data-lightgallery="item">
+                                                               Image
+                                                            </a>
+                                                            </span>
                                                     {% endif %}
                                                     {% else %}
                                                     {% endif %}
@@ -161,6 +159,75 @@
                                             </tbody>
 
                                         </table>
+                                        <!-- Pagination controls -->
+                        <nav aria-label="Page navigation" style="float:right">
+                            <ul class="pagination justify-content-right">
+                                {% if transfer_records.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1"
+                                       aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ transfer_records.previous_page_number }}"
+                                       aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% for num in transfer_records.paginator.page_range %}
+                                {% if transfer_records.number == num %}
+                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                {% elif num > transfer_records.number|add:-5 and num < transfer_records.number|add:5 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+
+                                {% if transfer_records.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ transfer_records.next_page_number }}"
+                                       aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ transfer_records.paginator.num_pages }}"
+                                       aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
 
                                     </div>
                                     <!-- /.card-body -->

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    {% load static %}
+
+    {% include 'reusable.html' %}
+
+    <meta charset="UTF-8">
+    <title>RTO - II Disposition List</title>
+</head>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    {% include 'navbar.html' %}
+    {% include 'sidebar.html' %}
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                <a href="/ManageTransferPosting" style="color:black">
+                                    Manage Disposition </a>
+                            </li>
+                            {% if empId %}
+                            <li class="breadcrumb-item">Edit</li>
+                            {% else %}
+                            <li class="breadcrumb-item">Create</li>
+                            {% endif %}
+
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <form action="AddEditDisposition" id="AddEditDisposition" method="POST">
+                    {% csrf_token %}
+                    <div class="row p-2">
+
+                        <div class="col-lg-5">
+                            <div class="card collapsed-card">
+                                <div class="card-header header-elements-inline">
+
+                                    <h5 class="card-title">Regional Tax Office - II Employee List</h5>
+
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
+                                                class="fas fa-minus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-tool" data-card-widget="remove"><i
+                                                class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+
+
+                                <div class="card-body mt-0" style="display:block">
+                                    <input type="hidden" name="hd_emp" value="{{empId}}" id="hd_emp">
+                                    <input type="hidden" name="hd_rowId" value="{{rowId}}" id="rowId">
+
+                                    <div class="form-group">
+                                        <label>Employee Name</label>
+                                        <select class="js-example-basic-single form-control" name="emp_name"
+                                                id="emp_name" required>
+                                            <option value="" selected disabled>Select an employee</option>
+
+                                            {% for item in result %}
+                                            <option value="{{item.id}}" empZone="{{item.ZONE}}">{{item.Name}} -
+                                                ({{item.Designation}}) - {{item.ZONE}}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Employee Status</label>
+                                        <select class="js-example-basic-single form-control" name="emp_status"
+                                                id="emp_status" required>
+                                            <option value="" selected disabled>Select an employee status</option>
+                                            <option value="1">Active</option>
+                                            <option value="2">Retired</option>
+                                            <option value="2">Transferred</option>
+
+
+                                        </select>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                        <a href="" class="btn btn-default ml-2">Cancel</a>
+                                    </div>
+
+
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </section>
+    </div>
+    {% include 'footer.html' %}
+
+</div>
+</body>
+
+</html>
+
+
+<script>
+$(document).ready(function() {
+           var hd_emp = document.getElementById('rowId').value; // Get the hidden input value
+           $('#emp_name').val(hd_emp).trigger('change');
+});
+
+
+</script>

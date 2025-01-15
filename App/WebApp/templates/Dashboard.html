@@ -68,11 +68,11 @@
         </div>
 
         <div class="container-fluid" id="tableContainer" style="padding-top:20px;">
-            {% include 'retired.html' with retired=retired type=label count_leave_individuals=count_leave_individuals %}
+            {% include 'retired.html' with retired=retired type=label count_leave_individuals=count_leave_individuals CountExplanationIndividuals=CountExplanationIndividuals %}
         </div>
 
         <div class="container-fluid" id="graphContainer" style="padding-top:20px;">
-            {% include 'graph.html' with results=results counts=counts zones=zones Comparison=Comparison leave_summary=leave_summary %}
+            {% include 'graph.html' with results=results zone_wise_count=zone_wise_count counts=counts zones=zones Comparison=Comparison leave_summary=leave_summary explanation_summary=explanation_summary zones=transfer_posting_summary CountTransferPostingIndividuals=CountTransferPostingIndividuals age_range_count=age_range_count zone_age_ranges=zone_age_ranges retirement_year_count=retirement_year_count %}
         </div>
     </div>
     <!-- Content Wrapper. Contains page content  Ends Here -->
