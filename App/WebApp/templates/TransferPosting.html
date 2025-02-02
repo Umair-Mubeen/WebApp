@@ -108,14 +108,14 @@
                                     <input type="hidden" name="new_zone" value="{{row.new_zone}}" id="new_zone">
 
                                     <div class="form-group">
-                                        <label>Employee Name {{emp_id }} </label>
+                                        <label>Employee Name  </label>
 
                                         <select class="js-example-basic-single form-control" name="emp_name"
                                                 id="emp_name" required>
                                             <option value="" selected disabled>Select an employee</option>
 
                                             {% for item in data %}
-                                            <option value="{{item.id}}">{{item.Name}} - ({{item.Designation}}) -
+                                            <option value="{{item.Personal_No}}">{{item.Name}} - ({{item.Designation}}) -
                                                 {{item.ZONE}}
                                             </option>
                                             {% endfor %}
@@ -128,7 +128,11 @@
                                         <label> Old Zone </label>
                                         <select name="old_zone" class="form-control" id="old_zone_name" required>
                                             <option value="" selected disabled>Select an zone</option>
+                                            <option value="Board">On Transfer From Board</option>
                                             <option value="CCIR">CCIR</option>
+                                            <option value="CSO">CSO</option>
+                                            <option value="Refund Zone">Refund Zone</option>
+                                            <option value="IP/TFD/HRM">IP /TFD / HRM</option>
                                             <option value="Zone-I">Zone-I</option>
                                             <option value="Zone-II">Zone-II</option>
                                             <option value="Zone-III">Zone-III</option>
@@ -146,6 +150,10 @@
                                             <option value="" selected disabled>Select an zone</option>
 
                                             <option value="CCIR">CCIR</option>
+                                            <option value="CSO">CSO</option>
+                                            <option value="Refund Zone">Refund Zone</option>
+                                            <option value="IP/TFD/HRM">IP /TFD / HRM</option>
+
 
                                             <option value="Zone-I">Zone-I</option>
                                             <option value="Zone-II">Zone-II</option>

@@ -20,9 +20,8 @@ def transfer_posting_chart(request):
         if is_admin(request.user):
             userType = 1
             # For admin, get data for all zones (returns list of dicts)
-            zone_transfer_data = TransferPosting.objects.values('zone_type').annotate(
-                total_transfers=Count('id')).order_by(
-                'zone_type')
+            zone_transfer_data = (TransferPosting.objects.values('zone_type').annotate(total_transfers=Count('id')).
+            order_by('zone_type'))
 
             # For this case, use dictionary-style access
             zones = [entry['zone_type'] for entry in zone_transfer_data]
@@ -32,18 +31,19 @@ def transfer_posting_chart(request):
                 'total_transfers': total_transfers,
                 'userType': userType
             }
+            print(context)
             return context
         elif is_zone_admin(request.user):
             userType = 2
             # Filter records based on the user's zone_type (which corresponds to userType)
-            zone_transfer_data = TransferPosting.objects.filter(zone_type=request.user.userType).values('zone_type',
-                                                                                                        'new_unit').annotate(
-                total_transfers=Count('id')
-            ).order_by('zone_type', 'new_unit')
+            zone_transfer_data = (TransferPosting.objects.filter(zone_type=request.user.userType).
+                                  values('zone_type','new_unit').annotate(total_transfers=Count('id')).order_by('zone_type', 'new_unit'))
 
             # Prepare data for Chart.js
             zones = list(set(entry['zone_type'] for entry in zone_transfer_data))  # Unique zone names
-            units = list(set(entry['new_unit'] for entry in zone_transfer_data))  # Unique units
+            #units = list(set(entry['new_unit'] for entry in zone_transfer_data))  # Unique units
+            units = list(set(entry['new_unit'] for entry in zone_transfer_data if entry['new_unit'] is not None))  # Unique units
+
             unit_counts = {unit: 0 for unit in units}
 
             # Aggregate the total number of transfers for each unit
@@ -52,13 +52,17 @@ def transfer_posting_chart(request):
                 unit_counts[unit] = entry['total_transfers']
 
         # Return the context to the template
+        #units = 0 if units is None else units
+        #0 if units is None else None
         context = {
             'zones': zones,
             'units': units,
             'unit_counts': unit_counts,
             'userType': userType
-
         }
+
+        print(context)
+
         return context
     except Exception as e:
         print(str(e))
@@ -482,7 +486,6 @@ def get_retirement_year_count(request):
 
     except Exception as e:
         print(str(e))
-
 
 
 def get_zone_wise_count(request):

@@ -28,7 +28,8 @@
                     </div><!-- /.col -->
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i class="fa fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a></li>
                             <li class="breadcrumb-item active">Disposition List</li>
                         </ol>
                     </div><!-- /.col -->
@@ -48,7 +49,8 @@
                         <div class="card-tools">
                             <form method="GET" action="">
                                 <div class="input-group input-group-sm" style="width: 150px;">
-                                    <input type="text" name="search" class="form-control float-right" placeholder="Search" value="{{ request.GET.search }}">
+                                    <input type="text" name="search" class="form-control float-right"
+                                           placeholder="Search" value="{{ request.GET.search }}">
                                     <div class="input-group-append">
                                         <button type="submit" class="btn btn-default">
                                             <i class="fas fa-search"></i>
@@ -92,68 +94,75 @@
                         </table>
                         <br/>
 
-                <!-- Pagination controls -->
-                <nav aria-label="Page navigation" style="float:right">
-                    <ul class="pagination justify-content-right">
-                        {% if DispositionResult.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1&search={{ request.GET.search }}" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ DispositionResult.previous_page_number }}&search={{ request.GET.search }}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <a class="page-link" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item disabled">
-                            <a class="page-link" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        {% endif %}
+                        <!-- Pagination controls -->
+                        <nav aria-label="Page navigation" style="float:right">
+                            <ul class="pagination justify-content-right">
+                                {% if DispositionResult.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1&search={{ request.GET.search }}"
+                                       aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ DispositionResult.previous_page_number }}&search={{ request.GET.search }}"
+                                       aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
 
-                        {% for num in DispositionResult.paginator.page_range %}
-                        {% if DispositionResult.number == num %}
-                        <li class="page-item active"><a class="page-link">{{ num }}</a></li>
-                        {% elif num > DispositionResult.number|add:-5 and num < DispositionResult.number|add:5 %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}&search={{ request.GET.search }}">{{ num }}</a>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
+                                {% for num in DispositionResult.paginator.page_range %}
+                                {% if DispositionResult.number == num %}
+                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                {% elif num > DispositionResult.number|add:-5 and num < DispositionResult.number|add:5 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}&search={{ request.GET.search }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
 
-                        {% if DispositionResult.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ DispositionResult.next_page_number }}&search={{ request.GET.search }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ DispositionResult.paginator.num_pages }}&search={{ request.GET.search }}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="page-item disabled">
-                            <a class="page-link" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item disabled">
-                            <a class="page-link" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                                {% if DispositionResult.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ DispositionResult.next_page_number }}&search={{ request.GET.search }}"
+                                       aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page={{ DispositionResult.paginator.num_pages }}&search={{ request.GET.search }}"
+                                       aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
                     </div>
                     <!-- /.card-body -->
                 </div>

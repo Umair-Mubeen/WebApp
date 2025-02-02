@@ -111,3 +111,17 @@ class CustomUser(AbstractUser):
     userType = models.CharField(
         choices=[('ZONE', 'Zone-I'), ('ZONE', 'Zone-II'), ('ZONE', 'Zone-III'), ('ZONE', 'Zone-IV'),
                  ('ZONE', 'Zone-V')], max_length=50)
+
+
+class InventoryStock(models.Model):
+    item_name = models.CharField(max_length=255, unique=True)
+    quantity = models.PositiveIntegerField(default=0)
+    is_deleted = models.BooleanField(default=False)  # Soft delete flag
+    deleted_at = models.DateTimeField(null=True, blank=True)  # Deletion timestamp
+
+
+class OutgoingStock(models.Model):
+    item = models.ForeignKey(InventoryStock, on_delete=models.CASCADE)  # Link to stock item
+    quantity_deducted = models.PositiveIntegerField()
+    officerName = models.CharField(max_length=255,default=True)
+    date = models.DateTimeField(auto_now_add=True)  # Auto store date of transaction

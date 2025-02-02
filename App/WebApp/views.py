@@ -21,17 +21,18 @@ import mimetypes
 import logging
 
 from django.db.models import Sum, Count, Q
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee_explanation_data, \
-    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart, get_retirement_year_count,get_zone_wise_count
+    getZoneRetirementList, get_age_range_count, get_zone_age_range_chart, get_retirement_year_count, get_zone_wise_count
 from .Utitlities import (DesignationWiseList, getRetirementList, fetchAllDispositionList, getZoneWiseOfficialsList,
                          ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison, getAllEmpTransferPosting,
                          getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin, calculate_tax
                          )
-from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
+from .models import DispositionList, TransferPosting, LeaveApplication, Explanation, InventoryStock, OutgoingStock
 from .tables import CountLeaveIndividuals_table, CountExplanationIndividuals_table, \
     CountTransferPostingIndividuals_table
 
@@ -105,7 +106,7 @@ def Dashboard(request):
             'age_range_count': age_range_count,
             'zone_age_ranges': zone_age_ranges,
             'retirement_year_count': retirement_year_count,
-            'zone_wise_count' : zone_wise_count
+            'zone_wise_count': zone_wise_count
 
         }
 
@@ -222,11 +223,11 @@ def Sanction_Strength(request):
             posts_data = [
                 {"s_no": 1, "name": "Chief Commissioner-IR", "bs": 21, "sanctioned": 1, "working": 1, "vacancy": 0},
                 {"s_no": 2, "name": "Commissioner-IR", "bs": 20, "sanctioned": 5, "working": 5, "vacancy": 0},
-                {"s_no": 3, "name": "Additional Commissioner-IR", "bs": 19, "sanctioned": 11, "working": 8,
-                 "vacancy": 3},
-                {"s_no": 4, "name": "Cost Accountant", "bs": 19, "sanctioned": 1, "working": 1, "vacancy": 0},
-                {"s_no": 5, "name": "Deputy/Assistant Commissioner-IR", "bs": "18/17", "sanctioned": 34, "working": 27,
+                {"s_no": 3, "name": "Additional Commissioner-IR", "bs": 19, "sanctioned": 11, "working": 4,
                  "vacancy": 7},
+                {"s_no": 4, "name": "Cost Accountant", "bs": 19, "sanctioned": 1, "working": 1, "vacancy": 0},
+                {"s_no": 5, "name": "Deputy/Assistant Commissioner-IR", "bs": "18/17", "sanctioned": 34, "working": 28,
+                 "vacancy": 6},
                 {"s_no": 6, "name": "Accounts Officer", "bs": 18, "sanctioned": 1, "working": 1, "vacancy": 0},
                 {"s_no": 7, "name": "Deputy Director (MIS)", "bs": 18, "sanctioned": 1, "working": 0, "vacancy": 1},
                 {"s_no": 8, "name": "Assistant Director Audit", "bs": 18, "sanctioned": 13, "working": 7, "vacancy": 6},
@@ -267,7 +268,7 @@ def Sanction_Strength(request):
                 {"s_no": 37, "name": "Daftari", "bs": 2, "sanctioned": 41, "working": 28, "vacancy": 13},
                 {"s_no": 38, "name": "Record Sorter", "bs": 2, "sanctioned": 5, "working": 3, "vacancy": 2},
                 {"s_no": 39, "name": "Qasid", "bs": 2, "sanctioned": 3, "working": 0, "vacancy": 3},
-                {"s_no": 40, "name": "Bailiff", "bs": 1, "sanctioned": 18, "working": 13, "vacancy": 5},
+                {"s_no": 40, "name": "Bailiff", "bs": 1, "sanctioned": 18, "working": 12, "vacancy": 6},
                 {"s_no": 41, "name": "Chowkidar", "bs": 1, "sanctioned": 2, "working": 1, "vacancy": 1},
                 {"s_no": 42, "name": "Mali", "bs": 1, "sanctioned": 6, "working": 8, "vacancy": -2},
                 {"s_no": 43, "name": "Farash", "bs": 1, "sanctioned": 8, "working": 2, "vacancy": 6},
@@ -303,9 +304,9 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
         userType = request.GET.get('userType', '')
         # Determine if the user is an admin or zone admin and filter data accordingly
         if is_admin(request.user):
-            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
+            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'Personal_No')
         if is_zone_admin(request.user):
-            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
+            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'Personal_No').filter(
                 ZONE=request.user.userType)
         # super admin will edit the record
         if empId and rowId and is_admin(request.user):
@@ -335,7 +336,7 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
         # fetch row from database zone admin in case of edit record
         elif empId and rowId and is_zone_admin(request.user):
             print('zone admin edit record')
-            employee = DispositionList.objects.get(id=empId)
+            employee = DispositionList.objects.get(Personal_No=empId)
             postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId, zone_type=request.user.userType)
             if postingRow:
                 row = {
@@ -375,7 +376,8 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
                 return HttpResponse("Uploaded file is not a valid image or PDF.", status=400)
 
             # Retrieve the employee object
-            employee = DispositionList.objects.get(id=emp_name)
+            employee = DispositionList.objects.get(Personal_No=emp_name)
+            print(employee)
 
             if is_admin(request.user) and hd_type:
                 new_zone = request.POST.get('new_zone')
@@ -408,7 +410,7 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
                 employee.save()
 
                 transfer_posting = TransferPosting(
-                    employee=employee,
+                    employee=employee.Personal_No,
                     old_zone=request.POST.get('old_zone'),
                     new_zone=new_zone,
                     chief_order_number=request.POST.get('order_number'),
@@ -501,8 +503,14 @@ def ManageEmployeeTransferPosting(request):
             elif mime_type and mime_type.startswith('image'):
                 item['chief_is_image'] = True
 
+        page = request.GET.get('page')
+        paginator = Paginator(transfer_records, 12)  # 10 items per page
+        result = paginator.get_page(page)
+        # Calculate the starting serial number for the current page
+        start_serial_number = (result.number - 1) * paginator.per_page + 1
+
         return render(request, 'ManageTransferPosting.html', {
-            'transfer_records': transfer_records,
+            'transfer_records': result, 'start_serial_number': start_serial_number
         })
     except Exception as e:
         logger.error(f"Error in ManageEmployeeTransferPosting view: {e}")
@@ -734,7 +742,7 @@ def Strength(request):
     try:
         if is_admin(request.user):
             final_data = StrengthComparison(request.user.userType, None)
-            #return HttpResponse(str(final_data))
+            # return HttpResponse(str(final_data))
             return render(request, 'strength.html', {
                 'data': final_data,
                 'Comparison': ZoneDesignationWiseComparison(),
@@ -748,6 +756,113 @@ def Strength(request):
 def Logout(request):
     logout(request)
     return redirect('/')
+
+
+def InventoryForm(request):
+    messages = None
+    data = {'rowId': '', 'item_name': '', 'quantity': ''}
+
+    try:
+        # Fetch record for editing
+        id = request.GET.get('id')
+        if id:
+            item = get_object_or_404(InventoryStock, id=id)
+            data = {'rowId': item.id, 'item_name': item.item_name, 'quantity': item.quantity}
+
+        if request.method == 'POST':
+            item_name = request.POST.get('itemName', '').strip()
+            quantity = request.POST.get('quantity', '').strip()
+            rowId = request.POST.get('rowId')
+
+            if not item_name or not quantity.isdigit():
+                messages.error(request, "❌ Invalid input: Please provide a valid item name and numeric quantity.")
+            else:
+                if rowId:  # **Update Existing Record**
+                    item = get_object_or_404(InventoryStock, id=rowId)
+                    item.item_name = item_name
+                    item.quantity = int(quantity)
+                    item.save()
+                    messages.success(request, "✅ Stock updated successfully!")
+                    redirect('InventoryList')
+
+                else:  # **Insert New Record**
+                    item = InventoryStock(item_name=item_name, quantity=int(quantity))
+                    item.save()
+                    messages.success(request, "✅ Stock added successfully!")
+
+                # Reset form after success
+                data = {'rowId': '', 'item_name': '', 'quantity': ''}
+
+        return render(request, 'AddInventory.html', {'data': data, 'messages': messages})
+
+    except Exception as e:
+        messages = f"An error occurred: {str(e)}"
+        return render(request, 'AddInventory.html', {'message': messages})
+
+
+def InventoryList(request):
+    try:
+        inventoryList = InventoryStock.objects.all()
+        return render(request, 'InventoryList.html', {'inventoryList': inventoryList})
+    except Exception as e:
+        print(str(e))
+
+
+def OutGoingStock(request):
+    try:
+        if request.method == 'POST':
+            officerName = request.POST.get('officerName')
+
+            selected_items = request.POST.getlist('itemName')  # Get selected item IDs
+            quantities = {item_id: int(request.POST.get(f'quantity_{item_id}', 0)) for item_id in selected_items}
+
+            for item_id, qty in quantities.items():
+                try:
+                    item = InventoryStock.objects.get(id=item_id)  # Fetch item from DB
+
+                    if item.quantity >= qty:  # Check stock availability
+                        item.quantity -= qty  # Deduct quantity
+                        item.save()  # Save updated stock
+                        messages.success(request, f"{qty} units of {item.item_name} deducted successfully.")
+                        OutgoingStock.objects.create(item=item, officerName=officerName, quantity_deducted=qty)
+
+                    else:
+                        messages.error(request, f"Not enough stock for {item.item_name}. Available: {item.quantity}.")
+
+                    # print(f"Item ID: {item.id}, Item Name: {item.item_name}, Quantity Deducted: {qty}")
+                    outgoing_stock = OutgoingStock.objects.select_related('item').all().order_by('-date')
+
+                    # Fetch officer details from DispositionList using officer_name from OutgoingStock
+                    for record in outgoing_stock:
+                        officer_details = DispositionList.objects.filter(Personal_No=record.officerName).first()
+                        print(officer_details)
+
+                        # Add the officer details to each outgoing stock record
+                        if officer_details:
+                            record.officer_details = {
+                                'Name': officer_details.Name,
+                                'Designation': officer_details.Designation,
+                                'ZONE': officer_details.ZONE
+                            }
+                        else:
+                            record.officer_details = {
+                                'Name': 'Not Found',
+                                'Designation': 'Not Found',
+                                'ZONE': 'Not Found'
+                            }
+                except Exception as e:
+                    print(str(e))
+                    messages.error(request, f"Item with ID {item_id} does not exist.")
+
+        # Fetch necessary data
+        result = DispositionList.objects.values('Personal_No', 'Name', 'ZONE', 'Designation')
+        stockList = InventoryStock.objects.values('id', 'item_name', 'quantity')
+
+        return render(request, 'DebitStock.html', {'result': result, 'stockList': stockList})
+
+    except Exception as e:
+        print(str(e))  # Print error before returning
+        return render(request, 'DebitStock.html', {'error': str(e)})
 
 
 def verify(request):
@@ -799,6 +914,7 @@ def verify(request):
             'status': 'error',
             'message': str(e)
         })
+
 
 def TaxSlab(request):
     try:

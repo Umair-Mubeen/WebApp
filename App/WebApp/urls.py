@@ -11,6 +11,9 @@ urlpatterns = [
     path('Dashboard', views.Dashboard, name='Dashboard'),
     path('TaxSlab', views.TaxSlab, name='TaxSlab'),
     path('verify', views.verify, name='verify'),
+    path('InventoryForm', views.InventoryForm, name='InventoryForm'),
+    path('InventoryList', views.InventoryList, name='InventoryList'),
+    path('OutGoingStock', views.OutGoingStock, name='OutGoingStock'),
 
     path('Logout', views.Logout, name='Logout'),
     path('DispositionList', views.getDispositionList, name='DispositionList'),

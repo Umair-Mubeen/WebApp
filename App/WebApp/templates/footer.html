@@ -54,7 +54,6 @@
 
 <!-- LightGallery Rotate Plugin -->
 <script src="https://cdn.jsdelivr.net/npm/lg-rotate@1.0.0/dist/lg-rotate.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 
 
@@ -375,6 +374,7 @@ if (userType == 1) {
     // Transfer Posting Summary
     const transferCtx = document.getElementById('transferChart').getContext('2d');
     const transferUserType = {{ transfer_posting_summary.userType|safe }};
+
     let transferLabels = [], transferData = [];
 
     if (transferUserType == 1) {

@@ -330,7 +330,7 @@ def getAllEmpTransferPosting(userType, zoneType):
                 default=True,
                 output_field=BooleanField()
             )
-        )
+        ).order_by('-chief_transfer_date')
 
         return distinct_transfers
 
