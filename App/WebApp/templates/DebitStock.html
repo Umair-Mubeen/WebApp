@@ -1,0 +1,175 @@
+<html lang="en">
+<head>
+    {% load static %}
+    {% include 'reusable.html' %}
+    <meta charset="UTF-8">
+    <title> Debit / Outgoing Stock - RTO - II, Karachi</title>
+
+</head>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+
+    <!-- SideBar Start Here -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="/InventoryList" style="color:black">Inventory List</a>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                Debit / Outgoing Stock
+                            </li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+
+
+                <form action="OutGoingStock" id="OutGoingStock" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="card col-lg-6">
+                            <!-- /.card-header -->
+                            <div class="card-body p-0">
+                                <div class="card collapsed-card">
+                                    <div class="card-header header-elements-inline">
+
+                                        <h5 class="card-title"> Debit / Outgoing Stock
+                                        </h5>
+
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                                <i class="fas fa-times"></i></button>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="card-body" style="display:block">
+                                        <div class="form-group">
+                                            <select class="js-example-basic-single form-control" id="officerName"
+                                                    name="officerName">
+                                                <option value="" selected disabled>Select an employee</option>
+                                                {% for item in result %}
+                                                <option value="{{item.Personal_No}}">{{item.Name}} -
+                                                    ({{item.Designation}}) - {{item.ZONE}}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="itemName" class="form-label">Item Name</label>
+                                            <select class="js-example-basic-multiple form-control" id="itemName"
+                                                    name="itemName" multiple="multiple">
+                                                {% for item in stockList %}
+                                                <option value="{{item.id}}" data-item="{{item.item_name}}" data-quantity="{{item.quantity}}">
+                                                    {{item.item_name}}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+
+                                        </div>
+                                        <!-- /.form-group -->
+
+                                        <div class="form-group">
+                                            <label for="quantityInputs" class="form-label">Quantity</label>
+                                            <div id="quantityInputs">
+                                            </div>
+
+                                        </div>
+
+                                        <div class="form-group">
+                                                  <label class="form-label">Requisition date</label>
+
+                                            <input type="date" class="form-control" name="letter_date">
+                                        </div>
+
+                                          <div class="form-group">
+                                                   <label>Requisition Letter / Docx </label>
+                                        <input type="file" name="image" class="form-control" required>
+
+                                          </div>
+
+
+                                        <div class="text-right">
+                                            <button type="submit" class="btn btn-primary">Submit</button>
+
+                                            <a href="" class="btn btn-default ml-2">Cancel</a>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- /.card-body -->
+                </form>
+
+
+            </div>
+        </section>
+    </div>
+
+    {% include 'footer.html' %}
+</div>
+</body>
+</html>
+<script>
+       $(document).ready(function() {
+    // Initialize Select2 if using it
+    $('#itemName').select2();
+
+    // Listen for changes in the select dropdown
+    $('#itemName').on('change', function() {
+        var selectedItems = $(this).val();  // Get selected item IDs
+        $('#quantityInputs').empty();  // Clear previous quantity fields
+
+        if (selectedItems) {
+            selectedItems.forEach(function(itemId) {
+                // Get the custom attribute (item name) from the selected option
+                var itemName = $('#itemName option[value="' + itemId + '"]').data('item');
+                var CurrentQty = $('#itemName option[value="' + itemId + '"]').data('quantity');
+
+
+                var quantityField = `
+                    <div class="form-group">
+                        <label for="quantity_${itemId}">Enter Quantity for ${itemName}. Available stock: ${CurrentQty}</label>
+                        <input type="number" class="form-control" id="quantity_${itemId}"
+                               name="quantity_${itemId}" placeholder="Enter quantity" required>
+                    </div>
+                `;
+                $('#quantityInputs').append(quantityField);
+            });
+        }
+    });
+});
+
+
+</script>

@@ -1,13 +1,13 @@
 import os
 from datetime import datetime
 
-import pandas as pd
+from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import connection
 from django.http import JsonResponse
-from openpyxl.styles import Alignment
-from openpyxl.styles import Border, Side, Alignment, Font, PatternFill
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl import Workbook
+
+from django.db.models import Count, F, Value, OuterRef, Subquery
+from django.db.models.functions import Concat
 
 """
 The code consists of Django views for managing user authentication, dashboard data, employee
@@ -26,7 +26,7 @@ import mimetypes
 import logging
 
 from django.db.models import Sum, Count, Q
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
@@ -34,10 +34,10 @@ from .Graph import transfer_posting_chart, get_employee_leave_data, get_employee
     getZoneRetirementList, get_age_range_count, get_zone_age_range_chart, get_retirement_year_count, get_zone_wise_count
 from .Utitlities import (DesignationWiseList, getRetirementList, fetchAllDispositionList, getZoneWiseOfficialsList,
                          ZoneWiseStrength, ZoneDesignationWiseComparison, StrengthComparison, getAllEmpTransferPosting,
-                         getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin, calculate_tax,
-                         getAllBoardTransferPosting
+                         getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin, calculate_tax
                          )
-from .models import DispositionList, TransferPosting, LeaveApplication, Explanation
+from .models import DispositionList, TransferPosting, LeaveApplication, Explanation, InventoryStock, Promotion, \
+    OutgoingStock
 from .tables import CountLeaveIndividuals_table, CountExplanationIndividuals_table, \
     CountTransferPostingIndividuals_table
 
@@ -81,6 +81,7 @@ def Dashboard(request):
         if not request.user.is_authenticated:
             return redirect('/')
 
+        total_employees = DispositionList.objects.filter(status=1)
         transfer_posting_summary = transfer_posting_chart(request)  # Graph Scripts
         leave_summary = get_employee_leave_data(request)  # Graph Scripts
         explanation_summary = get_employee_explanation_data(request)  # Graph Scripts
@@ -111,7 +112,8 @@ def Dashboard(request):
             'age_range_count': age_range_count,
             'zone_age_ranges': zone_age_ranges,
             'retirement_year_count': retirement_year_count,
-            'zone_wise_count': zone_wise_count
+            'zone_wise_count': zone_wise_count,
+            'total_employees': len(total_employees)
 
         }
 
@@ -129,32 +131,26 @@ def getDispositionList(request):
 
         if is_admin(request.user):
             if search_query:
+                # Filter by CNIC_No, Name, ZONE, or Designation
                 disposition_result = DispositionList.objects.filter(
-                    (
-                        Q(Personal_No__icontains=search_query) |
-                        Q(CNIC_No__icontains=search_query) |
-                        Q(Name__icontains=search_query) |
-                        Q(ZONE__icontains=search_query) |
-                        Q(Designation__icontains=search_query)
-                ),
-                status = 1  # Add this condition for filtering by status
+                    Q(Personal_No__icontains=search_query) |
+                    Q(CNIC_No__icontains=search_query) |
+                    Q(Name__icontains=search_query) |
+                    Q(ZONE__icontains=search_query) |
+                    Q(Designation__icontains=search_query), status=1
                 )
             else:
                 disposition_result, error = fetchAllDispositionList(request)
-                print(len(disposition_result))
 
         elif is_zone_admin(request.user):
             if search_query:
                 # Filter by CNIC_No, Name, ZONE, Designation, and restrict by user's zone type
                 disposition_result = DispositionList.objects.filter(
-                    (
-                            Q(Personal_No__icontains=search_query) |
-                            Q(CNIC_No__icontains=search_query) |
-                            Q(Name__icontains=search_query) |
-                            Q(ZONE__icontains=search_query) |
-                            Q(Designation__icontains=search_query)
-                    ),
-                    status=1  # Add this condition for filtering by status
+                    Q(Personal_No__icontains=search_query) |
+                    Q(CNIC_No__icontains=search_query) |
+                    Q(Name__icontains=search_query) |
+                    Q(ZONE__icontains=search_query) |
+                    Q(Designation__icontains=search_query), status=1
                 )
             else:
                 disposition_result, error = fetchAllDispositionList(request)
@@ -175,26 +171,97 @@ def getDispositionList(request):
         return HttpResponse("An error occurred.", status=500)
 
 
-@login_required(login_url='userLogin')  # redirect when user is not logged in
+@login_required(login_url='userLogin')
 def AddEditDisposition(request):
     try:
+        data = {'rowId': '', 'empId': '', 'status': '', 'result': ''}
+        result = DispositionList.objects.filter(status=1)
+        rowId = request.GET.get('rowId')
+        empId = request.GET.get('empId')
+
+        if rowId and empId:
+            res = DispositionList.objects.get(id=rowId, Personal_No=empId, status=1)
+            data = {'rowId': res.id, 'empId': res.Personal_No, 'status': res.status, 'result': result}
+            return render(request, 'AddEditDispositionList.html', {'data': data})
+
         if is_admin(request.user):
-            empId = request.GET.get('empId')
-            rowId = request.GET.get('rowId')
             if request.method == 'POST':
+                hd_personnel = request.POST.get('hd_personnel')  # update
+                hd_rowId = request.POST.get('hd_rowId')  # update
+                hd_status = request.POST.get('hd_status')  # update
+                print(hd_personnel, hd_rowId, hd_status)
                 empId = request.POST.get('emp_name')
-                empStatus = request.POST.get('emp_status')
-                employee = DispositionList.objects.get(id=empId,status=1)
-                employee.status = empStatus
-                employee.save()
-                return HttpResponse(str("Yup !"))
-            data = DispositionList.objects.filter(status=1)
-            print(data)
-            return render(request, 'AddEditDispositionList.html', {'result': data, 'empId' : empId,'rowId' : rowId})
+                emp_status = request.POST.get('emp_status')
+                emp_remarks = request.POST.get('remarks')
+
+                if hd_personnel and hd_rowId and hd_status:
+                    employee = DispositionList.objects.get(id=empId, Personal_No=hd_personnel, status=hd_status)
+                    employee.status = emp_status
+                    employee.Remarks = emp_remarks
+                    employee.save()
+
+            data.update({'rowId': '', 'empId': '', 'status': '', 'result': result})
+
+            return render(request, 'AddEditDispositionList.html', {'data': data})
+
+        if is_zone_admin(request.user):
+            pass
 
     except Exception as e:
-        logger.error(f"Error in getDispositionList view: {e}")
-        return HttpResponse("An error occurred.", status=500)
+        print(str(e))
+
+
+@login_required(login_url='userLogin')
+def RetiredTransferredEmployee(request):
+    try:
+        print('----------')
+        if is_admin(request.user):
+            result_retired = DispositionList.objects.filter(status=3)
+            page = request.GET.get('page')
+            paginator = Paginator(result_retired, 10)  # 10 items per page
+            result_retired = paginator.get_page(page)
+            start_serial_number_retired = (result_retired.number - 1) * paginator.per_page + 1
+
+            transferred_result = DispositionList.objects.filter(status=2)
+            page = request.GET.get('page')
+            paginator = Paginator(transferred_result, 10)  # 10 items per page
+            transferred_result = paginator.get_page(page)
+            start_serial_number_transferred = (transferred_result.number - 1) * paginator.per_page + 1
+
+            transferred_by_designation = (
+                DispositionList.objects.filter(status=2)
+                .values('Designation')
+                .annotate(count=Count('id'))
+                .order_by('-count')  # Order by count descending (optional)
+            )
+            transferred_by_designation_data = {
+                "labels": [item['Designation'] for item in transferred_by_designation],
+                "counts": [item['count'] for item in transferred_by_designation],
+            }
+
+            retired_by_designation = (
+                DispositionList.objects.filter(status=3)
+                .values('Designation')
+                .annotate(count=Count('id'))
+                .order_by('-count')  # Order by count descending (optional)
+            )
+            retirement_by_designation_data = {
+                "labels": [item['Designation'] for item in retired_by_designation],
+                "counts": [item['count'] for item in retired_by_designation],
+            }
+
+            return render(request, 'RetiredTransferredEmpList.html', {"result_retired": result_retired,
+                                                                      'start_serial_number_retired': start_serial_number_retired,
+                                                                      'start_serial_number_transferred': start_serial_number_transferred,
+                                                                      "transferred_result": transferred_result,
+                                                                      'transferred_by_designation_data': transferred_by_designation_data,
+                                                                      'retirement_by_designation_data': retirement_by_designation_data})
+
+        if is_zone_admin(request.user):
+            pass
+
+    except Exception as e:
+        print(str(e))
 
 
 @login_required(login_url='userLogin')  # redirect when user is not logged in
@@ -202,11 +269,12 @@ def Search(request):
     try:
         if is_admin(request.user):  # admin
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'CNIC_No', 'Date_of_Birth',
-                                                  'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement').filter(status=1)
+                                                  'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement').filter(
+                status=1)
         if is_zone_admin(request.user):
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'CNIC_No', 'Date_of_Birth',
                                                   'Date_of_Entry_into_Govt_Service', 'Date_of_Retirement').filter(
-                ZONE=request.user.userType,status=1)
+                ZONE=request.user.userType, status=1)
 
         if request.method == 'POST':
             # search_type = request.POST.get('type')
@@ -337,10 +405,10 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
         userType = request.GET.get('userType', '')
         # Determine if the user is an admin or zone admin and filter data accordingly
         if is_admin(request.user):
-            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(status=1)
+            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'Personal_No')
         if is_zone_admin(request.user):
-            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
-                ZONE=request.user.userType,status=1)
+            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE', 'Personal_No').filter(
+                ZONE=request.user.userType)
         # super admin will edit the record
         if empId and rowId and is_admin(request.user):
             print('admin / CCIR')
@@ -369,7 +437,6 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
         # fetch row from database zone admin in case of edit record
         elif empId and rowId and is_zone_admin(request.user):
             print('zone admin edit record')
-            employee = DispositionList.objects.get(id=empId)
             postingRow = TransferPosting.objects.get(id=rowId, employee_id=empId, zone_type=request.user.userType)
             if postingRow:
                 row = {
@@ -381,6 +448,7 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
                     'zone_order_approved_by': postingRow.zone_order_approved_by or ''
 
                 }  # # f
+                print(row)
             else:
                 # Handle the case where both empId and rowId are None
                 row = {
@@ -410,6 +478,7 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
 
             # Retrieve the employee object
             employee = DispositionList.objects.get(id=emp_name)
+            print(employee)
 
             if is_admin(request.user) and hd_type:
                 new_zone = request.POST.get('new_zone')
@@ -442,7 +511,7 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
                 employee.save()
 
                 transfer_posting = TransferPosting(
-                    employee=employee,
+                    employee=employee.Personal_No,
                     old_zone=request.POST.get('old_zone'),
                     new_zone=new_zone,
                     chief_order_number=request.POST.get('order_number'),
@@ -549,28 +618,6 @@ def ManageEmployeeTransferPosting(request):
         return HttpResponse("An error occurred.", status=500)
 
 
-@login_required(login_url='userLogin')  # Template Data
-def ManageBoard(request):
-    try:
-        print("board")
-        transfer_records = getAllBoardTransferPosting(request.user.is_superuser, request.user.userType)
-
-        for item in transfer_records:
-            chief_transfer_document = item.get('chief_transfer_document')
-
-        page = request.GET.get('page')
-        paginator = Paginator(transfer_records, 12)  # 10 items per page
-        result = paginator.get_page(page)
-        start_serial_number = (result.number - 1) * paginator.per_page + 1
-
-        return render(request, 'Board.html', {
-            'transfer_records': result, 'start_serial_number': start_serial_number
-        })
-    except Exception as e:
-        logger.error(f"Error in ManageEmployeeTransferPosting view: {e}")
-        return HttpResponse("An error occurred.", status=500)
-
-
 @login_required(login_url='userLogin')  # Redirect when user is not logged in
 def submitLeaveApplication(request):  # Leave Submission Form
     try:
@@ -581,10 +628,10 @@ def submitLeaveApplication(request):  # Leave Submission Form
 
         # Fetch data based on user role
         if is_admin(request.user):
-            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(status=1)
+            data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
         elif is_zone_admin(request.user):
             data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(
-                ZONE=request.user.userType,status=1)
+                ZONE=request.user.userType)
         else:
             data = DispositionList.objects.none()  # No data if not admin or zone admin
 
@@ -714,7 +761,7 @@ def EmployeeExplanation(request):  # Explanation Submission Form
 
         # Fetch data based on user role
         user_zone = request.user.userType if is_zone_admin(request.user) else None
-        data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE').filter(status=1)
+        data = DispositionList.objects.values('id', 'Name', 'Designation', 'ZONE')
         if user_zone:
             data = data.filter(ZONE=user_zone)
 
@@ -812,6 +859,235 @@ def Logout(request):
     return redirect('/')
 
 
+def InventoryForm(request):
+    messages = None
+    data = {'rowId': '', 'item_name': '', 'quantity': ''}
+
+    try:
+        # Fetch record for editing
+        id = request.GET.get('id')
+        if id:
+            item = get_object_or_404(InventoryStock, id=id)
+            data = {'rowId': item.id, 'item_name': item.item_name, 'quantity': item.quantity}
+
+        if request.method == 'POST':
+            item_name = request.POST.get('itemName', '').strip()
+            quantity = request.POST.get('quantity', '').strip()
+            rowId = request.POST.get('rowId')
+
+            if not item_name or not quantity.isdigit():
+                messages.error(request, "❌ Invalid input: Please provide a valid item name and numeric quantity.")
+            else:
+                if rowId:  # **Update Existing Record**
+                    item = get_object_or_404(InventoryStock, id=rowId)
+                    item.item_name = item_name
+                    item.quantity = int(quantity)
+                    item.save()
+                    messages.success(request, "✅ Stock updated successfully!")
+                    redirect('InventoryList')
+
+                else:  # **Insert New Record**
+                    item = InventoryStock(item_name=item_name, quantity=int(quantity))
+                    item.save()
+                    messages.success(request, "✅ Stock added successfully!")
+
+                # Reset form after success
+                data = {'rowId': '', 'item_name': '', 'quantity': ''}
+
+        stockList = InventoryStock.objects.all()
+
+
+        return render(request, 'AddInventory.html', {'data': data, 'messages': messages, 'stockList' : stockList})
+
+    except Exception as e:
+        messages = f"An error occurred: {str(e)}"
+        return render(request, 'AddInventory.html', {'message': messages})
+
+
+def InventoryList(request):
+    try:
+        inventoryList = InventoryStock.objects.all()
+        page = request.GET.get('page')
+        paginator = Paginator(inventoryList, 10)  # 10 items per page
+        result = paginator.get_page(page)
+        start_serial_number = (result.number - 1) * paginator.per_page + 1
+
+        return render(request, 'InventoryList.html', {'result': result, 'start_serial_number' : start_serial_number})
+    except Exception as e:
+        print(str(e))
+
+
+def OutGoingStock(request):
+    try:
+        if request.method == 'POST':
+            officerName = request.POST.get('officerName')
+            selected_items = request.POST.getlist('itemName')  # Get selected item IDs
+            letter_date = request.POST.get('letter_date')
+
+            quantities = {item_id: int(request.POST.get(f'quantity_{item_id}', 0)) for item_id in selected_items}
+            image = request.FILES.get('image')
+            # Validate uploaded file
+            if not image:
+                return HttpResponse("No file uploaded.", status=400)
+
+            file_type = mimetypes.guess_type(image.name)[0]
+            if not file_type or (not file_type.startswith('image') and file_type != 'application/pdf'):
+                return HttpResponse("Uploaded file is not a valid image or PDF.", status=400)
+
+            for item_id, qty in quantities.items():
+                try:
+                    item = InventoryStock.objects.get(id=item_id)  # Fetch item from DB
+
+                    if item.quantity >= qty:  # Check stock availability
+                        item.quantity -= qty  # Deduct quantity
+                        item.save()  # Save updated stock
+                        messages.success(request, f"{qty} units of {item.item_name} deducted successfully.")
+                        OutgoingStock.objects.create(item=item, officerName=officerName, quantity_deducted=qty,order_docx=image, letter_date=letter_date)
+
+                    else:
+                        messages.error(request, f"Not enough stock for {item.item_name}. Available: {item.quantity}.")
+
+                    # print(f"Item ID: {item.id}, Item Name: {item.item_name}, Quantity Deducted: {qty}")
+                    outgoing_stock = OutgoingStock.objects.select_related('item').all().order_by('-date')
+
+                    # Fetch officer details from DispositionList using officer_name from OutgoingStock
+                    for record in outgoing_stock:
+                        officer_details = DispositionList.objects.filter(Personal_No=record.officerName).first()
+
+                        # Add the officer details to each outgoing stock record
+                        if officer_details:
+                            record.officer_details = {
+                                'Name': officer_details.Name,
+                                'Designation': officer_details.Designation,
+                                'ZONE': officer_details.ZONE
+                            }
+                            print()
+                        else:
+                            record.officer_details = {
+                                'Name': 'Not Found',
+                                'Designation': 'Not Found',
+                                'ZONE': 'Not Found'
+                            }
+                except Exception as e:
+                    print(str(e))
+                    messages.error(request, f"Item with ID {item_id} does not exist.")
+
+        # Fetch necessary data
+        result = DispositionList.objects.values('Personal_No', 'Name', 'ZONE', 'Designation')
+        stockList = InventoryStock.objects.values('id', 'item_name', 'quantity')
+
+        return render(request, 'DebitStock.html', {'result': result, 'stockList': stockList})
+
+    except Exception as e:
+        print(str(e))  # Print error before returning
+        return render(request, 'DebitStock.html', {'error': str(e)})
+
+
+def OutGoingStockList(request):
+    try:
+        if is_admin(request.user):
+            queryset = DispositionList.objects.raw("""
+                SELECT dis.id, dis.Name, dis.Designation, dis.BPS, dis.Personal_No, dis.ZONE,
+                inv.item_name, outg.quantity_deducted AS Availed,outg.date,outg.order_docx, outg.letter_date FROM webapp_dispositionlist dis
+                INNER JOIN webapp_outgoingstock outg ON dis.Personal_No = outg.officerName
+                INNER JOIN webapp_inventorystock inv ON outg.item_id = inv.id order by date desc
+            """)
+            data = list(queryset)
+            page = request.GET.get('page')
+            paginator = Paginator(data, 12)  # 10 items per page
+            result = paginator.get_page(page)
+            # Calculate the starting serial number for the current page
+            start_serial_number = (result.number - 1) * paginator.per_page + 1
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT dis.Name, credit.item_name, SUM(debit.quantity_deducted) AS total_availed
+                    FROM webapp_dispositionlist dis
+                    INNER JOIN webapp_outgoingstock debit ON dis.Personal_No = debit.officerName
+                    INNER JOIN webapp_inventorystock credit ON debit.item_id = credit.id
+                    GROUP BY dis.Name, credit.item_name
+                    ORDER BY total_availed DESC
+                """)
+                raw_data = cursor.fetchall()
+
+                # Convert raw SQL results to chart-friendly data
+                labels = []  # X-axis (Item Names)
+                counts = []  # Y-axis (Total Availed per Officer)
+
+                for item_name, officer_name, total_availed in raw_data:
+                    labels.append(f"{item_name} - {officer_name}")  # Combining item and officer
+                    counts.append(float(total_availed))
+
+                chart_data = {
+                    "labels": labels,
+                    "counts": counts,
+                }
+            return render(request,'OutGoingStockList.html', {'result' : result,'start_serial_number' : start_serial_number,'chart_data' : chart_data})
+    except Exception as e:
+        print("Exception :" + str(e))
+
+        return str("Exception : " + str(e))
+
+
+def CreatePromotions(request):
+    try:
+        result = DispositionList.objects.filter(status=1)
+        return render(request, 'Promotions.html', {'result': result})
+    except Exception as e:
+        print(str(e))
+
+
+def PromotedEmployeeList(request):
+    try:
+        if is_admin(request.user):
+            promotions = Promotion.objects.filter(status=1).order_by('-order_date')
+            result = []
+
+            for promotion in promotions:
+                # Compare personnel_no from Promotion with Personal_No in DispositionList
+                disposition = DispositionList.objects.filter(Personal_No=promotion.personnel_no).first()
+
+                if disposition:
+                    result.append({
+                        'Name': disposition.Name,
+                        'Designation': disposition.Designation,
+                        'ZONE': disposition.ZONE,
+                        'Promotion_Date': disposition.Date_of_Promotion,
+                        'Personnel_No': promotion.personnel_no,
+                        'Current_Designation': promotion.current_designation,
+                        'New_Designation': promotion.new_designation,
+                        'order_number': promotion.order_number,
+                        'order_date': promotion.order_date,
+                        'order_docx': promotion.order_docx.url if promotion.order_docx else None,
+                        'Status': promotion.status,
+                        'Zone_Type': promotion.zone_type,
+                    })
+            page = request.GET.get('page')
+            paginator = Paginator(result, 10)  # 10 items per page
+            result = paginator.get_page(page)
+            # Calculate the starting serial number for the current page
+            start_serial_number = (result.number - 1) * paginator.per_page + 1
+
+            # Django ORM equivalent
+            promotions = (
+                Promotion.objects.values(
+                    promotion_path=Concat(F('current_designation'), Value(' to '), F('new_designation')))
+                .annotate(total=Count('id'))  # Replace 'id' with the primary key field if different
+                .order_by('-total')
+            )
+            context = {
+                'labels': [item['promotion_path'] for item in promotions],
+                'counts': [item['total'] for item in promotions],
+            }
+            print(context)
+
+            return render(request, 'PromotedEmployeeList.html', {'result': result,
+                                                                 'promotions_path': context,
+                                                                 'start_serial_number': start_serial_number})
+
+    except Exception as e:
+        print(str(e))
+
+
 def verify(request):
     try:
         # This function remains a GET request
@@ -869,8 +1145,6 @@ def TaxSlab(request):
             income_type = request.POST.get('income_type')  # 'monthly' or 'yearly'
             income_amount = int(request.POST.get('income_amount'))  # Either monthly or yearly salary based on user
             taxpayer_type = request.POST.get('taxpayer_type')  # Either monthly or yearly salary based on user type
-            excel_file = request.FILES.get('excel_file')
-
             print(taxpayer_type)
 
             # If monthly income, convert it to yearly income
@@ -978,110 +1252,3 @@ def TaxSlab(request):
     except Exception as e:
         print(str(e))
         return HttpResponse(str(e))
-
-
-def ExcelImport(request):
-    try:
-        if request.method == 'POST':
-            # Tax brackets (adjust as per actual requirements)
-
-            excel_file = request.FILES.get('excel_file')
-
-            if not excel_file:
-                return HttpResponse("Please upload a file")
-
-            try:
-                # Read the uploaded Excel file into a DataFrame
-                df = pd.read_excel(excel_file)
-            except Exception as e:
-                return HttpResponse(f"Error reading file: {str(e)}")
-
-            # Ensure 'MONTHLY_SALARY' column exists
-            if 'MONTHLY_SALARY' not in df.columns:
-                return HttpResponse("Excel file must contain a 'MONTHLY_SALARY' column.")
-
-            # Add required new columns
-            df['Annual_Salary'] = df['MONTHLY_SALARY'] * 12
-            tax_results = []
-            TAX_BRACKETS = {
-                (0, 600000): (0, 0),
-                (600001, 1200000): (0.05, 600000),
-                (1200001, 2200000): (0.15, 30000),
-                (2200001, 3200000): (0.25, 180000),
-                (3200001, 4100000): (0.30, 430000),
-                (4100001, float('inf')): (0.35, 700000)
-            }
-
-            for salary in df['Annual_Salary']:
-                tax_info = calculate_tax(salary, TAX_BRACKETS, apply_surcharge=True)
-                tax_results.append(tax_info)
-
-            # Append calculated columns to DataFrame
-            df['Annual_Tax'] = [result['total_tax'] for result in tax_results]
-            df['4AB'] = [result['surcharge'] for result in tax_results]
-            df['Annual Normal + 4AB'] = [result['total_tax_with_surcharge'] for result in tax_results]
-            df['Monthly Normal + 4AB'] = [result['per_month'] for result in tax_results]
-            # Convert TAX_DEDUCTED to numeric and calculate Difference
-            df['TAX_DEDUCTED'] = pd.to_numeric(df['TAX_DEDUCTED'], errors='coerce').fillna(0)
-            df['Difference'] = [
-                result['per_month'] - tax_deducted
-                for result, tax_deducted in zip(tax_results, df['TAX_DEDUCTED'])
-            ]
-
-            # Create an Excel file with formatting using openpyxl
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Tax Calculations"
-
-            # Add headers with formatting
-            header_font = Font(bold=True, color="FFFFFF")
-            header_fill = PatternFill("solid", fgColor="4F81BD")
-            thin_border = Border(
-                left=Side(style="thin"),
-                right=Side(style="thin"),
-                top=Side(style="thin"),
-                bottom=Side(style="thin")
-            )
-
-            # Write headers
-            for col_num, header in enumerate(df.columns, 1):
-                cell = ws.cell(row=1, column=col_num, value=header)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.border = thin_border
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-
-            # Write data rows with borders
-            for row_idx, row in enumerate(dataframe_to_rows(df, index=False, header=False), start=2):
-                for col_idx, value in enumerate(row, start=1):
-                    cell = ws.cell(row=row_idx, column=col_idx, value=value)
-                    cell.border = thin_border
-                    cell.alignment = Alignment(horizontal="center", vertical="center")
-
-                    # Apply number formatting
-                    if ws.cell(row=1, column=col_idx).value in ['MONTHLY_SALARY', 'Annual_Salary', 'Annual_Tax', '4AB',
-                                                                'Annual Normal + 4AB', 'Monthly Normal + 4AB',
-                                                                'Difference', 'TAX_DEDUCTED']:
-                        cell.number_format = '#,##0'  # Currency/Decimal format
-                    elif ws.cell(row=1, column=col_idx).value == 'Percentage':
-                        cell.number_format = '0.00%'  # Example if you have percentage columns
-
-            # Adjust column widths
-            for col in ws.columns:
-                max_length = 0
-                col_letter = col[0].column_letter
-                for cell in col:
-                    if cell.value:
-                        max_length = max(max_length, len(str(cell.value)))
-                ws.column_dimensions[col_letter].width = max_length + 2
-
-            # Export to Excel file
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename="calculated_taxes.xlsx"'
-            wb.save(response)
-
-            return response
-
-        return render(request, 'ImportExcel.html')
-    except Exception as e:
-        return HttpResponse(f"Error: {str(e)}")

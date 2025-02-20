@@ -7,7 +7,7 @@ from urllib import request
 from dateutil.relativedelta import relativedelta  # More accurate for months
 from django.db.models import Value, Case, When, CharField, F
 from django.db.models.functions import Replace, Substr, Concat, Cast, ExtractYear
-from django.db.models.fields import DateField
+from django.db.models.fields import DateField, IntegerField
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Count, F, When, BooleanField, Value, Func, CharField
@@ -26,10 +26,12 @@ def fetchAllDispositionList(request):
     try:
         # Determine the base queryset based on user role
         if is_zone_admin(request.user):
-            result = DispositionList.objects.filter(ZONE=request.user.userType,status=1)
+            result = DispositionList.objects.filter(ZONE=request.user.userType, status=1)
         elif is_admin(request.user):
-            result = DispositionList.objects.filter(status=1)
-            print(str(len(result)))
+            print("admin")
+            result = (DispositionList.objects.filter(status=1).annotate(bps_as_int=Cast('BPS', IntegerField()))
+                      .order_by('-bps_as_int')
+                      )
         else:
             result = DispositionList.objects.none()  # No results for other roles
 
@@ -48,7 +50,7 @@ def DesignationWiseList(zone, request):
                 .values('trimmed_designation') \
                 .annotate(total=Count('trimmed_designation'))
         if is_zone_admin(request.user):
-            results = DispositionList.objects.filter(status=1,ZONE=zone). \
+            results = DispositionList.objects.filter(status=1, ZONE=zone). \
                 annotate(trimmed_designation=Trim('Designation')).values('trimmed_designation') \
                 .annotate(total=Count('trimmed_designation'))
         return results
@@ -87,7 +89,8 @@ def getRetirementList(zone, request):
             ).filter(
                 # Include employees retired from two months ago to the next 12 months
                 retirement_date__gte=two_months_ago,
-                retirement_date__lte=next_year_date
+                retirement_date__lte=next_year_date,
+                status=1
             ).order_by('retirement_date')
         if is_zone_admin(request.user):
             retirement = DispositionList.objects.annotate(
@@ -105,7 +108,8 @@ def getRetirementList(zone, request):
             ).filter(
                 retirement_date__gte=two_months_ago,
                 retirement_date__lte=next_year_date,
-                ZONE=request.user.userType
+                ZONE=request.user.userType,
+                status=1
             ).order_by('retirement_date')
 
         # Return relevant fields for employees to be retired
@@ -135,7 +139,7 @@ def getRetirementList(zone, request):
 def getZoneWiseOfficialsList(zone):
     try:
         # Trim fields and count officials by zone and designation
-        results = DispositionList.objects.filter(status=1,ZONE__in=[zone]) \
+        results = DispositionList.objects.filter(status=1, ZONE__in=[zone]) \
             .annotate(zone=Trim(F('ZONE')), designation=Trim(F('Designation'))) \
             .values("zone", "designation").annotate(total=Count('id'))
         results_list = list(results)
@@ -192,7 +196,7 @@ def ZoneDesignationWiseComparison():
         zones = ['CCIR', 'IP/TFD/HRM', 'Zone-I', 'Zone-II', 'Zone-III', 'Zone-IV', 'Zone-V', 'Refund Zone']
 
         for i, zone in enumerate(zones):
-            datasets.append({'label': zone,'data': [pivoted_data[designation].get(zone, 0) for designation in labels]})
+            datasets.append({'label': zone, 'data': [pivoted_data[designation].get(zone, 0) for designation in labels]})
 
         data_json = json.dumps({'labels': labels, 'datasets': datasets})
         return {'data_json': data_json}
@@ -292,7 +296,7 @@ def StrengthComparison(userType, user_zone=None):
             'CSO': total_zones.get('CSO', 0),
             'AdPool': total_zones.get('Admin Pool', 0),
             'total_sum': sum(total_zones.values()),
-            'row_color' : 'table-info'
+            'row_color': 'table-info'
         }
 
         final_data.append(total_row)
@@ -403,7 +407,7 @@ def is_zone_admin(user):
     return user.is_superuser == 2
 
 
-def calculate_tax(income, tax_brackets,apply_surcharge):
+def calculate_tax(income, tax_brackets, apply_surcharge):
     try:
         surcharge_threshold = 10000000
         surcharge_rate = 0.10
@@ -431,26 +435,25 @@ def calculate_tax(income, tax_brackets,apply_surcharge):
                 if apply_surcharge and income > surcharge_threshold:
                     surcharge = round(tax * surcharge_rate)
                     total_tax_with_surcharge = round(tax + surcharge)
-                    print('surcharge =>',surcharge)
+                    print('surcharge =>', surcharge)
                     month = round(total_tax_with_surcharge / 12)
 
                 return {
-                        'income': income,
-                        'lower': lower,
-                        'upper': upper,
-                        'base_tax': base_tax,
-                        'amount_exceeding': amount_exceeding if rate != 0 else 0,
-                        'rate': rate * 100,
-                        'tax_on_exceeding': round(tax_on_exceeding) if rate != 0 else 0,
-                        'total_tax': tax,
-                        'per_month' : month,
-                        'total_tax_with_surcharge' : total_tax_with_surcharge,
-                        'surcharge' : surcharge
-                    }
+                    'income': income,
+                    'lower': lower,
+                    'upper': upper,
+                    'base_tax': base_tax,
+                    'amount_exceeding': amount_exceeding if rate != 0 else 0,
+                    'rate': rate * 100,
+                    'tax_on_exceeding': round(tax_on_exceeding) if rate != 0 else 0,
+                    'total_tax': tax,
+                    'per_month': month,
+                    'total_tax_with_surcharge': total_tax_with_surcharge,
+                    'surcharge': surcharge
+                }
         return None
     except Exception as e:
         print(str(e))
-
 
 
 def getAllBoardTransferPosting(userType, zoneType):
@@ -467,6 +470,7 @@ def getAllBoardTransferPosting(userType, zoneType):
             'employee__Name',
             'employee__Designation',
             'employee__BPS',
+            'employee__ZONE',
             'id',
             'old_zone',
             'new_zone',

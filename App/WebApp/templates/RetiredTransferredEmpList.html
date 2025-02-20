@@ -1,0 +1,522 @@
+{% load static %}
+{% include 'reusable.html' %}
+<title>RTO - II, Dashboard</title>
+<style>
+    .ellipsis {
+    max-width: 180px; /* Set the maximum width of the cell */
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
+}
+
+</style>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+    <!-- SideBar Start Here  -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here  -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#" style="color:black"><i class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">Retired / Transferred Employee</li>
+
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row mb-3">
+                    <div class="col-lg-3">
+                        <a href="/DispositionList">
+                            <button type="button" class="btn btn-primary"> Disposition List</button>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card">
+                                    <div class="card-header bg-primary">
+                                        <h3 class="card-title">List of Retired Employees</h3>
+
+                                        <div class="card-tools">
+                                            <div class="input-group input-group-sm" style="width: 150px;">
+                                                <input id="" type="text" name=""
+                                                       class="form-control float-right"
+                                                       placeholder="Search">
+
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-default">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body table-responsive p-0">
+                                        <table id=""
+                                               class="table table-head-fixed text-nowrap table table-head-fixed text-nowrap lightgallery">
+                                            <thead>
+                                            <tr>
+                                                <th>S#</th>
+                                                <th>Name</th>
+                                                <th>Designation</th>
+                                                <th>BPS</th>
+                                                <th>Personnel</th>
+                                                <th>Zone</th>
+                                                <th>Retirement Date</th>
+                                                <th>Status</th>
+
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+
+                                            {% for item in result_retired %}
+                                            <tr>
+                                                <td>{{ start_serial_number_retired|add:forloop.counter0 }}</td>
+                                                <td>{{ item.Name }}</td>
+                                                <td>{{ item.Designation }}</td>
+                                                <td>{{ item.BPS }}</td>
+
+                                                <td>{{ item.Personal_No }}</td>
+                                                <td>{{ item.ZONE }}</td>
+                                                <td>{{ item.Date_of_Retirement }}</td>
+                                                <td>{{ item.Remarks }}</td>
+                                            </tr>
+                                            {% endfor %}
+
+                                            </tbody>
+
+                                        </table>
+                                        <!-- Pagination controls -->
+                                        <nav aria-label="Page navigation" style="float:right">
+                                            <ul class="pagination justify-content-right">
+                                                {% if result_retired.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1"
+                                                       aria-label="First">
+                                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result_retired.previous_page_number }}"
+                                                       aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="First">
+                                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% for num in result_retired.paginator.page_range %}
+                                                {% if result_retired.number == num %}
+                                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                                {% elif num > result_retired.number|add:-5 and num < result_retired.number|add:5 %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                                {% endif %}
+                                                {% endfor %}
+
+                                                {% if result_retired.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result_retired.next_page_number }}"
+                                                       aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result_retired.paginator.num_pages }}"
+                                                       aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+
+                                    </div>
+                                    <!-- /.card-body -->
+
+                                </div>
+                                <!-- /.card -->
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Designation Graph Retirement Summary Report, RTO - II,
+                                            Karachi</h4>
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="retirement_by_designation_data" width="400" height="223"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-6">
+                                <div class="card">
+                                    <div class="card-header bg-primary">
+                                        <h3 class="card-title">List of Transferred Employees</h3>
+
+                                        <div class="card-tools">
+                                            <div class="input-group input-group-sm" style="width: 150px;">
+                                                <input id="" type="text" name=""
+                                                       class="form-control float-right"
+                                                       placeholder="Search">
+
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-default">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body table-responsive p-0">
+                                        <table id=""
+                                               class="table table-head-fixed text-nowrap table table-head-fixed text-nowrap lightgallery">
+                                            <thead>
+                                            <tr>
+                                                <th>S#</th>
+                                                <th>Name</th>
+                                                <th>Designation</th>
+                                                <th>BPS</th>
+                                                <th>Personnel</th>
+                                                <th>Zone</th>
+                                                <th>Status</th>
+
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+
+                                            {% for item in transferred_result %}
+                                            <tr>
+                                                <td>{{ start_serial_number_transferred|add:forloop.counter0 }}</td>
+                                                <td class="ellipsis" title="{{ item.Name }}">{{ item.Name }}</td>
+                                                <td class="ellipsis" title="{{ item.Designation }}">{{ item.Designation }}</td>
+                                                 <td>{{ item.BPS }}</td>
+                                                <td>{{ item.Personal_No }}</td>
+                                                <td>{{ item.ZONE }}</td>
+
+                                                <td class="ellipsis" title="{{ item.Remarks }}">{{ item.Remarks }}</td>
+                                            </tr>
+                                            {% endfor %}
+
+                                            </tbody>
+
+                                        </table>
+                                        <!-- Pagination controls -->
+                                        <nav aria-label="Page navigation" style="float:right">
+                                            <ul class="pagination justify-content-right">
+                                                {% if transferred_result.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1"
+                                                       aria-label="First">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transferred_result.previous_page_number }}"
+                                                       aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="First">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% for num in transferred_result.paginator.page_range %}
+                                                {% if transferred_result.number == num %}
+                                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                                {% elif num > transferred_result.number|add:-5 and num < transferred_result.number|add:5 %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                                {% endif %}
+                                                {% endfor %}
+
+                                                {% if transferred_result.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transferred_result.next_page_number }}"
+                                                       aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transferred_result.paginator.num_pages }}"
+                                                       aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+
+                                    </div>
+                                    <!-- /.card-body -->
+
+                                </div>
+                                <!-- /.card -->
+                            </div>
+
+                                                        <div class="col-lg-6">
+                                <div class="card card-primary">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Designation Graph Transferred Summary Report, RTO - II,
+                                            Karachi</h4>
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="transferred_by_designation_data" width="400" height="223"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+
+    </div>
+    <!-- Content Wrapper. Contains page content  Ends Here -->
+
+
+</div>
+<!-- /.content-wrapper -->
+
+
+{% include 'footer.html' %}
+
+
+</body>
+
+
+    <script>
+        // Fetch data from Django context
+        const retirementData = {{ retirement_by_designation_data|safe }};
+
+        // Prepare data for Chart.js
+        const labels = retirementData.labels;  // Designation names
+        const counts = retirementData.counts;  // Count of retirees
+
+        // Create the chart
+        const ctx = document.getElementById('retirement_by_designation_data').getContext('2d');
+        const retirementChart = new Chart(ctx, {
+            type: 'bar',  // Chart type (bar, pie, etc.)
+            data: {
+                labels: labels,  // X-axis labels
+                datasets: [{
+                    label: 'Number of Retirements',
+                    data: counts,  // Y-axis data
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Retirements by Designation',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Retirements'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Designation'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+
+
+
+
+    <script>
+        // Fetch data from Django context
+        const transferredData = {{ transferred_by_designation_data|safe }};
+
+        // Prepare data for Chart.js
+        const transferred_labels = transferredData.labels;  // Designation names
+        const transferred_counts = transferredData.counts;  // Count of retirees
+
+        // Create the chart
+        const transferred_ctx = document.getElementById('transferred_by_designation_data').getContext('2d');
+        const transferredChart = new Chart(transferred_ctx, {
+            type: 'bar',  // Chart type (bar, pie, etc.)
+            data: {
+                labels: transferred_labels,  // X-axis labels
+                datasets: [{
+                    label: 'Number of Transferred',
+                    data: transferred_counts,  // Y-axis data
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Transferred by Designation',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Transferred'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Designation'
+                        }
+                    }
+                }
+            }
+        });
+    </script>

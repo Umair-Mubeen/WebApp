@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory List - RTO - II, Karachi</title>
+    {% load static %}
+    {% include 'reusable.html' %}
+</head>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+
+    <!-- SideBar Start Here -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a></li>
+                            <li class="breadcrumb-item active">Inventory List</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+
+        <section class="content">
+
+            <div class="container">
+                <a href="/InventoryForm">
+                    <button type="button" class="btn btn-primary">Income Stock</button>
+                </a>
+                   <a href="/OutGoingStock">
+                    <button type="button" class="btn btn-success">Outgoing Stock</button>
+                </a>
+
+                <br/> <br/>
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <div class="card-title mb-0">
+                            <h5>Inventory List Regional Tax Office - II, Karachi</h5>
+                        </div>
+
+                        <div class="card-tools">
+
+                            <form method="GET" action="">
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input type="text" name="search" class="form-control float-right"
+                                           placeholder="Search" value="{{ request.GET.search }}">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn btn-default">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>Stock Name</th>
+                                <th>Current Stock in Quantity</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for db in result %}
+                            <tr>
+                                <td> {{db.item_name}}</td>
+                                <td> {{db.quantity}}</td>
+                                 <td>
+                                                    <a href="InventoryForm?id={{db.id}}&type=edit"
+                                                       style="color:black;">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
+                                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                                                                <nav aria-label="Page navigation" style="float:right">
+                                            <ul class="pagination justify-content-right">
+                                                {% if result.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1"
+                                                       aria-label="First">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result.previous_page_number }}"
+                                                       aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="First">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% for num in result.paginator.page_range %}
+                                                {% if result.number == num %}
+                                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                                {% elif num > result.number|add:-5 and num < result.number|add:5 %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                                {% endif %}
+                                                {% endfor %}
+
+                                                {% if result.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transferred_result.next_page_number }}"
+                                                       aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result.paginator.num_pages }}"
+                                                       aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+
+
+            </div>
+        </section>
+
+
+    </div>
+
+    {% include 'footer.html' %}
+</div>
+</body>
+</html>

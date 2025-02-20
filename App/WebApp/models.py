@@ -39,11 +39,13 @@ class TransferPosting(models.Model):
 
     old_zone = models.CharField(max_length=255, blank=True)  # ccir
     new_zone = models.CharField(max_length=255, blank=True)  # ccir
-    chief_order_number = models.CharField(max_length=255)  # chief office
+    chief_order_number = models.IntegerField(default=0)  # chief office
     chief_transfer_date = models.DateField(null=True)  # chief office
     chief_reason_for_transfer = models.TextField(blank=True, null=True)  # chief office
     chief_order_approved_by = models.CharField(max_length=255)  # Person who approved the transfer chief office
-    chief_transfer_document = models.FileField(upload_to='transfer_documents/', max_length=250, default=None,null=True)  # ccir
+    chief_transfer_document = models.FileField(upload_to='transfer_documents/', max_length=250, default=None,
+                                               null=True)  # ccir
+
     old_unit = models.CharField(max_length=255, blank=True, null=True)  # zone
     new_unit = models.CharField(max_length=255, blank=True, null=True)  # zone
     zone_range = models.CharField(max_length=255, blank=True, null=True)  # zone
@@ -110,3 +112,31 @@ class CustomUser(AbstractUser):
     userType = models.CharField(
         choices=[('ZONE', 'Zone-I'), ('ZONE', 'Zone-II'), ('ZONE', 'Zone-III'), ('ZONE', 'Zone-IV'),
                  ('ZONE', 'Zone-V')], max_length=50)
+
+
+class InventoryStock(models.Model):
+    item_name = models.CharField(max_length=255, unique=True)
+    quantity = models.PositiveIntegerField(default=0)
+    description = models.CharField(max_length=255, unique=False, null=True)
+    is_deleted = models.BooleanField(default=False)  # Soft delete flag
+    deleted_at = models.DateTimeField(null=True, blank=True)  # Deletion timestamp
+
+
+class OutgoingStock(models.Model):
+    item = models.ForeignKey(InventoryStock, on_delete=models.CASCADE)  # Link to stock item
+    quantity_deducted = models.PositiveIntegerField()
+    officerName = models.CharField(max_length=255,default=True)
+    order_docx = models.FileField(upload_to='stationary_letters/', blank=True, null=True)  # Stores Stationary documents
+    date = models.DateTimeField(auto_now_add=True)  # Auto store date of transaction
+    letter_date = models.DateField(null=True)
+
+
+class Promotion(models.Model):
+    personnel_no = models.CharField(max_length=50, unique=True)  # Assuming personnel number is unique
+    current_designation = models.CharField(max_length=100)
+    new_designation = models.CharField(max_length=100)
+    order_number = models.CharField(max_length=50, unique=False)  # Assuming order numbers are unique
+    order_date = models.DateField()
+    order_docx = models.FileField(upload_to='promotion_orders/', blank=True, null=True)  # Stores promotion documents
+    status = models.IntegerField(default=1)
+    zone_type = models.CharField(max_length=50)

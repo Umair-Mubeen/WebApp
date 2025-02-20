@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% load static %}
+    {% include 'reusable.html' %}
+    <meta charset="UTF-8">
+    <title> {% if data.rowId %} Edit Stock {% else %} Add Stock {% endif %} - RTO - II, Karachi</title>
+
+
+</head>
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+
+    <!-- SideBar Start Here -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II, Dashboard</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/Dashboard" style="color:black"><i
+                                    class="fa fa-home"></i></a></li>
+                            <li class="breadcrumb-item"><a href="/InventoryList" style="color:black">Inventory List</a>
+                            </li>
+                            <li class="breadcrumb-item active">
+                                {% if data.rowId %} Edit Stock {% else %} Add Stock {% endif %}
+                            </li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+
+
+                <form action="InventoryForm" id="InventoryForm" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="card col-lg-6">
+                            <!-- /.card-header -->
+                            <div class="card-body p-0">
+                                <div class="card collapsed-card">
+                                    <div class="card-header header-elements-inline">
+
+                                        <h5 class="card-title"> {% if data.rowId %} Edit Stock {% else %} New Stock {% endif %}
+                                        </h5>
+
+                                        <div class="card-tools">
+                                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                                <i class="fas fa-times"></i></button>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="card-body" style="display:block">
+                                        <input type="hidden" name="rowId" value="{{data.rowId}}"/>
+                                        <input type="hidden" name="hidden_item_name"
+                                               value="{{data.item_name}}"
+                                               id="hidden_item_name"/>
+
+                                        <div class="form-group">
+                                            <label for="itemName" class="form-label">Item Name</label>
+                                            <select class="js-example-basic-single form-control" id="itemName"
+                                                    name="itemName">
+                                                <option value="" selected disabled>Select an Inventory Item</option>
+                                                {% for item in stockList %}
+                                                <option value="{{item.item_name}}"> {{item.item_name}}</option>
+                                                {% endfor %}
+
+
+                                            </select>
+                                        </div>
+                                        <!-- /.form-group -->
+
+                                        <div class="form-group">
+                                            <label for="quantity" class="form-label">Quantity</label>
+                                            <input type="number" class="form-control" id="quantity" name="quantity"
+                                                   placeholder="Enter quantity (bundles or pieces as applicable)"
+                                                   value="{{data.quantity}}">
+                                        </div>
+
+
+
+
+                                        <div class="text-right">
+                                                    <button type="submit" class="btn btn-primary">{% if data.rowId %} Update Stock {% else %} Add Stock {% endif %}</button>
+
+                                            <a href="" class="btn btn-default ml-2">Cancel</a>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- /.card-body -->
+                </form>
+
+
+            </div>
+        </section>
+    </div>
+
+    {% include 'footer.html' %}
+</div>
+</body>
+</html>
+
+<script>
+    var hidden_item_name = document.getElementById('hidden_item_name').value; // Get the hidden input value
+    $('#itemName').val(hidden_item_name).trigger('change');
+
+</script>
+  <script>
+    $(document).ready(function() {
+        {% if messages %}
+            {% for message in messages %}
+                $(document).Toasts('create', {
+                    class: "{% if 'success' in message.tags %}bg-success{% elif 'error' in message.tags %}bg-danger{% else %}bg-warning{% endif %}",
+                    title: "{% if 'success' in message.tags %} Success {% elif 'error' in message.tags %} Error {% else %} Notification {% endif %}",
+                    subtitle: "Inventory Update",
+                    body: "{{ message|escapejs }}",
+                    icon: "{% if 'success' in message.tags %}fas fa-check-circle{% else %}fas fa-exclamation-triangle{% endif %}"
+                });
+            {% endfor %}
+        {% endif %}
+    });
+</script>

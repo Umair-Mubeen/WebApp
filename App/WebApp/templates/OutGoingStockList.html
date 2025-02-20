@@ -1,0 +1,309 @@
+{% load static %}
+{% include 'reusable.html' %}
+<title>RTO - II, Dashboard</title>
+<style>
+    .ellipsis {
+    max-width: 200px; /* Set the maximum width of the cell */
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
+}
+
+</style>
+
+<body class="sidebar-mini layout-fixed sidebar-collapse">
+<div class="wrapper">
+
+    <!-- Navbar Starts Here -->
+    {% include 'navbar.html' %}
+    <!-- /.Navbar Ends Here -->
+    <!-- SideBar Start Here  -->
+    {% include 'sidebar.html' %}
+    <!-- SideBar Ends Here  -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Regional Tax Office - II</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#" style="color:black"><i class="fa fa-home"></i></a>
+                            </li>
+                            <li class="breadcrumb-item active">Debit Stock</li>
+
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row mb-3">
+                    <div class="col-lg-3">
+                        <a href="/OutGoingStock">
+                            <button type="button" class="btn btn-primary"> OutGoing Stock</button>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col-9">
+                                <div class="card">
+                                    <div class="card-header bg-primary">
+                                        <h3 class="card-title">List of OutGoing Stock</h3>
+
+                                        <div class="card-tools">
+                                            <div class="input-group input-group-sm" style="width: 150px;">
+                                                <input id="tableSearch" type="text" name="table_search"
+                                                       class="form-control float-right"
+                                                       placeholder="Search">
+
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-default">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- /.card-header -->
+                                    <div class="card-body table-responsive p-0">
+                                        <table id="zoneTable"
+                                               class="table table-head-fixed text-nowrap table table-head-fixed text-nowrap lightgallery">
+                                            <thead>
+                                            <tr>
+                                                <th>S#</th>
+                                                <th>Name</th>
+                                                <th>Designation</th>
+                                                <th>BPS</th>
+                                                <th>Personnel</th>
+                                                <th>Zone</th>
+                                                <th>Item Name</th>
+                                                <th>Quantity</th>
+                                                <th>Docx</th>
+                                                <th>Date</th>
+
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for item in result %}
+                                            <tr>
+                                                <td>{{ start_serial_number|add:forloop.counter0 }}</td>
+
+                                                <td class="ellipsis">{{ item.Name }}</td>
+                                                <td class="ellipsis">{{ item.Designation }}</td>
+                                                <td class="ellipsis">{{ item.BPS }}</td>
+                                                <td class="ellipsis">{{ item.Personal_No }}</td>
+                                                <td class="ellipsis">{{ item.ZONE }}</td>
+                                                <td class="ellipsis">{{ item.item_name }}</td>
+                                                <td class="ellipsis">{{ item.Availed }}
+                                                <td><a href="media/{{item.order_docx}}" target="_blank">
+                                                    PDF
+                                                </a>
+                                                </td>
+
+                                                <td class="ellipsis">{{ item.letter_date}}</td>
+
+                                                </td>
+
+
+                                            </tr>
+                                            {% endfor %}
+                                            </tbody>
+
+                                        </table>
+                                        <nav aria-label="Page navigation" style="float:right">
+                                            <ul class="pagination justify-content-right">
+                                                {% if result.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1"
+                                                       aria-label="First">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result.previous_page_number }}"
+                                                       aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="First">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Previous">
+                                                        <span aria-hidden="true">&laquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+
+                                                {% for num in result.paginator.page_range %}
+                                                {% if result.number == num %}
+                                                <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                                                {% elif num > result.number|add:-5 and num < result.number|add:5 %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                                {% endif %}
+                                                {% endfor %}
+
+                                                {% if result.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ transferred_result.next_page_number }}"
+                                                       aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                       href="?page={{ result.paginator.num_pages }}"
+                                                       aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% else %}
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Next">
+                                                        <span aria-hidden="true">&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <a class="page-link" aria-label="Last">
+                                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+
+
+                                    </div>
+                                    <!-- /.card-body -->
+
+                                </div>
+                                <!-- /.card -->
+                            </div>
+<!--                            <div class="col-lg-6">-->
+<!--                                <div class="card card-primary">-->
+<!--                                    <div class="card-header">-->
+<!--                                        <h4 class="card-title">Outgoing Stock Graph Summary Report, RTO - II,-->
+<!--                                            Karachi</h4>-->
+<!--                                        <div class="card-tools">-->
+<!--                                            <button type="button" class="btn btn-tool" data-card-widget="collapse">-->
+<!--                                                <i class="fas fa-minus"></i>-->
+<!--                                            </button>-->
+<!--                                            <button type="button" class="btn btn-tool" data-card-widget="remove">-->
+<!--                                                <i class="fas fa-times"></i>-->
+<!--                                            </button>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                    <div class="card-body">-->
+<!--                                        <canvas id="outgoing_stock" width="400" height="270"></canvas>-->
+<!--                                    </div>-->
+
+<!--                                </div>-->
+<!--                            </div>-->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+
+    </div>
+    <!-- Content Wrapper. Contains page content  Ends Here -->
+
+
+</div>
+<!-- /.content-wrapper -->
+
+
+{% include 'footer.html' %}
+
+
+</body>
+
+
+<script>
+    // Fetch data from Django context
+    const outgoingStockData = {{ chart_data|safe }};
+
+    // Prepare data for Chart.js
+    const labels = outgoingStockData.labels;  // Designation names
+    const counts = outgoingStockData.counts;  // Count of retirees
+
+    // Create the chart
+    const outgoing_ctx = document.getElementById('outgoing_stock').getContext('2d');
+    const outgoing_stock = new Chart(outgoing_ctx, {
+        type: 'bar',  // Chart type (bar, pie, etc.)
+        data: {
+            labels: labels,  // X-axis labels
+            datasets: [{
+                label: 'OutGoing Stock ',
+                data: counts,  // Y-axis data
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Total',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Retirements'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Designation'
+                    }
+                }
+            }
+        }
+    });
+</script>

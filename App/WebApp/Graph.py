@@ -365,6 +365,7 @@ def get_age_range_count(request):
 
                     # Calculate the age
                     age = current_year - dob_date.year
+
                     # Increment the appropriate age range
                     if 18 <= age <= 30:
                         age_ranges['18-30'] += 1

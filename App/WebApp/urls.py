@@ -10,13 +10,20 @@ urlpatterns = [
     path('login', views.userLogin, name='userLogin'),
     path('Dashboard', views.Dashboard, name='Dashboard'),
     path('TaxSlab', views.TaxSlab, name='TaxSlab'),
-    path('Excel-Import', views.ExcelImport, name='Excel-Import'),
-
     path('verify', views.verify, name='verify'),
+    path('InventoryForm', views.InventoryForm, name='InventoryForm'),
+    path('InventoryList', views.InventoryList, name='InventoryList'),
+    path('OutGoingStock', views.OutGoingStock, name='OutGoingStock'),
+    path('OutGoingStockList', views.OutGoingStockList, name='OutGoingStockList'),
+
+    path('CreatePromotions', views.CreatePromotions, name='CreatePromotions'),
+
+    path('PromotedEmployeeList', views.PromotedEmployeeList, name='PromotedEmployeeList'),
 
     path('Logout', views.Logout, name='Logout'),
     path('DispositionList', views.getDispositionList, name='DispositionList'),
     path('AddEditDisposition', views.AddEditDisposition, name='AddEditDisposition'),
+    path('RetiredTransferredEmployee', views.RetiredTransferredEmployee, name='RetiredTransferredEmployee'),
 
     path('Search', views.Search, name='Search'),
     path('Zone', views.Zone, name='Zone'),
@@ -25,8 +32,6 @@ urlpatterns = [
     path('Strength', views.Strength, name='Strength'),
     path('TransferPosting', views.EmployeeTransferPosting, name='TransferPosting'),
     path('ManageTransferPosting', views.ManageEmployeeTransferPosting, name='ManageTransferPosting'),
-    path('Board', views.ManageBoard, name='Board'),
-
     path('LeaveApplication',views.submitLeaveApplication, name='submitLeaveApplication'),
     path('ManageLeaveApplication',views.ManageEmployeeLeaveApplication, name='ManageLeaveApplication'),
     path('EmployeeExplanation', views.EmployeeExplanation, name='EmployeeExplanation'),
