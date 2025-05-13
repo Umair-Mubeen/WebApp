@@ -362,6 +362,8 @@ def getAllEmpLeaveApplication(userType, zoneType):
             'employee__Name',
             'employee__Designation',
             'employee__BPS',
+            'employee__ZONE',
+
             'id',
             'leave_type',
             'leave_start_date',

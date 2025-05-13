@@ -49,7 +49,7 @@
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
-                <form action="createPromotion" id="createPromotion" method="POST" enctype="multipart/form-data">
+                <form action="CreatePromotions" id="createPromotion" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="row p-2">
 
@@ -91,9 +91,7 @@
                                                 id="emp_current_post" required>
                                             <option value="" selected disabled>Select Current Designation</option>
                                             {% for item in distinct_destinations %}
-                                            <option value="{{ item.Designation }}" {% if item.Designation == 'Naib Qasid' %} selected {% endif %} >
-                                                {{ item.Designation }}
-                                            </option>
+                                            <option value="{{item.Designation}}">{{ item.Designation }}</option>
                                             {% endfor %}
 
 
@@ -104,8 +102,10 @@
                                         <label>Promoted To </label>
                                         <select class="js-example-basic-single form-control" name="emp_new_post"
                                                 id="emp_new_post" required>
+                                                <option value="" selected disabled>Select New Designation</option>
+
                                             {% for item in distinct_destinations %}
-                                             <option value="{{ item.Designation }}" {% if item.Designation == 'LDC' %} selected {% endif %} >
+                                             <option value="{{ item.Designation }}">
                                                 {{ item.Designation }}
                                             </option>
 
@@ -117,12 +117,12 @@
 
                                     <div class="form-group">
                                         <label>Order # </label>
-                                        <input type="number" class="form-control" name="order_number" value="50"/>
+                                        <input type="number" class="form-control" name="order_number"/>
                                     </div>
 
                                     <div class="form-group">
                                         <label>Order Date </label>
-                                        <input type="date" class="form-control" name="order_date" value="2025-01-17" />
+                                        <input type="date" class="form-control" name="order_date"/>
                                     </div>
 
                                     <div class="form-group">

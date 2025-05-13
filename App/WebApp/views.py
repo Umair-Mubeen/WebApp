@@ -8,6 +8,7 @@ from django.http import JsonResponse
 
 from django.db.models import Count, F, Value, OuterRef, Subquery
 from django.db.models.functions import Concat
+from django.utils.dateparse import parse_date
 
 """
 The code consists of Django views for managing user authentication, dashboard data, employee
@@ -37,7 +38,7 @@ from .Utitlities import (DesignationWiseList, getRetirementList, fetchAllDisposi
                          getAllEmpLeaveApplication, getAllEmpLeaveExplanation, is_admin, is_zone_admin, calculate_tax
                          )
 from .models import DispositionList, TransferPosting, LeaveApplication, Explanation, InventoryStock, Promotion, \
-    OutgoingStock
+    OutgoingStock, OldStock,MedicalBill
 from .tables import CountLeaveIndividuals_table, CountExplanationIndividuals_table, \
     CountTransferPostingIndividuals_table
 
@@ -91,7 +92,7 @@ def Dashboard(request):
         retirement_year_count = get_retirement_year_count(request)  # Graph Scripts
         zone_wise_count = get_zone_wise_count(request)
 
-        label = "Employee yet to be Retired in the Year 2024, Regional Tax Office - II"
+        label = "Employee yet to be Retired in the Year 2025, Regional Tax Office - II"
         Comparison = ZoneDesignationWiseComparison()
         results = DesignationWiseList(request.user.userType, request)
         employee_to_be_retired = getRetirementList(request.user.userType, request)  # table retired
@@ -214,7 +215,6 @@ def AddEditDisposition(request):
 @login_required(login_url='userLogin')
 def RetiredTransferredEmployee(request):
     try:
-        print('----------')
         if is_admin(request.user):
             result_retired = DispositionList.objects.filter(status=3)
             page = request.GET.get('page')
@@ -511,7 +511,7 @@ def EmployeeTransferPosting(request):  # Transfer Posting Form
                 employee.save()
 
                 transfer_posting = TransferPosting(
-                    employee=employee.Personal_No,
+                    employee=employee,
                     old_zone=request.POST.get('old_zone'),
                     new_zone=new_zone,
                     chief_order_number=request.POST.get('order_number'),
@@ -737,7 +737,13 @@ def ManageEmployeeLeaveApplication(request):  # Data Template Leave
             elif mime_type and mime_type.startswith('image'):
                 item['is_image'] = True
 
-        return render(request, 'ManageLeaveApplication.html', {'leave_application': leave_application})
+        page = request.GET.get('page')
+        paginator = Paginator(leave_application, 12)  # 10 items per page
+        leave_application = paginator.get_page(page)
+        # Calculate the starting serial number for the current page
+        start_serial_number = (leave_application.number - 1) * paginator.per_page + 1
+
+        return render(request, 'ManageLeaveApplication.html', {'leave_application': leave_application,'start_serial_number' : start_serial_number})
     except Exception as e:
         logger.error(f"Error in ManageLeaveApplication view: {e}")
         return HttpResponse("An error occurred.", status=500)
@@ -896,8 +902,7 @@ def InventoryForm(request):
 
         stockList = InventoryStock.objects.all()
 
-
-        return render(request, 'AddInventory.html', {'data': data, 'messages': messages, 'stockList' : stockList})
+        return render(request, 'AddInventory.html', {'data': data, 'messages': messages, 'stockList': stockList})
 
     except Exception as e:
         messages = f"An error occurred: {str(e)}"
@@ -912,7 +917,7 @@ def InventoryList(request):
         result = paginator.get_page(page)
         start_serial_number = (result.number - 1) * paginator.per_page + 1
 
-        return render(request, 'InventoryList.html', {'result': result, 'start_serial_number' : start_serial_number})
+        return render(request, 'InventoryList.html', {'result': result, 'start_serial_number': start_serial_number})
     except Exception as e:
         print(str(e))
 
@@ -942,7 +947,8 @@ def OutGoingStock(request):
                         item.quantity -= qty  # Deduct quantity
                         item.save()  # Save updated stock
                         messages.success(request, f"{qty} units of {item.item_name} deducted successfully.")
-                        OutgoingStock.objects.create(item=item, officerName=officerName, quantity_deducted=qty,order_docx=image, letter_date=letter_date)
+                        OutgoingStock.objects.create(item=item, officerName=officerName, quantity_deducted=qty,
+                                                     order_docx=image, letter_date=letter_date)
 
                     else:
                         messages.error(request, f"Not enough stock for {item.item_name}. Available: {item.quantity}.")
@@ -1021,7 +1027,25 @@ def OutGoingStockList(request):
                     "labels": labels,
                     "counts": counts,
                 }
-            return render(request,'OutGoingStockList.html', {'result' : result,'start_serial_number' : start_serial_number,'chart_data' : chart_data})
+            return render(request, 'OutGoingStockList.html',
+                          {'result': result, 'start_serial_number': start_serial_number, 'chart_data': chart_data})
+    except Exception as e:
+        print("Exception :" + str(e))
+
+        return str("Exception : " + str(e))
+
+
+def OldStockComputer(request):
+    try:
+        if is_admin(request.user):
+            result = OldStock.objects.all()
+            page = request.GET.get('page')
+            paginator = Paginator(result, 10)  # 10 items per page
+            result = paginator.get_page(page)
+            # Calculate the starting serial number for the current page
+            start_serial_number = (result.number - 1) * paginator.per_page + 1
+
+            return render(request, 'OldStock.html', {'result': result, 'start_serial_number': start_serial_number})
     except Exception as e:
         print("Exception :" + str(e))
 
@@ -1030,8 +1054,44 @@ def OutGoingStockList(request):
 
 def CreatePromotions(request):
     try:
+        if request.method == 'POST':
+            EmpStatus = 0
+            EmpZone = ''
+            personnel = request.POST['emp_name']
+            emp_current_post = request.POST['emp_current_post']
+            emp_new_post = request.POST['emp_new_post']
+            order_number = request.POST['order_number']
+            order_date = request.POST['order_date']
+            orderDocx = request.FILES.get('image')
+
+            # Validate uploaded file
+            if not orderDocx:
+                return HttpResponse("No file uploaded.", status=400)
+
+            file_type = mimetypes.guess_type(orderDocx.name)[0]
+            if not file_type or (not file_type.startswith('image') and file_type != 'application/pdf'):
+                return HttpResponse("Uploaded file is not a valid image or PDF.", status=400)
+            result = DispositionList.objects.filter(Personal_No=personnel)
+            for res in result:
+                EmpStatus = res.status
+                EmpZone = res.ZONE
+
+            prom = Promotion(
+                personnel_no = personnel,
+                current_designation = emp_current_post,
+                new_designation = emp_new_post,
+                order_number = order_number,
+                order_date = order_date,
+                order_docx = orderDocx,
+                status = EmpStatus,
+                zone_type = EmpZone
+
+            )
+            prom.save()
+
         result = DispositionList.objects.filter(status=1)
-        return render(request, 'Promotions.html', {'result': result})
+        distinct_destinations = DispositionList.objects.values('Designation').distinct()
+        return render(request, 'Promotions.html', {'result': result, 'distinct_destinations' : distinct_destinations})
     except Exception as e:
         print(str(e))
 
@@ -1252,3 +1312,92 @@ def TaxSlab(request):
     except Exception as e:
         print(str(e))
         return HttpResponse(str(e))
+
+
+def AddEditMedicalBills(request):
+    result = DispositionList.objects.filter(status=1)
+    if request.method == 'POST':
+        try:
+            employee_id = request.POST.get('emp_name')
+            decease_type = request.POST.get('decease_type')
+            application_date = parse_date(request.POST.get('application_date'))
+            bill_document = request.FILES.get('bill_document')
+            medical_bill_amount = request.POST.get('medical_bill_amount')
+            hospital_name = request.POST.get('hospital_name')
+            treatment_start_date = parse_date(request.POST.get('treatment_start_date'))
+            treatment_end_date = parse_date(request.POST.get('treatment_end_date'))
+            diagnosis_details = request.POST.get('diagnosis_details')
+            bill_status = request.POST.get('bill_status')
+
+            patient_name = request.POST.get('patient_name')
+            patient_relationship = request.POST.get('patient_relationship')
+            patient_gender = request.POST.get('patient_gender')
+            surgeon_name = request.POST.get('surgeon_name')
+            hospital_contact = request.POST.get('hospital_contact')
+            claim_ref_number = request.POST.get('claim_ref_number')
+            verification_status = request.POST.get('verification_status')
+            date_of_claim_received = parse_date(request.POST.get('date_of_claim_received'))
+            approved_bill_docx = request.FILES.get('approved_bill_docx')
+            authorized_person = request.POST.get('authorized_person')
+            date_of_submission = parse_date(request.POST.get('date_of_submission'))
+            authorized_docx = request.FILES.get('authorized_docx')
+
+            sanction_bill = request.FILES.get('sanction_bill')
+            bill_submission_date = parse_date(request.POST.get('bill_submission_date'))
+            bill_order_docx = request.FILES.get('bill_order_docx')
+            date_of_approval_agpr = parse_date(request.POST.get('date_of_approval_agpr'))
+            approved_sanction_amount = request.POST.get('approved_sanction_amount')
+            bill_ref_number = request.POST.get('bill_ref_number')
+            payment_status = request.POST.get('payment_status')
+            bank_name = request.POST.get('bank_name')
+            IBAN = request.POST.get('IBAN')
+            Bank_Address = request.POST.get('Bank_Address')
+            BranchCode = request.POST.get('BranchCode')
+            remarks = request.POST.get('remarks')
+
+            employee = DispositionList.objects.get(Personal_No=employee_id)
+
+            MedicalBill.objects.create(
+                employee=employee,
+                bill_type='Medical',
+                decease_type=decease_type,
+                application_date=application_date,
+                bill_document=bill_document,
+                medical_bill_amount=medical_bill_amount,
+                hospital_name=hospital_name,
+                treatment_start_date=treatment_start_date,
+                treatment_end_date=treatment_end_date,
+                diagnosis_details=diagnosis_details,
+                bill_status=bill_status,
+
+                patient_name=patient_name,
+                patient_relationship=patient_relationship,
+                patient_gender=patient_gender,
+                surgeon_name=surgeon_name,
+                hospital_contact=hospital_contact,
+                claim_ref_number=claim_ref_number,
+                verification_status=verification_status,
+                date_of_claim_received=date_of_claim_received,
+                approved_bill_docx=approved_bill_docx,
+                authorized_person=authorized_person,
+                date_of_submission=date_of_submission,
+                authorized_docx=authorized_docx,
+
+                sanction_bill=sanction_bill,
+                bill_submission_date=bill_submission_date,
+                bill_order_docx=bill_order_docx,
+                date_of_approval_agpr=date_of_approval_agpr,
+                approved_sanction_amount=approved_sanction_amount,
+                bill_ref_number = bill_ref_number,
+                payment_status = payment_status,
+                bank_name = bank_name,
+                IBAN = IBAN,
+                Bank_Address = Bank_Address,
+                BranchCode = BranchCode,
+                remarks = remarks
+            )
+
+        except Exception as e:
+            print('Medical Bill error' , str(e))
+
+    return render(request,'Medical/AddEditMedical.html',{'result' : result})

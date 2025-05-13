@@ -5,39 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f3f26e0d-6d80-4cb2-9ee7-8a43816f9774" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/PromotedEmployeeList.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/Promotions.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/RetiredTransferredEmpList.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/WebApp.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/Medical/AddEditMedical.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/OldStock.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/App/abc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SalaryTransfer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/VENDOR.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/Graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/Graph.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/Utitlities.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/Utitlities.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/migrations/0002_dispositionlist_mode_of_appointment.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/migrations/0003_remove_dispositionlist_mode_of_appointment_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/migrations/0004_alter_transferposting_chief_order_number.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/AddEditDispositionList.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/AddEditDispositionList.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/Board.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/Board.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/Dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/Dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/DispositionList.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/DispositionList.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/icons.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/icons.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/navbar.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/navbar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/reusable.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/reusable.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/LeaveApplication.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/LeaveApplication.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/ManageLeaveApplication.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/ManageLeaveApplication.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/ManageTransferPosting.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/ManageTransferPosting.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/PromotedEmployeeList.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/PromotedEmployeeList.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/Promotions.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/Promotions.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/RetiredTransferredEmpList.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/RetiredTransferredEmpList.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/graph.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/templates/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/sidebar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/strength.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/strength.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output.xlsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/readPdf.py" beforeDir="false" afterPath="$PROJECT_DIR$/readPdf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/record.py" beforeDir="false" afterPath="$PROJECT_DIR$/record.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/webapp_dispositionlist.sql" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +35,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -69,14 +57,18 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;Python.SalaryTransfer (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.VENDOR.executor&quot;: &quot;Run&quot;,
+    &quot;Python.abc.executor&quot;: &quot;Run&quot;,
     &quot;Python.admin.executor&quot;: &quot;Run&quot;,
+    &quot;Python.code.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;Python.readPdf.executor&quot;: &quot;Run&quot;,
     &quot;Python.record.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/PythonProjects/WebApp-main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/ACS/TaxBuddyUmair&quot;,
     &quot;two.files.diff.last.used.file&quot;: &quot;E:/PythonProjects/WebApp-main/App/WebApp/views.py&quot;
   }
 }</component>
@@ -86,8 +78,8 @@
       <recent name="E:\PythonProjects\WebApp-main\App\WebApp\templates" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.readPdf">
-    <configuration name="admin" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.abc">
+    <configuration name="SalaryTransfer (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="WebApp-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -100,7 +92,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/admin.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SalaryTransfer.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -109,7 +101,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="SalaryTransfer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="WebApp-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -122,7 +114,51 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="SCRIPT_NAME" value="E:\PythonProjects\WebApp-main\SalaryTransfer.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="VENDOR" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="WebApp-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/VENDOR.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="abc" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="WebApp-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/App" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/App/abc.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -153,34 +189,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="record" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="WebApp-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/record.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.abc" />
+        <item itemvalue="Python.SalaryTransfer (1)" />
         <item itemvalue="Python.readPdf" />
-        <item itemvalue="Python.admin" />
-        <item itemvalue="Python.record" />
-        <item itemvalue="Python.main" />
+        <item itemvalue="Python.VENDOR" />
+        <item itemvalue="Python.SalaryTransfer" />
       </list>
     </recent_temporary>
   </component>

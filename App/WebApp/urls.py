@@ -16,8 +16,9 @@ urlpatterns = [
     path('OutGoingStock', views.OutGoingStock, name='OutGoingStock'),
     path('OutGoingStockList', views.OutGoingStockList, name='OutGoingStockList'),
 
-    path('CreatePromotions', views.CreatePromotions, name='CreatePromotions'),
+    path('OldStock', views.OldStockComputer, name='OldStock'),
 
+    path('CreatePromotions', views.CreatePromotions, name='CreatePromotions'),
     path('PromotedEmployeeList', views.PromotedEmployeeList, name='PromotedEmployeeList'),
 
     path('Logout', views.Logout, name='Logout'),
@@ -36,6 +37,8 @@ urlpatterns = [
     path('ManageLeaveApplication',views.ManageEmployeeLeaveApplication, name='ManageLeaveApplication'),
     path('EmployeeExplanation', views.EmployeeExplanation, name='EmployeeExplanation'),
     path('ManageEmployeeExplanation', views.ManageEmployeeExplanation, name='ManageEmployeeExplanation'),
+
+    path('AddEditMedicalBills', views.AddEditMedicalBills, name='AddEditMedicalBills'),
 
     path('get_employee_leave_data/<int:emp_id>/', views.get_employee_leave_data, name='get_employee_leave_data'),
     path('get_employee_unit_data/<int:emp_id>/', tables.get_employee_unit_data_table, name='get_employee_unit_data_table'),

@@ -31,7 +31,6 @@ def transfer_posting_chart(request):
                 'total_transfers': total_transfers,
                 'userType': userType
             }
-            print(context)
             return context
         elif is_zone_admin(request.user):
             userType = 2
@@ -61,7 +60,6 @@ def transfer_posting_chart(request):
             'userType': userType
         }
 
-        print(context)
 
         return context
     except Exception as e:

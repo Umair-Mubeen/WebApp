@@ -123,6 +123,6 @@ def format_excel(personnel_excel, df):
 
 
 # Example usage
-pdf_file_path = 'C:/Users/ACS/Downloads/JAN-25.pdf'
-personnel_excel_path = 'C:/Users/ACS/Pictures/Disposition.xlsx'
+pdf_file_path = 'C:/Users/ACS/Videos/Mar-2025.pdf'
+personnel_excel_path = 'C:/Users/ACS/Videos/March PayRoll.xlsx'
 extract_pay_and_designation_from_pdf(pdf_file_path, personnel_excel_path)

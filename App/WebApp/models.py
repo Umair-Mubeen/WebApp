@@ -125,10 +125,11 @@ class InventoryStock(models.Model):
 class OutgoingStock(models.Model):
     item = models.ForeignKey(InventoryStock, on_delete=models.CASCADE)  # Link to stock item
     quantity_deducted = models.PositiveIntegerField()
-    officerName = models.CharField(max_length=255,default=True)
+    officerName = models.CharField(max_length=255, default=True)
     order_docx = models.FileField(upload_to='stationary_letters/', blank=True, null=True)  # Stores Stationary documents
     date = models.DateTimeField(auto_now_add=True)  # Auto store date of transaction
     letter_date = models.DateField(null=True)
+    serial_No = models.DateField(null=True)
 
 
 class Promotion(models.Model):
@@ -140,3 +141,56 @@ class Promotion(models.Model):
     order_docx = models.FileField(upload_to='promotion_orders/', blank=True, null=True)  # Stores promotion documents
     status = models.IntegerField(default=1)
     zone_type = models.CharField(max_length=50)
+
+
+class OldStock(models.Model):
+    itemName = models.CharField(max_length=255, default=True)
+    OfficerName = models.CharField(max_length=255, default=True)
+    Designation = models.CharField(max_length=255, default=True)
+    Zone = models.CharField(max_length=255, default=True)
+    serial_No = models.CharField(max_length=255, default=True)
+    Remarks = models.CharField(max_length=255, default=True)
+    Source = models.CharField(max_length=255, default=True)
+
+
+class MedicalBill(models.Model):
+    employee = models.ForeignKey('DispositionList', on_delete=models.CASCADE)
+    bill_type = models.CharField(max_length=255,default=True)
+    decease_type = models.CharField(max_length=255,default=True)
+    application_date = models.DateField()
+    bill_document = models.FileField(upload_to='medical_bills/')
+    medical_bill_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    hospital_name = models.CharField(max_length=255,default=True)
+    treatment_start_date = models.DateField()
+    treatment_end_date = models.DateField()
+    diagnosis_details = models.TextField()
+    bill_status = models.CharField(max_length=255,default=True)
+
+    patient_name = models.CharField(max_length=255,default=True)
+    patient_relationship = models.CharField(max_length=255,default=True)
+    patient_gender = models.CharField(max_length=50,default=True)
+    surgeon_name = models.CharField(max_length=255,default=True)
+    hospital_contact = models.CharField(max_length=255,default=True)
+    claim_ref_number = models.CharField(max_length=255,default=True)
+    verification_status = models.CharField(max_length=50,
+        choices=[('verified', 'Verified'), ('pending', 'Pending'), ('rejected', 'Rejected')]
+    )
+    date_of_claim_received = models.DateField()
+    approved_bill_docx = models.FileField(upload_to='approved_bills/')
+    authorized_person = models.CharField(max_length=255,default=True)
+    date_of_submission = models.DateField()
+    authorized_docx = models.FileField(upload_to='authorized_docs/')
+
+    sanction_bill = models.FileField(upload_to='sanction_bills/')
+    bill_submission_date = models.DateField()
+    bill_order_docx = models.FileField(upload_to='bill_orders/')
+    date_of_approval_agpr = models.DateField()
+    approved_sanction_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    bill_ref_number = models.CharField(max_length=255,default=True)
+    payment_status = models.CharField(max_length=255,default=True)
+    bank_name = models.CharField(max_length=255,default=True)
+    IBAN = models.CharField(max_length=255,default=True)
+    Bank_Address = models.CharField(max_length=255, default=True)
+    BranchCode = models.CharField(max_length=255,default=True)
+    remarks = models.CharField(max_length=255,default=True)
+
