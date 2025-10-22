@@ -5,26 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f3f26e0d-6d80-4cb2-9ee7-8a43816f9774" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/Medical/AddEditMedical.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/OldStock.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/App/abc.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SalaryTransfer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/VENDOR.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/App/WebApp/templates/new_pc_stock.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/House_Hring_Yes_No.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Performance_Allowance_Fbr_Yes_No.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/attendance.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/Graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/Graph.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/Utitlities.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/Utitlities.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/LeaveApplication.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/LeaveApplication.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/ManageLeaveApplication.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/ManageLeaveApplication.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/ManageTransferPosting.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/ManageTransferPosting.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/PromotedEmployeeList.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/PromotedEmployeeList.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/Promotions.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/Promotions.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/templates/RetiredTransferredEmpList.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/RetiredTransferredEmpList.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/graph.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/graph.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App/WebApp/templates/TaxSlab.html" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/templates/TaxSlab.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App/WebApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/App/WebApp/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readPdf.py" beforeDir="false" afterPath="$PROJECT_DIR$/readPdf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SalaryTransfer.py" beforeDir="false" afterPath="$PROJECT_DIR$/SalaryTransfer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,10 +49,13 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;Python.House_Hring_Yes_No.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Performance_Allowance_Fbr_Yes_No.executor&quot;: &quot;Run&quot;,
     &quot;Python.SalaryTransfer (1).executor&quot;: &quot;Run&quot;,
     &quot;Python.VENDOR.executor&quot;: &quot;Run&quot;,
     &quot;Python.abc.executor&quot;: &quot;Run&quot;,
     &quot;Python.admin.executor&quot;: &quot;Run&quot;,
+    &quot;Python.attendance.executor&quot;: &quot;Run&quot;,
     &quot;Python.code.executor&quot;: &quot;Run&quot;,
     &quot;Python.main.executor&quot;: &quot;Run&quot;,
     &quot;Python.readPdf.executor&quot;: &quot;Run&quot;,
@@ -68,7 +63,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/ACS/TaxBuddyUmair&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/PythonProjects/WebApp-main&quot;,
     &quot;two.files.diff.last.used.file&quot;: &quot;E:/PythonProjects/WebApp-main/App/WebApp/views.py&quot;
   }
 }</component>
@@ -78,7 +73,51 @@
       <recent name="E:\PythonProjects\WebApp-main\App\WebApp\templates" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.abc">
+  <component name="RunManager" selected="Python.Performance_Allowance_Fbr_Yes_No">
+    <configuration name="House_Hring_Yes_No" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="WebApp-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/House_Hring_Yes_No.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Performance_Allowance_Fbr_Yes_No" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="WebApp-main" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Performance_Allowance_Fbr_Yes_No.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="SalaryTransfer (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="WebApp-main" />
       <option name="ENV_FILES" value="" />
@@ -101,7 +140,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="SalaryTransfer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="attendance" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="WebApp-main" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -114,51 +153,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="E:\PythonProjects\WebApp-main\SalaryTransfer.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="VENDOR" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="WebApp-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/VENDOR.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="abc" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="WebApp-main" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/App" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/App/abc.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/attendance.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -191,11 +186,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.abc" />
+        <item itemvalue="Python.Performance_Allowance_Fbr_Yes_No" />
+        <item itemvalue="Python.House_Hring_Yes_No" />
         <item itemvalue="Python.SalaryTransfer (1)" />
+        <item itemvalue="Python.attendance" />
         <item itemvalue="Python.readPdf" />
-        <item itemvalue="Python.VENDOR" />
-        <item itemvalue="Python.SalaryTransfer" />
       </list>
     </recent_temporary>
   </component>

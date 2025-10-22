@@ -104,146 +104,211 @@
 
         <div class="container-fluid">
             <div class="card">
-                <h5 class="text-center text-primary">Tax Calculation Comparison: {{tax_2023_year}} vs. {{tax_2024_year}}</h5>
+                <h5 class="text-center text-primary">Tax Calculation Comparison: {{tax_2024_2025_year}} vs. {{tax_2025_2026_year}}</h5>
 
                 <div class="row">
                     <!-- Tax calculation for 2023 -->
-                    <div class="col-md-6">
-                        <h5 class="text-primary">Tax Calculation for {{tax_2023_year}}</h5>
+<!--                    <div class="col-md-6">-->
+<!--                        <h5 class="text-primary">Tax Calculation for {{tax_2023_year}}</h5>-->
+<!--                        <table class="table table-bordered table-hover">-->
+<!--                            <tr>-->
+<!--                                <th>Yearly Income</th>-->
+<!--                                <td>Rs. {{ tax_2023.income|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <th>Applicable Tax Bracket</th>-->
+<!--                                <td>Rs. {{ tax_2023.lower|intcomma }} to Rs. {{ tax_2023.upper|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr class="bg-light">-->
+<!--                                <th>Base Tax</th>-->
+<!--                                <td class="bg-light">Rs. {{ tax_2023.base_tax|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <th>Amount Exceeding Bracket</th>-->
+<!--                                <td>Rs. {{ tax_2023.amount_exceeding|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <th>Rate Applied</th>-->
+<!--                                <td class="{% if tax_2023.rate != 0 %}bg-primary{% else %}bg-light{% endif %}">{{ tax_2023.rate }}%</td>-->
+<!--                            </tr>-->
+<!--                            <tr class="bg-light">-->
+<!--                                <th>Tax on Amount Exceeding Bracket</th>-->
+<!--                                <td>Rs. {{ tax_2023.tax_on_exceeding|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            {% if tax_2024.surcharge %}-->
+<!--                            <tr class="bg-light">-->
+<!--                                <th>Surcharge</th>-->
+<!--                                <td>Rs. {{ tax_2023.surcharge|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr class="bg-light">-->
+<!--                                <th>Total Tax with Surcharge</th>-->
+<!--                                <td>Rs. {{ tax_2023.total_tax_with_surcharge|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            {% endif %}-->
+<!--                            <tr>-->
+<!--                                <th>Total Tax Chargeable During Year</th>-->
+<!--                                <td>Rs. {{ tax_2023.total_tax|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <th>Monthly Tax</th>-->
+<!--                                <td>Rs. {{ tax_2023.per_month|intcomma }}</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <th>Percentage</th>-->
+<!--                                <td>-->
+<!--                                    <div class="d-flex align-items-center">-->
+<!--                                        <div class="progress w-75 me-3">-->
+<!--                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tax_2023_percentage }}%;" aria-valuenow="{{ tax_2023_percentage }}" aria-valuemin="0" aria-valuemax="100">-->
+<!--                                                {{ tax_2023_percentage|floatformat:2 }}%-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                        <span class="text-info">{{ tax_2023_percentage|floatformat:2 }}%</span>-->
+<!--                                    </div>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+<!--                        </table>-->
+<!--                    </div>-->
+
+                    <!-- Tax calculation for 2024-2025 -->
+
+
+                      <div class="col-md-6">
+                        <h5 class="text-primary">Tax Calculation for {{tax_2024_2025_year}}</h5>
                         <table class="table table-bordered table-hover">
                             <tr>
                                 <th>Yearly Income</th>
-                                <td>Rs. {{ tax_2023.income|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.income|intcomma }}</td>
                             </tr>
                             <tr>
                                 <th>Applicable Tax Bracket</th>
-                                <td>Rs. {{ tax_2023.lower|intcomma }} to Rs. {{ tax_2023.upper|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.lower|intcomma }} to Rs. {{ tax_2024_2025.upper|intcomma }}</td>
                             </tr>
                             <tr class="bg-light">
                                 <th>Base Tax</th>
-                                <td class="bg-light">Rs. {{ tax_2023.base_tax|intcomma }}</td>
+                                <td class="bg-light">Rs. {{ tax_2024_2025.fixed_tax|intcomma }}</td>
                             </tr>
                             <tr>
                                 <th>Amount Exceeding Bracket</th>
-                                <td>Rs. {{ tax_2023.amount_exceeding|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.amount_exceeding|intcomma }}</td>
                             </tr>
                             <tr>
                                 <th>Rate Applied</th>
-                                <td class="{% if tax_2023.rate != 0 %}bg-primary{% else %}bg-light{% endif %}">{{ tax_2023.rate }}%</td>
+                                <td class="{% if tax_2024_2025.rate != 0 %}bg-primary{% else %}bg-light{% endif %}">{{ tax_2024_2025.rate }}%</td>
                             </tr>
                             <tr class="bg-light">
                                 <th>Tax on Amount Exceeding Bracket</th>
-                                <td>Rs. {{ tax_2023.tax_on_exceeding|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.tax_on_exceeding|intcomma }}</td>
                             </tr>
-                            {% if tax_2024.surcharge %}
+                            {% if tax_2024_2025.surcharge %}
                             <tr class="bg-light">
                                 <th>Surcharge</th>
-                                <td>Rs. {{ tax_2023.surcharge|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.surcharge|intcomma }}</td>
                             </tr>
                             <tr class="bg-light">
                                 <th>Total Tax with Surcharge</th>
-                                <td>Rs. {{ tax_2023.total_tax_with_surcharge|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.total_tax_with_surcharge|intcomma }}</td>
                             </tr>
                             {% endif %}
                             <tr>
                                 <th>Total Tax Chargeable During Year</th>
-                                <td>Rs. {{ tax_2023.total_tax|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.total_tax|intcomma }}</td>
                             </tr>
                             <tr>
                                 <th>Monthly Tax</th>
-                                <td>Rs. {{ tax_2023.per_month|intcomma }}</td>
+                                <td>Rs. {{ tax_2024_2025.per_month|intcomma }}</td>
                             </tr>
                             <tr>
                                 <th>Percentage</th>
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="progress w-75 me-3">
-                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tax_2023_percentage }}%;" aria-valuenow="{{ tax_2023_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                                                {{ tax_2023_percentage|floatformat:2 }}%
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tax_2023_percentage }}%;" aria-valuenow="{{ tax_2024_2025_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                {{ tax_2024_2025_percentage|floatformat:2 }}%
                                             </div>
                                         </div>
-                                        <span class="text-info">{{ tax_2023_percentage|floatformat:2 }}%</span>
+                                        <span class="text-info">{{ tax_2024_2025_percentage|floatformat:2 }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <!-- Tax calculation for 2025-2026 -->
+
+                     <div class="col-md-6">
+                        <h5 class="text-primary">Tax Calculation for {{tax_2025_2026_year}}</h5>
+                        <table class="table table-bordered table-hover">
+                            <tr>
+                                <th>Yearly Income</th>
+                                <td>Rs. {{ tax_2025_2026.income|intcomma }}</td>
+                            </tr>
+                            <tr>
+                                <th>Applicable Tax Bracket</th>
+                                <td>Rs. {{ tax_2025_2026.lower|intcomma }} to Rs. {{ tax_2025_2026.upper|intcomma }}</td>
+                            </tr>
+                            <tr class="bg-light">
+                                <th>Base Tax</th>
+                                <td class="bg-light">Rs. {{ tax_2025_2026.fixed_tax|intcomma }}</td>
+                            </tr>
+                            <tr>
+                                <th>Amount Exceeding Bracket</th>
+                                <td>Rs. {{ tax_2025_2026.amount_exceeding|intcomma }}</td>
+                            </tr>
+                            <tr>
+                                <th>Rate Applied</th>
+                                <td class="{% if tax_2025_2026.rate != 0 %}bg-primary{% else %}bg-light{% endif %}">{{ tax_2025_2026.rate }}%</td>
+                            </tr>
+                            <tr class="bg-light">
+                                <th>Tax on Amount Exceeding Bracket</th>
+                                <td class="bg-light">Rs. {{ tax_2025_2026.tax_on_exceeding|intcomma }}</td>
+                            </tr>
+                            {% if tax_2025_2026.surcharge %}
+                            <tr class="bg-light">
+                                <th>Surcharge (Tax on Exceeding Bracket	+ Base Tax)</th>
+                                <td>Rs. {{ tax_2025_2026.surcharge|intcomma }}</td>
+                            </tr>
+                            <tr class="bg-light">
+                                <th>Total Tax with Surcharge</th>
+                                <td>Rs. {{ tax_2025_2026.total_tax_with_surcharge|intcomma }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <th>Total Tax Chargeable During Year</th>
+                                <td>Rs. {{ tax_2025_2026.total_tax|intcomma }}</td>
+                            </tr>
+                            <tr>
+                                <th>Monthly Tax</th>
+                                <td>Rs. {{ tax_2025_2026.per_month|intcomma }}</td>
+                            </tr>
+                            <tr>
+                                <th>Percentage</th>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress w-75 me-3">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tax_2024_percentage }}%;" aria-valuenow="{{ tax_2025_2026_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                {{ tax_2025_2026_percentage|floatformat:2 }}%
+                                            </div>
+                                        </div>
+                                        <span class="text-info">{{ tax_2025_2026_percentage|floatformat:2 }}%</span>
                                     </div>
                                 </td>
                             </tr>
                         </table>
                     </div>
 
-                    <!-- Tax calculation for 2024 -->
-                    <div class="col-md-6">
-                        <h5 class="text-primary">Tax Calculation for {{tax_2024_year}}</h5>
-                        <table class="table table-bordered table-hover">
-                            <tr>
-                                <th>Yearly Income</th>
-                                <td>Rs. {{ tax_2024.income|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <th>Applicable Tax Bracket</th>
-                                <td>Rs. {{ tax_2024.lower|intcomma }} to Rs. {{ tax_2024.upper|intcomma }}</td>
-                            </tr>
-                            <tr class="bg-light">
-                                <th>Base Tax</th>
-                                <td class="bg-light">Rs. {{ tax_2024.base_tax|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <th>Amount Exceeding Bracket</th>
-                                <td>Rs. {{ tax_2024.amount_exceeding|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <th>Rate Applied</th>
-                                <td class="{% if tax_2024.rate != 0 %}bg-primary{% else %}bg-light{% endif %}">{{ tax_2024.rate }}%</td>
-                            </tr>
-                            <tr class="bg-light">
-                                <th>Tax on Amount Exceeding Bracket</th>
-                                <td class="bg-light">Rs. {{ tax_2024.tax_on_exceeding|intcomma }}</td>
-                            </tr>
-                            {% if tax_2024.surcharge %}
-                            <tr class="bg-light">
-                                <th>Surcharge (Tax on Exceeding Bracket	+ Base Tax)</th>
-                                <td>Rs. {{ tax_2024.surcharge|intcomma }}</td>
-                            </tr>
-                            <tr class="bg-light">
-                                <th>Total Tax with Surcharge</th>
-                                <td>Rs. {{ tax_2024.total_tax_with_surcharge|intcomma }}</td>
-                            </tr>
-                            {% endif %}
-                            <tr>
-                                <th>Total Tax Chargeable During Year</th>
-                                <td>Rs. {{ tax_2024.total_tax|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <th>Monthly Tax</th>
-                                <td>Rs. {{ tax_2024.per_month|intcomma }}</td>
-                            </tr>
-                            <tr>
-                                <th>Percentage</th>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress w-75 me-3">
-                                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tax_2024_percentage }}%;" aria-valuenow="{{ tax_2024_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                                                {{ tax_2024_percentage|floatformat:2 }}%
-                                            </div>
-                                        </div>
-                                        <span class="text-info">{{ tax_2024_percentage|floatformat:2 }}%</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
 
                     <!-- Growth percentage (if available) -->
                     {% if growth_percentage %}
-                    <div class="col-md-12">
-                        <table class="table table-bordered table-hover">
-                            <tr>
-                                <th class="col-md-6">Growth : (Current - Last Year) / Last Year * 100</th>
-                                <td class="bg-primary">
-                                    <div class="progress-bar bg-info" role="progressbar" style="width:{{growth_percentage}}%" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"></div>
-                                    Growth Percentage {{ growth_percentage }} %
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
+<!--                    <div class="col-md-12">-->
+<!--                        <table class="table table-bordered table-hover">-->
+<!--                            <tr>-->
+<!--                                <th class="col-md-6">Growth : (Current - Last Year) / Last Year * 100</th>-->
+<!--                                <td class="bg-primary">-->
+<!--                                    <div class="progress-bar bg-info" role="progressbar" style="width:{{growth_percentage}}%" aria-valuenow="12" aria-valuemin="0" aria-valuemax="100"></div>-->
+<!--                                    Growth Percentage {{ growth_percentage }} %-->
+<!--                                </td>-->
+<!--                            </tr>-->
+<!--                        </table>-->
+<!--                    </div>-->
                     {% endif %}
                 </div>
             </div>

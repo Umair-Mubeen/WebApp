@@ -30,8 +30,7 @@ def fetchAllDispositionList(request):
         elif is_admin(request.user):
             print("admin")
             result = (DispositionList.objects.filter(status=1).annotate(bps_as_int=Cast('BPS', IntegerField()))
-                      .order_by('-bps_as_int')
-                      )
+    .order_by('-bps_as_int'))
         else:
             result = DispositionList.objects.none()  # No results for other roles
 
@@ -409,45 +408,39 @@ def is_zone_admin(user):
     return user.is_superuser == 2
 
 
-def calculate_tax(income, tax_brackets, apply_surcharge):
+def calculate_tax(income, tax_brackets, surcharge_rate):
     try:
-        surcharge_threshold = 10000000
-        surcharge_rate = 0.10
-        for (lower, upper), (rate, base_tax) in tax_brackets.items():
+        surcharge_threshold = 10000000  # 10 million
+
+        for (lower, upper), (rate, base_threshold, fixed_tax) in tax_brackets.items():
             if lower <= income <= upper:
-                month = 0
                 if rate == 0:
                     tax = 0
+                    tax_on_exceeding = 0
+                    amount_exceeding = 0
                 else:
-                    amount_exceeding = income - lower
+                    amount_exceeding = income - base_threshold
                     tax_on_exceeding = amount_exceeding * rate
+                    tax = round(fixed_tax + tax_on_exceeding)
 
-                    if lower == 600001 and upper == 1200000:
-                        tax = round(tax_on_exceeding)  # No base tax added
-                        month = round(tax / 12)
-                    elif lower == 600001 and upper == 800000:
-                        tax = round(tax_on_exceeding)  # No base tax added
-                        month = tax / 12
-
-                    else:
-                        tax = round(base_tax + tax_on_exceeding)
-                        month = round(tax / 12)
-                total_tax_with_surcharge = 0
+                month = round(tax / 12)
                 surcharge = 0
-                if apply_surcharge and income > surcharge_threshold:
+                total_tax_with_surcharge = tax
+
+                if income > surcharge_threshold:
                     surcharge = round(tax * surcharge_rate)
-                    total_tax_with_surcharge = round(tax + surcharge)
-                    print('surcharge =>', surcharge)
+                    total_tax_with_surcharge = tax + surcharge
                     month = round(total_tax_with_surcharge / 12)
 
                 return {
                     'income': income,
                     'lower': lower,
                     'upper': upper,
-                    'base_tax': base_tax,
-                    'amount_exceeding': amount_exceeding if rate != 0 else 0,
+                    'base_threshold': base_threshold,
+                    'fixed_tax': fixed_tax,
+                    'amount_exceeding': amount_exceeding,
                     'rate': rate * 100,
-                    'tax_on_exceeding': round(tax_on_exceeding) if rate != 0 else 0,
+                    'tax_on_exceeding': round(tax_on_exceeding),
                     'total_tax': tax,
                     'per_month': month,
                     'total_tax_with_surcharge': total_tax_with_surcharge,
@@ -456,6 +449,64 @@ def calculate_tax(income, tax_brackets, apply_surcharge):
         return None
     except Exception as e:
         print(str(e))
+
+
+# def calculate_tax(income, tax_brackets, apply_surcharge):
+#     try:
+#         print('income', income)
+#         surcharge_threshold = 10000000
+#         surcharge_rate = 0.10
+#         for (lower, upper), (rate, base_tax) in tax_brackets.items():
+#             print('.-------------')
+#             print('lower', lower)
+#             print('upper', upper)
+#             print(lower <= income <= upper)
+#             if lower <= income <= upper:
+#                 print('if ...........')
+#                 month = 0
+#                 if rate == 0:
+#                     tax = 0
+#                 else:
+#                     amount_exceeding = income - lower
+#                     print('amount_exceeding', amount_exceeding)
+#                     tax_on_exceeding = amount_exceeding * rate
+#
+#                     if lower == 600001 and upper == 1200000:
+#                         tax = round(tax_on_exceeding)  # No base tax added
+#                         month = round(tax / 12)
+#                     elif lower == 600001 and upper == 800000:
+#                         tax = round(tax_on_exceeding)  # No base tax added
+#                         month = tax / 12
+#
+#                     else:
+#                         tax = round(base_tax + tax_on_exceeding)
+#                         month = round(tax / 12)
+#                 total_tax_with_surcharge = 0
+#                 surcharge = 0
+#                 if apply_surcharge and income > surcharge_threshold:
+#                     surcharge = round(tax * surcharge_rate)
+#                     total_tax_with_surcharge = round(tax + surcharge)
+#                     print('surcharge =>', surcharge)
+#                     month = round(total_tax_with_surcharge / 12)
+#
+#                 return {
+#                     'income': income,
+#                     'lower': lower,
+#                     'upper': upper,
+#                     'base_tax': base_tax,
+#                     'amount_exceeding': amount_exceeding if rate != 0 else 0,
+#                     'rate': rate * 100,
+#                     'tax_on_exceeding': round(tax_on_exceeding) if rate != 0 else 0,
+#                     'total_tax': tax,
+#                     'per_month': month,
+#                     'total_tax_with_surcharge': total_tax_with_surcharge,
+#                     'surcharge': surcharge
+#                 }
+#         return None
+#     except Exception as e:
+#         print(str(e))
+
+
 
 
 def getAllBoardTransferPosting(userType, zoneType):

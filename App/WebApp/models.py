@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, User
 from django.db import models
 
 # Create your models here.
@@ -194,3 +194,20 @@ class MedicalBill(models.Model):
     BranchCode = models.CharField(max_length=255,default=True)
     remarks = models.CharField(max_length=255,default=True)
 
+
+class PC(models.Model):
+    STATUS_CHOICES = [
+        ('in_stock', 'In Stock'),
+        ('assigned', 'Assigned'),
+        ('repair', 'In Repair'),
+        ('retired', 'Retired'),
+    ]
+
+    pc_name = models.CharField(max_length=100)
+    serial_number = models.CharField(max_length=100, unique=True)
+    type = models.CharField(max_length=50)  # e.g., Desktop, Laptop, Server
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_stock')
+    personnel = models.ForeignKey(DispositionList, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_pcs")
+
+    def __str__(self):
+        return f"{self.pc_name} ({self.serial_number})"

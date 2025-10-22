@@ -73,6 +73,6 @@ def extract_and_append_missing_personnel(pdf_path, personnel_excel):
 
 
 # Example usage
-pdf_file_path = 'C:/Users/ACS/Videos/Mar-2025.pdf'
-personnel_excel_path = 'C:/Users/ACS/Videos/March PayRoll.xlsx'
+pdf_file_path = 'C:/Users/ACS/Music/Sept - 2025.pdf'
+personnel_excel_path = 'C:/Users/ACS/Music/Sep - 2025.xlsx'
 extract_and_append_missing_personnel(pdf_file_path, personnel_excel_path)

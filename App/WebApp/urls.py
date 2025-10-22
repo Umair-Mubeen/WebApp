@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 from . import views, tables
 
 urlpatterns = [
-
     path('', views.index, name='index'),  # Login Page
     path('login', views.userLogin, name='userLogin'),
     path('Dashboard', views.Dashboard, name='Dashboard'),
@@ -17,6 +16,7 @@ urlpatterns = [
     path('OutGoingStockList', views.OutGoingStockList, name='OutGoingStockList'),
 
     path('OldStock', views.OldStockComputer, name='OldStock'),
+    path('NewPCStock', views.NewStockComputer, name='NewStockComputer'),
 
     path('CreatePromotions', views.CreatePromotions, name='CreatePromotions'),
     path('PromotedEmployeeList', views.PromotedEmployeeList, name='PromotedEmployeeList'),

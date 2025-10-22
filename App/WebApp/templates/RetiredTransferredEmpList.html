@@ -359,72 +359,80 @@
 </body>
 
 
-    <script>
-        // Fetch data from Django context
-        const retirementData = {{ retirement_by_designation_data|safe }};
+<script>
+    // Fetch data from Django context
+    const retirementData = {{ retirement_by_designation_data|safe }};
 
-        // Prepare data for Chart.js
-        const labels = retirementData.labels;  // Designation names
-        const counts = retirementData.counts;  // Count of retirees
+    // Prepare data for Chart.js
+    const labels = retirementData.labels;  // Designation names
+    const counts = retirementData.counts;  // Count of retirees
 
-        // Create the chart
-        const ctx = document.getElementById('retirement_by_designation_data').getContext('2d');
-        const retirementChart = new Chart(ctx, {
-            type: 'bar',  // Chart type (bar, pie, etc.)
-            data: {
-                labels: labels,  // X-axis labels
-                datasets: [{
-                    label: 'Number of Retirements',
-                    data: counts,  // Y-axis data
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 206, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Retirements by Designation',
-                        font: {
-                            size: 16
-                        }
-                    },
-                    legend: {
-                        display: true
+    // Generate color arrays dynamically
+    function generateColors(length, opacity) {
+        const baseColors = [
+            [255, 99, 132],   // Red
+            [54, 162, 235],   // Blue
+            [255, 206, 86],   // Yellow
+            [75, 192, 192],   // Teal
+            [153, 102, 255],  // Purple
+            [255, 159, 64],   // Orange
+            [99, 255, 132],   // Light green
+            [235, 54, 162]    // Pinkish purple
+        ];
+        const colors = [];
+        for (let i = 0; i < length; i++) {
+            const [r, g, b] = baseColors[i % baseColors.length];
+            colors.push(`rgba(${r}, ${g}, ${b}, ${opacity})`);
+        }
+        return colors;
+    }
+
+    // Create the chart
+    const ctx = document.getElementById('retirement_by_designation_data').getContext('2d');
+    const retirementChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Retirements',
+                data: counts,
+                backgroundColor: generateColors(labels.length, 0.5),
+                borderColor: generateColors(labels.length, 1),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Retirements by Designation',
+                    font: {
+                        size: 16
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Retirements'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Designation'
-                        }
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Retirements'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Designation'
                     }
                 }
             }
-        });
-    </script>
+        }
+    });
+</script>
 
 
 
@@ -447,20 +455,8 @@
                 datasets: [{
                     label: 'Number of Transferred',
                     data: transferred_counts,  // Y-axis data
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 206, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
+                    backgroundColor: generateRandomColors(labels.length),
+                    borderColor: 'rgba(0, 0, 0, 1)',
                     borderWidth: 1
                 }]
             },
@@ -494,5 +490,77 @@
                     }
                 }
             }
+
+
+              // Function for generating random colors
+        function generateRandomColors(length) {
+            const colors = [];
+            for (let i = 0; i < length; i++) {
+                colors.push(`rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`);
+            }
+            return colors;
+        }
         });
-    </script>
+    </script><script>
+    // Fetch data from Django context
+    const transferredData = {{ transferred_by_designation_data|safe }};
+
+    // Prepare data for Chart.js
+    const transferred_labels = transferredData.labels;  // Designation names
+    const transferred_counts = transferredData.counts;  // Count of retirees
+
+    // Function for generating random colors
+    function generateRandomColors(length) {
+        const colors = [];
+        for (let i = 0; i < length; i++) {
+            colors.push(`rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.7)`);
+        }
+        return colors;
+    }
+
+    // Create the chart
+    const transferred_ctx = document.getElementById('transferred_by_designation_data').getContext('2d');
+    const transferredChart = new Chart(transferred_ctx, {
+        type: 'bar',
+        data: {
+            labels: transferred_labels,
+            datasets: [{
+                label: 'Number of Transferred',
+                data: transferred_counts,
+                backgroundColor: generateRandomColors(transferred_labels.length),
+                borderColor: 'rgba(0, 0, 0, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Transferred by Designation',
+                    font: {
+                        size: 16
+                    }
+                },
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Transferred'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Designation'
+                    }
+                }
+            }
+        }
+    });
+</script>
